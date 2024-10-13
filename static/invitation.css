@@ -2,7 +2,7 @@ body {
   font-family: 'Helvetica', sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #ddd5b5; /* Beige background */
+  background-color: #fff0f5; /* Light pink background */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -12,8 +12,8 @@ body {
 .envelope-container {
   position: relative;
   width: 100%;
-  max-width: 800px; /* Increased max-width for larger envelope */
-  padding-top: 75%; /* Adjust as needed for envelope aspect ratio */
+  max-width: 800px; /* Adjust as needed for envelope size */
+  padding-top: 75%; /* Adjust based on envelope aspect ratio */
 }
 
 .envelope-image {
@@ -35,8 +35,8 @@ body {
   max-width: 500px;
   background-color: #fff;
   border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  padding: 20px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); /* Enhanced drop shadow */
+  padding: 30px;
   text-align: center;
 }
 
@@ -47,7 +47,7 @@ body {
 h1 {
   font-family: 'Georgia', serif;
   font-size: 2.5rem;
-  color: #4e3fa2;
+  color: #ff69b4; /* Hot pink to match envelope theme */
   margin-bottom: 20px;
 }
 
@@ -72,7 +72,7 @@ input[type="text"] {
   font-size: 1rem;
   margin-bottom: 20px;
   border-radius: 5px;
-  border: 1px solid #ddd;
+  border: 1px solid #ffb6c1; /* Light pink border */
 }
 
 .radio-group {
@@ -90,7 +90,7 @@ button {
   padding: 10px 20px;
   font-size: 1.2rem;
   color: white;
-  background-color: #4e3fa2;
+  background-color: #ff69b4; /* Hot pink to match theme */
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -98,5 +98,5 @@ button {
 }
 
 button:hover {
-  background-color: #372f8b;
+  background-color: #ff1493; /* Darker pink on hover */
 }

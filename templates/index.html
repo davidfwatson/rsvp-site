@@ -4,31 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RSVP for the Birthday Party</title>
-    <link rel="stylesheet" href="https://test.davidfwatson.com/static/invitation.css">
+    <link rel="stylesheet" href="/static/invitation.css">
 </head>
 <body>
-    <div class="invite-container">
-        <!-- Envelope Image -->
-        <div class="envelope-container">
-            <img src="https://images.evite.com/images.postmark.com/envelope/red03/liners/env_red03_00.png" alt="Envelope" class="envelope-image">
-        </div>
-
-        <div class="invite-text">
-            <h1>You're Invited!</h1>
-            <form action="/rsvp" method="POST">
-                <label for="name">Your Name:</label>
-                <input type="text" id="name" name="name" required>
-                
-                <label for="attending">Will you attend?</label>
-                <div class="radio-group">
-                    <input type="radio" id="yes" name="attending" value="yes" required>
-                    <label for="yes">Yes</label>
-                    <input type="radio" id="no" name="attending" value="no" required>
-                    <label for="no">No</label>
-                </div>
-                
-                <button type="submit">Submit RSVP</button>
-            </form>
+    <div class="envelope-container">
+        <img src="/static/env_pink03_00.png" alt="Envelope" class="envelope-image">
+        <div class="invite-container">
+            <div class="invite-text">
+                <h1>You're Invited!</h1>
+                <form action="/rsvp" method="POST">
+                    <label for="name">Your Name:</label>
+                    <input type="text" id="name" name="name" required>
+                    
+                    <label for="attending">Will you attend?</label>
+                    <div class="radio-group">
+                        <input type="radio" id="yes" name="attending" value="yes" required>
+                        <label for="yes">Yes</label>
+                        <input type="radio" id="no" name="attending" value="no" required>
+                        <label for="no">No</label>
+                    </div>
+                    
+                    <button type="submit">Submit RSVP</button>
+                </form>
+            </div>
         </div>
     </div>
 </body>

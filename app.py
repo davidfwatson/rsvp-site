@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, send_from_directory
+
 
 app = Flask(__name__)
 
@@ -18,6 +19,11 @@ def rsvp():
 @app.route('/thank-you')
 def thank_you():
     return 'Thank you for your RSVP!'
+
+@app.route('/static/<file>')
+def serve_static(file):
+    print(f'Serving static file: {file}')
+    return send_from_directory('static', file)
 
 if __name__ == '__main__':
     app.run()

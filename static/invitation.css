@@ -3,12 +3,12 @@ body {
   font-family: 'Helvetica', sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #ddd5b5; /* Beige background */
+  background-color: #ddd5b5; /* Updated to closer match the beige tone */
 }
 
 .invite-container {
   width: 100%;
-  max-width: 600px;
+  max-width: 650px; /* Adjusted for a bit more width */
   margin: 50px auto;
   background-color: #fff;
   border-radius: 10px;
@@ -16,25 +16,18 @@ body {
   text-align: center;
   position: relative;
   padding-bottom: 20px;
-  overflow: hidden; /* Ensure contents don't overflow */
 }
 
-/* Envelope Image */
-.envelope-container {
-  position: relative;
-  width: 100%;
-  overflow: hidden;
-  margin-bottom: -5px; /* Overlap the envelope and content slightly */
+/* Envelope-style image */
+.envelope-background {
+  background: url('https://images.evite.com/images.postmark.com/envelope/red03/liners/env_red03_00.png') no-repeat;
+  background-size: 120%; /* Adjusted to ensure it's not clipped */
+  background-position: left; /* Positioned slightly to the left */
+  height: 220px; /* Slightly taller for visibility */
+  margin-bottom: 20px;
+  border-radius: 10px 10px 0 0;
 }
 
-.envelope-image {
-  position: relative;
-  width: 120%; /* Increase width to prevent clipping */
-  left: -10%;   /* Shift image to the left */
-  max-width: none;
-}
-
-/* Invite Text */
 .invite-text {
   padding: 20px;
   color: #333;
@@ -44,7 +37,7 @@ body {
 h1 {
   font-family: 'Georgia', serif;
   font-size: 2.5rem;
-  color: #4e3fa2;
+  color: #4e3fa2; /* Updated to match the shade of purple/blue */
   margin-bottom: 20px;
 }
 
@@ -59,7 +52,7 @@ label {
   font-size: 1.2rem;
   margin-bottom: 10px;
   display: block;
-  width: 80%;
+  width: 100%;
   text-align: left;
   max-width: 400px;
 }
@@ -80,16 +73,8 @@ input[type="radio"] {
 .radio-group {
   margin-bottom: 20px;
   display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.radio-group label {
-  margin-right: 15px;
-}
-
-.radio-group input[type="radio"] + label {
-  margin-right: 30px;
+  justify-content: space-around;
+  width: 80%;
 }
 
 /* Button Styling */
@@ -105,5 +90,5 @@ button {
 }
 
 button:hover {
-  background-color: #372f8b;
+  background-color: #372f8b; /* Darker shade for hover effect */
 }

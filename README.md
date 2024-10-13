@@ -90,14 +90,14 @@ These were the original instructions I used to set up the site.
      Example content:
 
      ```ini
-     [uwsgi]
-     module = app:app
-     master = true
-     process = 5
-     socket = /home/david/webserver/rsvp-site/rsvp-site.sock
-     chmod-socket = 660
-     vacuum = true
-     die-on-term = true
+    [uwsgi]
+    module = app:app
+    master = true
+    process = 5
+    socket = /home/david/webserver/rsvp-site/rsvp-site.sock
+    chmod-socket = 660
+    vacuum = true
+    die-on-term = true
      ```
 
 #### 4. **Configure Nginx for the Flask App:**
@@ -106,36 +106,39 @@ These were the original instructions I used to set up the site.
      Update the location block to use uWSGI for the Flask app:
 
      ```nginx
-     server {
-         server_name test.davidfwatson.com;
+server {
+    server_name test.davidfwatson.com;
+    
+    location ~ /.well-known {
+        root /etc/letsencrypt/verification;
+    }
 
-         location ~ /.well-known {
-             root /etc/letsencrypt/verification;
-         }
+    listen 443 ssl; # managed by Certbot
+    
+    # Proxy to uWSGI for Flask app
+    location / {
+        include uwsgi_params;
+        uwsgi_pass unix:/home/david/webserver/rsvp-site/rsvp-site.sock;  # Path to the uWSGI socket for rsvp-site
+    }
 
-         listen 443 ssl; # managed by Certbot
-         location / {
-             include uwsgi_params;
-             uwsgi_pass unix:/home/david/webserver/rsvp-site/rsvp-site.sock;
-         }
+    client_max_body_size 100M;
 
-         client_max_body_size 100M;
+    ssl_certificate /etc/letsencrypt/live/test.davidfwatson.com/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/test.davidfwatson.com/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+}
 
-         ssl_certificate /etc/letsencrypt/live/test.davidfwatson.com/fullchain.pem; # managed by Certbot
-         ssl_certificate_key /etc/letsencrypt/live/test.davidfwatson.com/privkey.pem; # managed by Certbot
-         include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
-         ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
-     }
+server {
+    if ($host = test.davidfwatson.com) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
 
-     server {
-         if ($host = test.davidfwatson.com) {
-             return 301 https://$host$request_uri;
-         } # managed by Certbot
+    listen 80;
+    server_name test.davidfwatson.com;
+    return 404; # managed by Certbot
+}
 
-         listen 80;
-         server_name test.davidfwatson.com;
-         return 404; # managed by Certbot
-     }
      ```
 
 #### 5. **Set Up a Systemd Service for the Flask App:**
@@ -148,18 +151,19 @@ These were the original instructions I used to set up the site.
      Example content:
 
      ```ini
-     [Unit]
-     Description=uWSGI instance to serve rsvp-site
-     After=network.target
+[Unit]
+Description=uWSGI instance to serve rsvp-site
+After=network.target
 
-     [Service]
-     User=david
-     Group=www-data
-     WorkingDirectory=/home/david/webserver/rsvp-site
-     ExecStart=/usr/local/bin/uwsgi --ini rsvp-site.ini
+[Service]
+User=david
+Group=www-data
+WorkingDirectory=/home/david/webserver/rsvp-site
+Environment="PATH=/home/david/webserver/rsvp-site/venv/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=/home/david/webserver/rsvp-site/venv/bin/uwsgi --ini rsvp-site.ini
 
-     [Install]
-     WantedBy=multi-user.target
+[Install]
+WantedBy=multi-user.target
      ```
 
    - Reload systemd and start the service:

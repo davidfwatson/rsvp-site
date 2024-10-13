@@ -2,92 +2,189 @@
 
 
 
-## Getting started
+These were the original instructions I used to set up the site.
+---
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+### **Setup Instructions for `rsvp-site` Flask Application**
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+#### 1. **Create a Separate Flask App for `rsvp-site`:**
+   - Set up a new Flask app directory for the RSVP site. You can create a directory like `/home/david/webserver/rsvp-site/`.
 
-## Add your files
+   - Inside this directory, create a basic Flask app:
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+     ```bash
+     mkdir -p /home/david/webserver/rsvp-site
+     cd /home/david/webserver/rsvp-site
+     nano app.py
+     ```
 
-```
-cd existing_repo
-git remote add origin https://gitlab.com/davidfwatson/rsvp-site.git
-git branch -M main
-git push -uf origin main
-```
+     Here’s an example `app.py`:
 
-## Integrate with your tools
+     ```python
+     from flask import Flask, render_template, request, redirect
 
-- [ ] [Set up project integrations](https://gitlab.com/davidfwatson/rsvp-site/-/settings/integrations)
+     app = Flask(__name__)
 
-## Collaborate with your team
+     @app.route('/')
+     def index():
+         return render_template('index.html')
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+     @app.route('/rsvp', methods=['POST'])
+     def rsvp():
+         name = request.form['name']
+         attending = request.form['attending']
+         # Here, you'd save the RSVP to a database or file
+         with open('rsvp.txt', 'a') as f:
+             f.write(f'{name} - Attending: {attending}\n')
+         return redirect('/thank-you')
 
-## Test and Deploy
+     @app.route('/thank-you')
+     def thank_you():
+         return 'Thank you for your RSVP!'
 
-Use the built-in continuous integration in GitLab.
+     if __name__ == '__main__':
+         app.run()
+     ```
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+#### 2. **Create the HTML Templates:**
+   - Create a `templates` directory and an `index.html` file for the invite form:
 
-***
+     ```bash
+     mkdir templates
+     nano templates/index.html
+     ```
 
-# Editing this README
+     Example content for `index.html`:
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+     ```html
+     <!DOCTYPE html>
+     <html lang="en">
+     <head>
+         <meta charset="UTF-8">
+         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+         <title>RSVP for the Event</title>
+     </head>
+     <body>
+         <h1>You're Invited!</h1>
+         <form action="/rsvp" method="POST">
+             <label for="name">Your Name:</label>
+             <input type="text" id="name" name="name" required><br><br>
+             <label for="attending">Will you attend?</label>
+             <input type="radio" id="yes" name="attending" value="yes" required>
+             <label for="yes">Yes</label>
+             <input type="radio" id="no" name="attending" value="no" required>
+             <label for="no">No</label><br><br>
+             <button type="submit">Submit RSVP</button>
+         </form>
+     </body>
+     </html>
+     ```
 
-## Suggestions for a good README
+#### 3. **Set Up uWSGI for the Flask App:**
+   - Create a `uwsgi` configuration file for this app:
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+     ```bash
+     nano /home/david/webserver/rsvp-site/rsvp-site.ini
+     ```
 
-## Name
-Choose a self-explaining name for your project.
+     Example content:
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+     ```ini
+     [uwsgi]
+     module = app:app
+     master = true
+     process = 5
+     socket = /home/david/webserver/rsvp-site/rsvp-site.sock
+     chmod-socket = 660
+     vacuum = true
+     die-on-term = true
+     ```
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+#### 4. **Configure Nginx for the Flask App:**
+   - Modify `/etc/nginx/sites-available/test-davidfwatson` to proxy requests to the new Flask app.
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+     Update the location block to use uWSGI for the Flask app:
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+     ```nginx
+     server {
+         server_name test.davidfwatson.com;
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+         location ~ /.well-known {
+             root /etc/letsencrypt/verification;
+         }
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+         listen 443 ssl; # managed by Certbot
+         location / {
+             include uwsgi_params;
+             uwsgi_pass unix:/home/david/webserver/rsvp-site/rsvp-site.sock;
+         }
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+         client_max_body_size 100M;
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+         ssl_certificate /etc/letsencrypt/live/test.davidfwatson.com/fullchain.pem; # managed by Certbot
+         ssl_certificate_key /etc/letsencrypt/live/test.davidfwatson.com/privkey.pem; # managed by Certbot
+         include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+         ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+     }
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+     server {
+         if ($host = test.davidfwatson.com) {
+             return 301 https://$host$request_uri;
+         } # managed by Certbot
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+         listen 80;
+         server_name test.davidfwatson.com;
+         return 404; # managed by Certbot
+     }
+     ```
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+#### 5. **Set Up a Systemd Service for the Flask App:**
+   - Create a new systemd service file to manage the `rsvp-site` Flask app.
 
-## License
-For open source projects, say how it is licensed.
+     ```bash
+     sudo nano /etc/systemd/system/rsvp-site.service
+     ```
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+     Example content:
+
+     ```ini
+     [Unit]
+     Description=uWSGI instance to serve rsvp-site
+     After=network.target
+
+     [Service]
+     User=david
+     Group=www-data
+     WorkingDirectory=/home/david/webserver/rsvp-site
+     ExecStart=/usr/local/bin/uwsgi --ini rsvp-site.ini
+
+     [Install]
+     WantedBy=multi-user.target
+     ```
+
+   - Reload systemd and start the service:
+
+     ```bash
+     sudo systemctl daemon-reload
+     sudo systemctl start rsvp-site
+     sudo systemctl enable rsvp-site
+     ```
+
+#### 6. **Test the Setup:**
+   - After starting the service, restart Nginx:
+     ```bash
+     sudo systemctl restart nginx
+     ```
+
+   - Visit `https://test.davidfwatson.com` and you should see your RSVP form. Submissions will be saved to a text file (`rsvp.txt`), or you can modify it to store the data in a database.
+
+---
+
+### Summary:
+- **Project Name**: `rsvp-site`
+- **Directory**: `/home/david/webserver/rsvp-site`
+- **Flask app**: Handles the form submission and RSVP storage
+- **Nginx**: Configured to proxy requests to the uWSGI instance running the Flask app
+- **Systemd Service**: Manages the uWSGI instance
+
+With these instructions saved, you can easily adapt this setup for other RSVP-style sites or expand it further as needed.

@@ -1,0 +1,93 @@
+/* General styling */
+body {
+  font-family: 'Helvetica', sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #ddd5b5; /* Updated to closer match the beige tone */
+}
+
+.invite-container {
+  width: 100%;
+  max-width: 600px;
+  margin: 50px auto;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  position: relative;
+  padding-bottom: 20px;
+}
+
+/* Envelope-style image */
+.envelope-background {
+  background: url('https://images.evite.com/images.postmark.com/envelope/red03/liners/env_red03_00.png') no-repeat center center;
+  background-size: cover;
+  height: 200px;
+  margin-bottom: 20px;
+  border-radius: 10px 10px 0 0;
+}
+
+.invite-text {
+  padding: 20px;
+  color: #333;
+}
+
+/* Typography */
+h1 {
+  font-family: 'Georgia', serif;
+  font-size: 2.5rem;
+  color: #4e3fa2; /* Updated to match the shade of purple/blue from the second screenshot */
+  margin-bottom: 20px;
+}
+
+/* Form styling */
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+label {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  display: block;
+  width: 100%;
+  text-align: left;
+  max-width: 400px;
+}
+
+input[type="text"] {
+  padding: 10px;
+  width: 80%;
+  font-size: 1rem;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+}
+
+input[type="radio"] {
+  margin-right: 5px;
+}
+
+.radio-group {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-around;
+  width: 80%;
+}
+
+/* Button Styling */
+button {
+  padding: 10px 20px;
+  font-size: 1.2rem;
+  color: white;
+  background-color: #4e3fa2;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #372f8b; /* Darker shade for hover effect */
+}

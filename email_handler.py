@@ -19,7 +19,19 @@ CREDENTIALS_FILE_PATH = "credentials.json"
 TOKEN_FILE_PATH = "token.pickle"
 
 def get_credentials():
-    # ... (same as before)
+    creds = None
+    if os.path.exists(TOKEN_FILE_PATH):
+        with open(TOKEN_FILE_PATH, 'rb') as token:
+            creds = pickle.load(token)
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE_PATH, SCOPES)
+            creds = flow.run_local_server(port=0)
+        with open(TOKEN_FILE_PATH, 'wb') as token:
+            pickle.dump(creds, token)
+    return creds
 
 def build_message(destination, subject, body, html_body=None):
     message = MIMEMultipart('alternative')
@@ -36,4 +48,13 @@ def build_message(destination, subject, body, html_body=None):
     return {'raw': urlsafe_b64encode(message.as_bytes()).decode()}
 
 def send_email(destination, subject, body, html_body=None):
-    # ... (same as before)
+    creds = get_credentials()
+    try:
+        service = build('gmail', 'v1', credentials=creds)
+        message = build_message(destination, subject, body, html_body)
+        sent_message = service.users().messages().send(userId="me", body=message).execute()
+        print(f"Message Id: {sent_message['id']}")
+        return True
+    except HttpError as error:
+        print(f'An error occurred: {error}')
+        return False

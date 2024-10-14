@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="/static/invitation.css">
+</head>
+<body>
+    <div class="admin-container">
+        <h1>Admin Dashboard</h1>
+        <h2>Events</h2>
+        <ul>
+            {% for event_id in events %}
+                <li><a href="{{ url_for('admin', event_id=event_id) }}">{{ event_id }}</a></li>
+            {% endfor %}
+        </ul>
+        <a href="{{ url_for('admin_logout') }}">Logout</a>
+    </div>
+</body>
+</html>

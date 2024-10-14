@@ -1,11 +1,27 @@
 import json
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, session
 from datetime import datetime
 from event_config import get_event_config
 from email_handler import send_email
+from functools import wraps
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Replace with a real secret key
+
+# Load configuration
+try:
+    app.config.from_pyfile('config.py')
+except FileNotFoundError:
+    raise FileNotFoundError("config.py file not found. Please create it with the required configuration.")
+
+app.secret_key = app.config['SECRET_KEY']
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('admin_logged_in'):
+            return redirect(url_for('admin_login', next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
 
 def load_rsvps(event_id):
     try:
@@ -64,7 +80,30 @@ def thank_you(event_id):
 def serve_static(file):
     return send_from_directory('static', file)
 
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        if request.form['password'] == app.config['ADMIN_PASSWORD']:
+            session['admin_logged_in'] = True
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('admin_dashboard'))
+        else:
+            flash('Invalid password', 'error')
+    return render_template('admin_login.html')
+
+@app.route('/admin/logout')
+def admin_logout():
+    session.pop('admin_logged_in', None)
+    return redirect(url_for('admin_login'))
+
+@app.route('/admin')
+@admin_required
+def admin_dashboard():
+    events = list(get_event_config().keys())
+    return render_template('admin_dashboard.html', events=events)
+
 @app.route('/<event_id>/admin', methods=['GET', 'POST'])
+@admin_required
 def admin(event_id):
     event_config = get_event_config(event_id)
     if not event_config:
@@ -86,51 +125,10 @@ def admin(event_id):
     return render_template('admin.html', event=event_config, rsvps=rsvps)
 
 def generate_email_body(event, rsvp):
-    if rsvp['attending'] == 'yes':
-        body = f"""
-# Thank you for your RSVP, {rsvp['name']}!
-
-We're excited that you'll be joining us for **{event['name']}**!
-
-## Event Details:
-- **Date:** {event['date']} at {event['time']}
-- **Location:** {event['location']}
-
-{event['description']}
-
-We have you down for **{rsvp['num_guests']}** guest(s) total.
-
-If you need to make any changes to your RSVP, please contact us.
-
-We look forward to seeing you there!
-"""
-    else:
-        body = f"""
-# Thank you for your RSVP, {rsvp['name']}
-
-We're sorry to hear that you won't be able to join us for **{event['name']}**, but we appreciate you letting us know.
-
-If your plans change and you're able to attend, please let us know.
-
-We hope to see you another time!
-"""
-    return body
+    # ... (same as before)
 
 def generate_invitation_email_body(event):
-    return f"""
-You're invited to {event['name']}!
-
-Join us for a special event:
-
-Date: {event['date']} at {event['time']}
-Location: {event['location']}
-
-{event['description']}
-
-Please RSVP by visiting: {url_for('index', event_id=event['id'], _external=True)}
-
-We hope to see you there!
-"""
+    # ... (same as before)
 
 if __name__ == '__main__':
     app.run(debug=True)

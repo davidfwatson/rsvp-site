@@ -1,8 +1,9 @@
 import json
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, session
 from datetime import datetime
-from event_config import get_event_config
+from event_config import get_event_config, get_all_events
 from email_handler import send_email
+from email_content import generate_confirmation_email_body, generate_invitation_email_body
 from functools import wraps
 
 app = Flask(__name__)
@@ -34,20 +35,20 @@ def save_rsvps(event_id, rsvps):
     with open(f'rsvps_{event_id}.json', 'w') as f:
         json.dump(rsvps, f, indent=2)
 
-@app.route('/<event_id>')
-def index(event_id):
-    event_config = get_event_config(event_id)
+@app.route('/')
+def index():
+    event_config = get_event_config(request.host)
     if not event_config:
         return "Event not found", 404
     return render_template('index.html', event=event_config)
 
-@app.route('/<event_id>/rsvp', methods=['POST'])
-def rsvp(event_id):
-    event_config = get_event_config(event_id)
+@app.route('/rsvp', methods=['POST'])
+def rsvp():
+    event_config = get_event_config(request.host)
     if not event_config:
         return "Event not found", 404
 
-    rsvps = load_rsvps(event_id)
+    rsvps = load_rsvps(event_config['id'])
     new_rsvp = {
         'timestamp': datetime.now().isoformat(),
         'name': request.form['name'],
@@ -56,18 +57,18 @@ def rsvp(event_id):
         'num_guests': int(request.form['num_guests']),
     }
     rsvps.append(new_rsvp)
-    save_rsvps(event_id, rsvps)
+    save_rsvps(event_config['id'], rsvps)
     
     # Send confirmation email
     subject = f"RSVP Confirmation for {event_config['name']}"
-    body = generate_email_body(event_config, new_rsvp)
+    body = generate_confirmation_email_body(event_config, new_rsvp)
     send_email(new_rsvp['email'], subject, body)
     
-    return redirect(url_for('thank_you', event_id=event_id, **new_rsvp))
+    return redirect(url_for('thank_you', **new_rsvp))
 
-@app.route('/<event_id>/thank-you')
-def thank_you(event_id):
-    event_config = get_event_config(event_id)
+@app.route('/thank-you')
+def thank_you():
+    event_config = get_event_config(request.host)
     if not event_config:
         return "Event not found", 404
 
@@ -99,13 +100,14 @@ def admin_logout():
 @app.route('/admin')
 @admin_required
 def admin_dashboard():
-    events = list(get_event_config().keys())
+    events = get_all_events()
     return render_template('admin_dashboard.html', events=events)
 
-@app.route('/<event_id>/admin', methods=['GET', 'POST'])
+@app.route('/admin/<event_id>', methods=['GET', 'POST'])
 @admin_required
 def admin(event_id):
-    event_config = get_event_config(event_id)
+    events = get_all_events()
+    event_config = next((event for event in events.values() if event['id'] == event_id), None)
     if not event_config:
         return "Event not found", 404
 
@@ -114,7 +116,7 @@ def admin(event_id):
     if request.method == 'POST':
         email = request.form['email']
         subject = f"RSVP Request for {event_config['name']}"
-        body = generate_invitation_email_body(event_config)
+        body = generate_invitation_email_body(event_config, request.host)
         html_body = render_template('email_invitation.html', event=event_config)
         
         if send_email(email, subject, body, html_body):
@@ -123,53 +125,6 @@ def admin(event_id):
             flash('Failed to send invitation.', 'error')
 
     return render_template('admin.html', event=event_config, rsvps=rsvps)
-
-def generate_email_body(event, rsvp):
-    if rsvp['attending'] == 'yes':
-        body = f"""
-# Thank you for your RSVP, {rsvp['name']}!
-
-We're excited that you'll be joining us for **{event['name']}**!
-
-## Event Details:
-- **Date:** {event['date']} at {event['time']}
-- **Location:** {event['location']}
-
-{event['description']}
-
-We have you down for **{rsvp['num_guests']}** guest(s) total.
-
-If you need to make any changes to your RSVP, please contact us.
-
-We look forward to seeing you there!
-"""
-    else:
-        body = f"""
-# Thank you for your RSVP, {rsvp['name']}
-
-We're sorry to hear that you won't be able to join us for **{event['name']}**, but we appreciate you letting us know.
-
-If your plans change and you're able to attend, please let us know.
-
-We hope to see you another time!
-"""
-    return body
-
-def generate_invitation_email_body(event):
-    return f"""
-You're invited to {event['name']}!
-
-Join us for a special event:
-
-Date: {event['date']} at {event['time']}
-Location: {event['location']}
-
-{event['description']}
-
-Please RSVP by visiting: {url_for('index', event_id=event['id'], _external=True)}
-
-We hope to see you there!
-"""
 
 if __name__ == '__main__':
     app.run(debug=True)

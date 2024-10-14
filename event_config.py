@@ -1,5 +1,6 @@
 events = {
-    "birthday_party": {
+    "test.davidfwatson.com": {
+        "id": "anita_6th",
         "name": "Anita's 6th Birthday Party",
         "date": "November, 2024",
         "time": "7:00 PM",
@@ -10,5 +11,9 @@ events = {
     # You can add more events here in the future
 }
 
-def get_event_config(event_id):
-    return events.get(event_id, {})
+
+def get_event_config(domain):
+    return events.get(domain, {})
+
+def get_all_events():
+    return events

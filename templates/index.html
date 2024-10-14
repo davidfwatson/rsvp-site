@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RSVP for the Birthday Party</title>
+    <title>RSVP for {{ event.name }}</title>
     <link rel="stylesheet" href="/static/invitation.css">
 </head>
 <body>
@@ -12,7 +12,11 @@
         <div class="invite-container">
             <div class="invite-text">
                 <h1>You're Invited!</h1>
-                <form action="/rsvp" method="POST">
+                <h2>{{ event.name }}</h2>
+                <p>Date: {{ event.date }} at {{ event.time }}</p>
+                <p>Location: {{ event.location }}</p>
+                <p>{{ event.description }}</p>
+                <form action="{{ url_for('rsvp', event_id=request.view_args['event_id']) }}" method="POST">
                     <label for="name">Your Name:</label>
                     <input type="text" id="name" name="name" required>
                     
@@ -23,6 +27,9 @@
                         <input type="radio" id="no" name="attending" value="no" required>
                         <label for="no">No</label>
                     </div>
+
+                    <label for="num_guests">Number of guests (including yourself):</label>
+                    <input type="number" id="num_guests" name="num_guests" min="1" max="{{ event.max_guests_per_invite }}" value="1" required>
                     
                     <button type="submit">Submit RSVP</button>
                 </form>

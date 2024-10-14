@@ -3,31 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RSVP for the Birthday Party</title>
-    <link rel="stylesheet" href="/static/invitation.css">
+    <title>RSVP Admin</title>
 </head>
 <body>
-    <div class="envelope-container">
-        <img src="/static/env_pink03_00.png" alt="Envelope" class="envelope-image">
-        <div class="invite-container">
-            <div class="invite-text">
-                <h1>You're Invited!</h1>
-                <form action="/rsvp" method="POST">
-                    <label for="name">Your Name:</label>
-                    <input type="text" id="name" name="name" required>
-                    
-                    <label for="attending">Will you attend?</label>
-                    <div class="radio-group">
-                        <input type="radio" id="yes" name="attending" value="yes" required>
-                        <label for="yes">Yes</label>
-                        <input type="radio" id="no" name="attending" value="no" required>
-                        <label for="no">No</label>
-                    </div>
-                    
-                    <button type="submit">Submit RSVP</button>
-                </form>
-            </div>
-        </div>
-    </div>
+    <h1>RSVP Responses</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Name</th>
+                <th>Attending</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rsvp in rsvps %}
+            <tr>
+                <td>{{ rsvp.timestamp }}</td>
+                <td>{{ rsvp.name }}</td>
+                <td>{{ rsvp.attending }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </body>
 </html>

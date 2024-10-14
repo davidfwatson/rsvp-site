@@ -11,8 +11,8 @@
         <h1>Admin Dashboard</h1>
         <h2>Events</h2>
         <ul>
-            {% for event_id in events %}
-                <li><a href="{{ url_for('admin', event_id=event_id) }}">{{ event_id }}</a></li>
+            {% for domain, event in events.items() %}
+                <li><a href="{{ url_for('admin', event_domain=domain) }}">{{ event['name'] }} ({{ domain }})</a></li>
             {% endfor %}
         </ul>
         <a href="{{ url_for('admin_logout') }}">Logout</a>

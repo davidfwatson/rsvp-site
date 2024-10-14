@@ -97,26 +97,26 @@ def admin_logout():
     session.pop('admin_logged_in', None)
     return redirect(url_for('admin_login'))
 
+
 @app.route('/admin')
 @admin_required
 def admin_dashboard():
     events = get_all_events()
     return render_template('admin_dashboard.html', events=events)
 
-@app.route('/admin/<event_id>', methods=['GET', 'POST'])
+@app.route('/admin/<path:event_domain>', methods=['GET', 'POST'])
 @admin_required
-def admin(event_id):
-    events = get_all_events()
-    event_config = next((event for event in events.values() if event['id'] == event_id), None)
+def admin(event_domain):
+    event_config = get_event_config(event_domain)
     if not event_config:
         return "Event not found", 404
 
-    rsvps = load_rsvps(event_id)
+    rsvps = load_rsvps(event_config['id'])
 
     if request.method == 'POST':
         email = request.form['email']
         subject = f"RSVP Request for {event_config['name']}"
-        body = generate_invitation_email_body(event_config, request.host)
+        body = generate_invitation_email_body(event_config, event_domain)
         html_body = render_template('email_invitation.html', event=event_config)
         
         if send_email(email, subject, body, html_body):

@@ -35,7 +35,7 @@ def get_credentials():
 def build_message(destination, subject, body, html_body=None):
     message = MIMEMultipart('alternative')
     message['to'] = destination
-    message['from'] = "your-email@gmail.com"  # Replace with your email
+    message['from'] = "davidfwatson@gmail.com"  # Replace with your email
     message['subject'] = subject
     
     message.attach(MIMEText(body, 'plain'))

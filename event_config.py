@@ -1,5 +1,5 @@
 events = {
-    "test.davidfwatson.com": {
+    "127.0.0.1:5000": {
         "id": "anita_6th",
         "name": "Anita's 6th Birthday Party",
         "date": "November, 2024",

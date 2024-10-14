@@ -2,18 +2,16 @@ import os
 import pickle
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
+from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from base64 import urlsafe_b64encode
 import markdown as md
-from flask import current_app
+from flask import current_app, url_for
 
-SCOPES = [
-    'https://www.googleapis.com/auth/gmail.send',
-]
+SCOPES = ['https://www.googleapis.com/auth/gmail.send']
 
 CREDENTIALS_FILE_PATH = "credentials.json"
 TOKEN_FILE_PATH = "token.pickle"
@@ -27,8 +25,21 @@ def get_credentials():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE_PATH, SCOPES)
-            creds = flow.run_local_server(port=0)
+            flow = Flow.from_client_secrets_file(
+                CREDENTIALS_FILE_PATH,
+                scopes=SCOPES,
+                redirect_uri=url_for('oauth2callback', _external=True)
+            )
+            auth_url, _ = flow.authorization_url(prompt='consent')
+            print(f"Please visit this URL to authorize the application: {auth_url}")
+            
+            # In a real application, you'd redirect the user to auth_url
+            # and handle the callback in the oauth2callback route
+            # For now, we'll use a simple input to simulate the process
+            code = input("Enter the authorization code: ")
+            flow.fetch_token(code=code)
+            creds = flow.credentials
+
         with open(TOKEN_FILE_PATH, 'wb') as token:
             pickle.dump(creds, token)
     return creds

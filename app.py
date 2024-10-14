@@ -2,9 +2,11 @@ import json
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, session
 from datetime import datetime
 from event_config import get_event_config, get_all_events
-from email_handler import send_email
+from email_handler import send_email, get_credentials
 from email_content import generate_confirmation_email_body, generate_invitation_email_body
 from functools import wraps
+from google_auth_oauthlib.flow import Flow
+import os
 
 app = Flask(__name__)
 
@@ -126,5 +128,27 @@ def admin(event_domain):
 
     return render_template('admin_event.html', event=event_config, rsvps=rsvps)
 
+
+@app.route('/oauth2callback')
+def oauth2callback():
+    # This route will handle the OAuth callback
+    flow = Flow.from_client_secrets_file(
+        'credentials.json',
+        scopes=['https://www.googleapis.com/auth/gmail.send'],
+        redirect_uri=url_for('oauth2callback', _external=True)
+    )
+    
+    flow.fetch_token(authorization_response=request.url)
+    credentials = flow.credentials
+    
+    # Save the credentials for future use
+    with open('token.pickle', 'wb') as token:
+        pickle.dump(credentials, token)
+    
+    flash('Successfully authenticated with Google', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # To allow OAuth on http://localhost
+    app.run(port=5000, debug=True)

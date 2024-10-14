@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSVP Admin</title>
+</head>
+<body>
+    <h1>RSVP Responses</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Name</th>
+                <th>Attending</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rsvp in rsvps %}
+            <tr>
+                <td>{{ rsvp.timestamp }}</td>
+                <td>{{ rsvp.name }}</td>
+                <td>{{ rsvp.attending }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

@@ -30,11 +30,13 @@ def rsvp():
     }
     rsvps.append(new_rsvp)
     save_rsvps(rsvps)
-    return redirect('/thank-you')
+    return redirect(f'/thank-you?name={new_rsvp["name"]}&attending={new_rsvp["attending"]}')
 
 @app.route('/thank-you')
 def thank_you():
-    return 'Thank you for your RSVP!'
+    name = request.args.get('name', 'Guest')
+    attending = request.args.get('attending', 'yes')
+    return render_template('thank_you.html', name=name, attending=attending)
 
 @app.route('/static/<file>')
 def serve_static(file):

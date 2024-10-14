@@ -7,6 +7,7 @@ from email_content import generate_confirmation_email_body, generate_invitation_
 from functools import wraps
 from google_auth_oauthlib.flow import Flow
 import os
+import pickle
 
 app = Flask(__name__)
 

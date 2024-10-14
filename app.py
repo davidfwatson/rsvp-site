@@ -124,7 +124,7 @@ def admin(event_domain):
         else:
             flash('Failed to send invitation.', 'error')
 
-    return render_template('admin.html', event=event_config, rsvps=rsvps)
+    return render_template('admin_event.html', event=event_config, rsvps=rsvps)
 
 if __name__ == '__main__':
     app.run(debug=True)

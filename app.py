@@ -1,10 +1,11 @@
 import json
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash
 from datetime import datetime
 from event_config import get_event_config
 from email_handler import send_email
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key'  # Replace with a real secret key
 
 def load_rsvps(event_id):
     try:
@@ -63,13 +64,25 @@ def thank_you(event_id):
 def serve_static(file):
     return send_from_directory('static', file)
 
-@app.route('/<event_id>/admin')
+@app.route('/<event_id>/admin', methods=['GET', 'POST'])
 def admin(event_id):
     event_config = get_event_config(event_id)
     if not event_config:
         return "Event not found", 404
 
     rsvps = load_rsvps(event_id)
+
+    if request.method == 'POST':
+        email = request.form['email']
+        subject = f"RSVP Request for {event_config['name']}"
+        body = generate_invitation_email_body(event_config)
+        html_body = render_template('email_invitation.html', event=event_config)
+        
+        if send_email(email, subject, body, html_body):
+            flash('Invitation sent successfully!', 'success')
+        else:
+            flash('Failed to send invitation.', 'error')
+
     return render_template('admin.html', event=event_config, rsvps=rsvps)
 
 def generate_email_body(event, rsvp):
@@ -102,6 +115,22 @@ If your plans change and you're able to attend, please let us know.
 We hope to see you another time!
 """
     return body
+
+def generate_invitation_email_body(event):
+    return f"""
+You're invited to {event['name']}!
+
+Join us for a special event:
+
+Date: {event['date']} at {event['time']}
+Location: {event['location']}
+
+{event['description']}
+
+Please RSVP by visiting: {url_for('index', event_id=event['id'], _external=True)}
+
+We hope to see you there!
+"""
 
 if __name__ == '__main__':
     app.run(debug=True)

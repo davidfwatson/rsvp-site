@@ -32,26 +32,25 @@ def get_credentials():
             pickle.dump(creds, token)
     return creds
 
-def build_message(destination, subject, body):
+def build_message(destination, subject, body, html_body=None):
     message = MIMEMultipart('alternative')
     message['to'] = destination
     message['from'] = "your-email@gmail.com"  # Replace with your email
     message['subject'] = subject
     
-    # Convert Markdown to HTML
-    html_body = md.markdown(body)
-    
-    # Attach both plain text and HTML versions
     message.attach(MIMEText(body, 'plain'))
-    message.attach(MIMEText(html_body, 'html'))
+    if html_body:
+        message.attach(MIMEText(html_body, 'html'))
+    else:
+        message.attach(MIMEText(md.markdown(body), 'html'))
     
     return {'raw': urlsafe_b64encode(message.as_bytes()).decode()}
 
-def send_email(destination, subject, body):
+def send_email(destination, subject, body, html_body=None):
     creds = get_credentials()
     try:
         service = build('gmail', 'v1', credentials=creds)
-        message = build_message(destination, subject, body)
+        message = build_message(destination, subject, body, html_body)
         sent_message = service.users().messages().send(userId="me", body=message).execute()
         print(f"Message Id: {sent_message['id']}")
         return True

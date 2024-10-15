@@ -39,3 +39,17 @@
   --button-hover-color: #b22222;
   --envelope-image: url('/static/env_red.png');
 }
+
+/* Black and white color scheme */
+.color-scheme-black {
+  --primary-color: #000000;
+  --secondary-color: #333333;
+  --background-color: #f5f5f5;
+  --text-color: #000000;
+  --heading-color: #000000;
+  --input-border-color: #333333;
+  --input-focus-color: #000000;
+  --button-color: #000000;
+  --button-hover-color: #333333;
+  --envelope-image: url('/static/env_black.png');
+}

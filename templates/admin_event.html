@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - {{ event.name }}</title>
-    <link rel="stylesheet" href="/static/invitation.css">
+    <link rel="stylesheet" href="/static/admin.css">
 </head>
 <body>
     <div class="admin-container">
@@ -35,6 +35,7 @@
                 <option value="pink" {% if event.color_scheme == 'pink' %}selected{% endif %}>Pink</option>
                 <option value="blue" {% if event.color_scheme == 'blue' %}selected{% endif %}>Blue</option>
                 <option value="red" {% if event.color_scheme == 'red' %}selected{% endif %}>Red</option>
+                <option value="black" {% if event.color_scheme == 'black' %}selected{% endif %}>Black</option>
             </select>
             
             <button type="submit" name="update_event">Update Event</button>

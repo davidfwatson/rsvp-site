@@ -3,17 +3,18 @@ body {
   margin: 0;
   padding: 0;
   background-color: var(--background-color);
-  display: flex;
-  justify-content: center;
-  align-items: center;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
+/* Adjust the envelope container for the new layout */
 .envelope-container {
-  position: relative;
   width: 100%;
   max-width: 800px;
-  padding-top: 75%;
+  padding-top: 60%; /* Reduced from 75% to make room for attendees section */
+  margin-bottom: 40px;
 }
 
 .envelope-image {
@@ -317,4 +318,57 @@ button:active {
   padding: 10px;
   border-radius: 4px;
   overflow-x: auto;
+}
+
+.attendees-container {
+  width: 90%;
+  max-width: 500px;
+  background-color: #fff;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  text-align: center;
+  margin: 40px auto;
+}
+
+.attendees-container h3 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 1.8rem;
+  color: var(--heading-color);
+  margin-bottom: 20px;
+}
+
+.attendees-list {
+  list-style-type: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.attendees-list li {
+  background-color: var(--secondary-color);
+  color: var(--text-color);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+}
+
+.attendees-list li::after {
+  content: attr(data-guest-info);
+  font-size: 0.8em;
+  margin-left: 5px;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  display: inline-block;
+}
+
+.attendees-list li:empty::after {
+  display: none;
 }

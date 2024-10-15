@@ -55,7 +55,17 @@ def index():
     # Convert Markdown description to HTML
     event_config['description_html'] = markdown.markdown(event_config['description'])
     
-    return render_template('index.html', event=event_config)
+    rsvps = load_rsvps(event_config['id'])
+    attendees = [
+            {
+                'first_name': rsvp['name'].split()[0],
+                'last_initial': rsvp['name'].split()[-1][0].upper(),
+            'guest_info': f" +{rsvp.get('num_guests', 1) - 1}" if rsvp.get('num_guests', 1) > 1 else ""
+            }
+            for rsvp in rsvps if rsvp.get('attending') == 'yes'
+        ]
+
+    return render_template('index.html', event=event_config, attendees=attendees)
 
 @app.route('/rsvp', methods=['POST'])
 def rsvp():

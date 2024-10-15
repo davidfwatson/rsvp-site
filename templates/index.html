@@ -18,7 +18,7 @@
                 <div class="event-details">
                     <p><strong>Date:</strong> {{ event.date }} at {{ event.time }}</p>
                     <p><strong>Location:</strong> {{ event.location }}</p>
-                    <div class="description">{{ event.description_html | safe }}</div>
+                    <div>{{ event.description_html | safe }}</div>
                 </div>
                 <form action="{{ url_for('rsvp', event_id=request.view_args['event_id']) }}" method="POST">
                     <div class="form-group">
@@ -42,7 +42,7 @@
                             </div>
                         </div>
                         <div class="guests-input" id="guestsInputContainer" style="display: none;">
-                            <label for="num_guests">Guests</label>
+                            <label for="num_guests">Extra Guests</label>
                             <input type="number" id="num_guests" name="num_guests" min="1" max="{{ event.max_guests_per_invite }}" value="1" required>
                         </div>
                     </div>

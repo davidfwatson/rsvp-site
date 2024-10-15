@@ -79,18 +79,19 @@ def rsvp():
     body = generate_confirmation_email_body(event_config, new_rsvp)
     send_email(new_rsvp['email'], subject, body)
     
-    return redirect(url_for('thank_you', **new_rsvp))
+    return redirect(url_for('thank_you', event_id=event_config['id'], **new_rsvp))
 
-@app.route('/thank-you')
-def thank_you():
-    event_config = get_event_config(request.host)
+@app.route('/<event_id>/thank-you')
+def thank_you(event_id):
+    events = get_all_events()
+    event_config = next((event for event in events.values() if event['id'] == event_id), None)
     if not event_config:
         return "Event not found", 404
-
-    name = request.args.get('name', 'Guest')
-    attending = request.args.get('attending', 'yes')
-    num_guests = request.args.get('num_guests', 1)
-    return render_template('thank_you.html', event=event_config, name=name, attending=attending, num_guests=num_guests)
+    
+    # Convert Markdown description to HTML
+    event_config['description_html'] = markdown.markdown(event_config['description'])
+    
+    return render_template('thank_you.html', event=event_config, **request.args)
 
 @app.route('/static/<path:file>')
 def serve_static(file):

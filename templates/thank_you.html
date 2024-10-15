@@ -4,40 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thank You for Your RSVP!</title>
+    <link rel="stylesheet" href="/static/color_schemes.css">
     <link rel="stylesheet" href="/static/invitation.css">
-    <style>
-        .thank-you-container {
-            text-align: center;
-            padding: 40px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            margin: 50px auto;
-        }
-        .thank-you-message {
-            font-size: 2rem;
-            color: #ff69b4;
-            margin-bottom: 20px;
-        }
-        .personalized-message {
-            font-size: 1.2rem;
-            margin-bottom: 30px;
-        }
-        .emoji {
-            font-size: 3rem;
-            margin-bottom: 20px;
-        }
-        .event-details {
-            margin-top: 30px;
-            font-size: 1rem;
-            text-align: left;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/thank_you.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="color-scheme-{{ event.color_scheme }}">
     <div class="envelope-container">
-        <img src="/static/env_pink.png" alt="Envelope" class="envelope-image">
+        <img src="{{ url_for('static', filename='env_' + event.color_scheme + '.png') }}" alt="Envelope" class="envelope-image">
         <div class="thank-you-container">
             <div class="emoji">
                 {% if attending == 'yes' %}
@@ -61,7 +35,7 @@
                 <h3>Event Details:</h3>
                 <p><strong>Date:</strong> {{ event.date }} at {{ event.time }}</p>
                 <p><strong>Location:</strong> {{ event.location }}</p>
-                <p>{{ event.description }}</p>
+                <div>{{ event.description_html | safe }}</div>
             </div>
             {% endif %}
             <a href="{{ url_for('index', event_id=request.view_args['event_id']) }}" class="button">Back to Event Page</a>

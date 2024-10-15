@@ -4,3 +4,4 @@ token.pickle
 config.py
 __pycache__/*
 event_config.json
+rsvps_*.json

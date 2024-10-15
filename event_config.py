@@ -22,16 +22,17 @@ def save_event_config(events):
 
 
 def create_default_event():
-  return [{
-      "domain": "test.davidfwatson.com",
-      "id": "anita_6th",
-      "name": "Anita's 6th Birthday Party",
-      "date": "November, 2024",
-      "time": "7:00 PM",
-      "location": "1787 Montecito Ave, Mountain View",
-      "description": "We're having grilled cheese and mac and cheese.",
-      "max_guests_per_invite": 5
-  }]
+    return [{
+        "domain": "test.davidfwatson.com",
+        "id": "anita_6th",
+        "name": "Anita's 6th Birthday Party",
+        "date": "November, 2024",
+        "time": "7:00 PM",
+        "location": "1787 Montecito Ave, Mountain View",
+        "description": "We're having grilled cheese and mac and cheese.",
+        "max_guests_per_invite": 5,
+        "color_scheme": "pink"  # Add default color scheme
+    }]
 
 
 events = load_event_config()
@@ -69,20 +70,22 @@ def update_event_config(domain, new_config):
 
 
 def add_new_event(domain, event_data):
-  event_id = str(uuid.uuid4())[:8]  # Generate a short unique ID
-  new_event = {
-      "domain": domain,
-      "id": event_id,
-      "name": event_data['name'],
-      "date": event_data['date'],
-      "time": event_data['time'],
-      "location": event_data['location'],
-      "description": event_data['description'],
-      "max_guests_per_invite": int(event_data['max_guests_per_invite'])
-  }
-  events.append(new_event)
-  save_event_config(events)
-  return event_id
+    event_id = str(uuid.uuid4())[:8]  # Generate a short unique ID
+    new_event = {
+        "domain": domain,
+        "id": event_id,
+        "name": event_data['name'],
+        "date": event_data['date'],
+        "time": event_data['time'],
+        "location": event_data['location'],
+        "description": event_data['description'],
+        "max_guests_per_invite": int(event_data['max_guests_per_invite']),
+        "color_scheme": event_data.get('color_scheme', 'pink')  # Add color scheme with default
+    }
+    events.append(new_event)
+    save_event_config(events)
+    return event_id
+
 
 
 # Debugging: Print the contents of events

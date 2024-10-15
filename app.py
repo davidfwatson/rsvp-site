@@ -154,7 +154,8 @@ def admin(event_domain):
                 "time": request.form['time'],
                 "location": request.form['location'],
                 "description": request.form['description'],
-                "max_guests_per_invite": int(request.form['max_guests_per_invite'])
+                "max_guests_per_invite": int(request.form['max_guests_per_invite']),
+                "color_scheme": request.form['color_scheme']  # Add color scheme
             }
             update_event_config(event_domain, new_config)
             flash('Event details updated successfully!', 'success')

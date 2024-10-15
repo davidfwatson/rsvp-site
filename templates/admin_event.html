@@ -30,6 +30,13 @@
             <label for="max_guests_per_invite">Max Guests per Invite:</label>
             <input type="number" id="max_guests_per_invite" name="max_guests_per_invite" value="{{ event.max_guests_per_invite }}" required>
             
+            <label for="color_scheme">Color Scheme:</label>
+            <select id="color_scheme" name="color_scheme" required>
+                <option value="pink" {% if event.color_scheme == 'pink' %}selected{% endif %}>Pink</option>
+                <option value="blue" {% if event.color_scheme == 'blue' %}selected{% endif %}>Blue</option>
+                <option value="red" {% if event.color_scheme == 'red' %}selected{% endif %}>Red</option>
+            </select>
+            
             <button type="submit" name="update_event">Update Event</button>
         </form>
 

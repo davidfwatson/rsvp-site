@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RSVP for {{ event.name }}</title>
+    <link rel="stylesheet" href="/static/color_schemes.css">
     <link rel="stylesheet" href="/static/invitation.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="color-scheme-{{ event.color_scheme }}">
     <div class="envelope-container">
-        <img src="/static/env_pink03_00.png" alt="Envelope" class="envelope-image">
+        <img src="{{ url_for('static', filename='env_' + event.color_scheme + '.png') }}" alt="Envelope" class="envelope-image">
         <div class="invite-container">
             <div class="invite-text">
                 <h1>You're Invited!</h1>

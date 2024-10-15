@@ -1,0 +1,41 @@
+/* Pink color scheme */
+.color-scheme-pink {
+  --primary-color: #ff69b4;
+  --secondary-color: #ffb6c1;
+  --background-color: #fff0f5;
+  --text-color: #333;
+  --heading-color: #ff69b4;
+  --input-border-color: #ffb6c1;
+  --input-focus-color: #ff69b4;
+  --button-color: #ff69b4;
+  --button-hover-color: #ff1493;
+  --envelope-image: url('/static/env_pink.png');
+}
+
+/* Blue color scheme */
+.color-scheme-blue {
+  --primary-color: #4169e1;
+  --secondary-color: #87cefa;
+  --background-color: #f0f8ff;
+  --text-color: #333;
+  --heading-color: #4169e1;
+  --input-border-color: #87cefa;
+  --input-focus-color: #4169e1;
+  --button-color: #4169e1;
+  --button-hover-color: #0000cd;
+  --envelope-image: url('/static/env_blue.png');
+}
+
+/* Red color scheme */
+.color-scheme-red {
+  --primary-color: #dc143c;
+  --secondary-color: #ff6347;
+  --background-color: #fff5f5;
+  --text-color: #333;
+  --heading-color: #dc143c;
+  --input-border-color: #ff6347;
+  --input-focus-color: #dc143c;
+  --button-color: #dc143c;
+  --button-hover-color: #b22222;
+  --envelope-image: url('/static/env_red.png');
+}

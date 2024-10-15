@@ -4,6 +4,7 @@ import pickle
 from datetime import datetime
 from functools import wraps
 import markdown
+import logging
 
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, session
 from google_auth_oauthlib.flow import Flow
@@ -87,7 +88,10 @@ def rsvp():
     # Send confirmation email
     subject = f"RSVP Confirmation for {event_config['name']}"
     body = generate_confirmation_email_body(event_config, new_rsvp)
-    send_email(new_rsvp['email'], subject, body)
+    try:
+      send_email(new_rsvp['email'], subject, body)
+    except Exception as e:
+      app.logger.error(f"Failed to send confirmation email: {e}")
     
     return redirect(url_for('thank_you', event_id=event_config['id'], **new_rsvp))
 

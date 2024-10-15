@@ -1,13 +1,15 @@
 import json
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, session
-from datetime import datetime
-from event_config import get_event_config, get_all_events, update_event_config
-from email_handler import send_email, get_credentials
-from email_content import generate_confirmation_email_body, generate_invitation_email_body
-from functools import wraps
-from google_auth_oauthlib.flow import Flow
 import os
 import pickle
+from datetime import datetime
+from functools import wraps
+
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, session
+from google_auth_oauthlib.flow import Flow
+
+from event_config import get_event_config, get_all_events, update_event_config, add_new_event
+from email_handler import send_email
+from email_content import generate_confirmation_email_body, generate_invitation_email_body
 
 app = Flask(__name__)
 
@@ -37,6 +39,11 @@ def load_rsvps(event_id):
 def save_rsvps(event_id, rsvps):
     with open(f'rsvps_{event_id}.json', 'w') as f:
         json.dump(rsvps, f, indent=2)
+
+@app.before_request
+def before_request():
+    app.logger.debug(f"Session: {session}")
+    app.logger.debug(f"Request path: {request.path}")
 
 @app.route('/')
 def index():
@@ -80,7 +87,7 @@ def thank_you():
     num_guests = request.args.get('num_guests', 1)
     return render_template('thank_you.html', event=event_config, name=name, attending=attending, num_guests=num_guests)
 
-@app.route('/static/<file>')
+@app.route('/static/<path:file>')
 def serve_static(file):
     return send_from_directory('static', file)
 
@@ -100,12 +107,32 @@ def admin_logout():
     session.pop('admin_logged_in', None)
     return redirect(url_for('admin_login'))
 
-
 @app.route('/admin')
 @admin_required
 def admin_dashboard():
     events = get_all_events()
     return render_template('admin_dashboard.html', events=events)
+
+@app.route('/admin/new_event', methods=['POST'])
+@admin_required
+def new_event():
+    if request.method == 'POST':
+        domain = request.form['domain']
+        event_data = {
+            'name': request.form['name'],
+            'date': request.form['date'],
+            'time': request.form['time'],
+            'location': request.form['location'],
+            'description': request.form['description'],
+            'max_guests_per_invite': request.form['max_guests_per_invite']
+        }
+        try:
+            add_new_event(domain, event_data)
+            flash('New event created successfully!', 'success')
+        except Exception as e:
+            flash(f'Error creating new event: {str(e)}', 'error')
+    return redirect(url_for('admin_dashboard'))
+
 
 @app.route('/admin/<path:event_domain>', methods=['GET', 'POST'])
 @admin_required
@@ -120,6 +147,7 @@ def admin(event_domain):
         if 'update_event' in request.form:
             # Update event configuration
             new_config = {
+                "domain": event_domain,  # Keep the original domain
                 "id": event_config['id'],  # Keep the original ID
                 "name": request.form['name'],
                 "date": request.form['date'],
@@ -145,7 +173,6 @@ def admin(event_domain):
 
     return render_template('admin_event.html', event=event_config, rsvps=rsvps, event_domain=event_domain)
 
-
 @app.route('/oauth2callback')
 def oauth2callback():
     # This route will handle the OAuth callback
@@ -164,7 +191,6 @@ def oauth2callback():
     
     flash('Successfully authenticated with Google', 'success')
     return redirect(url_for('admin_dashboard'))
-
 
 if __name__ == '__main__':
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # To allow OAuth on http://localhost

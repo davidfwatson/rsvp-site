@@ -269,3 +269,52 @@ button:active {
       width: 100%;
   }
 }
+
+.description {
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.description h1, .description h2, .description h3, .description h4, .description h5, .description h6 {
+  color: var(--heading-color);
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.description p {
+  margin-bottom: 10px;
+}
+
+.description ul, .description ol {
+  margin-left: 20px;
+  margin-bottom: 10px;
+}
+
+.description a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.description a:hover {
+  text-decoration: underline;
+}
+
+.description blockquote {
+  border-left: 4px solid var(--secondary-color);
+  padding-left: 15px;
+  margin-left: 0;
+  font-style: italic;
+}
+
+.description code {
+  background-color: #f4f4f4;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.description pre {
+  background-color: #f4f4f4;
+  padding: 10px;
+  border-radius: 4px;
+  overflow-x: auto;
+}

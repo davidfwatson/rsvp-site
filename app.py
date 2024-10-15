@@ -3,6 +3,7 @@ import os
 import pickle
 from datetime import datetime
 from functools import wraps
+import markdown
 
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, session
 from google_auth_oauthlib.flow import Flow
@@ -50,6 +51,10 @@ def index():
     event_config = get_event_config(request.host)
     if not event_config:
         return "Event not found", 404
+    
+    # Convert Markdown description to HTML
+    event_config['description_html'] = markdown.markdown(event_config['description'])
+    
     return render_template('index.html', event=event_config)
 
 @app.route('/rsvp', methods=['POST'])

@@ -18,7 +18,7 @@
                 <div class="event-details">
                     <p><strong>Date:</strong> {{ event.date }} at {{ event.time }}</p>
                     <p><strong>Location:</strong> {{ event.location }}</p>
-                    <p>{{ event.description }}</p>
+                    <div class="description">{{ event.description_html | safe }}</div>
                 </div>
                 <form action="{{ url_for('rsvp', event_id=request.view_args['event_id']) }}" method="POST">
                     <div class="form-group">

@@ -1,7 +1,7 @@
 import json
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, session
 from datetime import datetime
-from event_config import get_event_config, get_all_events
+from event_config import get_event_config, get_all_events, update_event_config
 from email_handler import send_email, get_credentials
 from email_content import generate_confirmation_email_body, generate_invitation_email_body
 from functools import wraps
@@ -117,17 +117,33 @@ def admin(event_domain):
     rsvps = load_rsvps(event_config['id'])
 
     if request.method == 'POST':
-        email = request.form['email']
-        subject = f"RSVP Request for {event_config['name']}"
-        body = generate_invitation_email_body(event_config, event_domain)
-        html_body = render_template('email_invitation.html', event=event_config)
-        
-        if send_email(email, subject, body, html_body):
-            flash('Invitation sent successfully!', 'success')
-        else:
-            flash('Failed to send invitation.', 'error')
+        if 'update_event' in request.form:
+            # Update event configuration
+            new_config = {
+                "id": event_config['id'],  # Keep the original ID
+                "name": request.form['name'],
+                "date": request.form['date'],
+                "time": request.form['time'],
+                "location": request.form['location'],
+                "description": request.form['description'],
+                "max_guests_per_invite": int(request.form['max_guests_per_invite'])
+            }
+            update_event_config(event_domain, new_config)
+            flash('Event details updated successfully!', 'success')
+            return redirect(url_for('admin', event_domain=event_domain))
+        elif 'send_invitation' in request.form:
+            # Existing invitation sending logic
+            email = request.form['email']
+            subject = f"RSVP Request for {event_config['name']}"
+            body = generate_invitation_email_body(event_config, event_domain)
+            html_body = render_template('email_invitation.html', event=event_config)
+            
+            if send_email(email, subject, body, html_body):
+                flash('Invitation sent successfully!', 'success')
+            else:
+                flash('Failed to send invitation.', 'error')
 
-    return render_template('admin_event.html', event=event_config, rsvps=rsvps)
+    return render_template('admin_event.html', event=event_config, rsvps=rsvps, event_domain=event_domain)
 
 
 @app.route('/oauth2callback')

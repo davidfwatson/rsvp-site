@@ -15,8 +15,6 @@ events = {
 # Mapping of alternative domains to main domains
 domain_aliases = {
     "127.0.0.1:5000": "test.davidfwatson.com",
-    # Add more aliases as needed, e.g.:
-    # "localhost:5000": "test.davidfwatson.com",
 }
 
 def get_event_config(domain):

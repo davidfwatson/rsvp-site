@@ -3,3 +3,4 @@ credentials.json
 token.pickle
 config.py
 __pycache__/*
+event_config.json

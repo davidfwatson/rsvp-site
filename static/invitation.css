@@ -6,6 +6,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
   align-items: center;
 }
 
@@ -368,4 +369,9 @@ button:active {
   .radio-group, .guests-input {
     width: 100%;
   }
+}
+
+* {
+  max-width: 100%;
+  box-sizing: border-box;
 }

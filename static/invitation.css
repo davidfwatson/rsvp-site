@@ -9,12 +9,12 @@ body {
   align-items: center;
 }
 
-/* Adjust the envelope container for the new layout */
 .envelope-container {
   width: 100%;
   max-width: 800px;
-  padding-top: 60%; /* Reduced from 75% to make room for attendees section */
-  margin-bottom: 40px;
+  padding-top: 60%;
+  position: relative;
+  margin-bottom: 20px;
 }
 
 .envelope-image {
@@ -28,10 +28,6 @@ body {
 }
 
 .invite-container {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   width: 90%;
   max-width: 500px;
   background-color: #fff;
@@ -39,6 +35,20 @@ body {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   padding: 40px;
   text-align: center;
+  margin: 0 auto 40px;
+  position: relative;
+  z-index: 2;
+}
+
+.attendees-container {
+  width: 90%;
+  max-width: 500px;
+  background-color: #fff;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  text-align: center;
+  margin: 0 auto 40px;
 }
 
 .invite-text {
@@ -142,32 +152,11 @@ button:active {
   transform: scale(0.98);
 }
 
-@media (max-width: 600px) {
-  .invite-container {
-    padding: 30px;
-  }
-
-  h1 {
-    font-size: 2rem;
-  }
-
-  h2 {
-    font-size: 1.2rem;
-  }
-}
-
-
 .attendance-group {
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-}
-
-.radio-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
 }
 
 .radio-options {
@@ -199,76 +188,6 @@ button:active {
 .guests-input input[type="number"] {
     width: 60px;
     padding: 8px;
-}
-
-@media (max-width: 480px) {
-    .attendance-group {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-
-    .radio-group, .guests-input {
-        width: 100%;
-    }
-}
-
-/* New styles to be added at the end of the existing CSS file */
-
-.attendance-group {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.radio-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.radio-options {
-  display: flex;
-  gap: 15px;
-}
-
-.radio-options label {
-  display: inline-flex;
-  align-items: center;
-  cursor: pointer;
-  margin: 0;
-}
-
-.radio-options input[type="radio"] {
-  margin-right: 5px;
-}
-
-.guests-input {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.guests-input label {
-  margin: 0;
-}
-
-.guests-input input[type="number"] {
-  width: 60px;
-  padding: 8px;
-}
-
-@media (max-width: 480px) {
-  .attendance-group {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 10px;
-  }
-
-  .radio-group, .guests-input {
-      width: 100%;
-  }
 }
 
 .description {
@@ -320,17 +239,6 @@ button:active {
   overflow-x: auto;
 }
 
-.attendees-container {
-  width: 90%;
-  max-width: 500px;
-  background-color: #fff;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  padding: 40px;
-  text-align: center;
-  margin: 40px auto;
-}
-
 .attendees-container h3 {
   font-family: 'Poppins', sans-serif;
   font-weight: 600;
@@ -371,4 +279,61 @@ button:active {
 
 .attendees-list li:empty::after {
   display: none;
+}
+
+@media (max-width: 768px) {
+  body {
+    padding-top: 60px;
+  }
+
+  .envelope-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding-top: 0;
+    z-index: 1;
+  }
+
+  .envelope-image {
+    object-fit: cover;
+  }
+
+  .invite-container,
+  .attendees-container {
+    position: relative;
+    z-index: 2;
+    background-color: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+  }
+}
+
+@media (max-width: 480px) {
+  .invite-container,
+  .attendees-container {
+    padding: 20px;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+  }
+
+  h2 {
+    font-size: 1.2rem;
+  }
+
+  .attendees-container h3 {
+    font-size: 1.5rem;
+  }
+
+  .attendance-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .radio-group, .guests-input {
+    width: 100%;
+  }
 }

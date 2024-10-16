@@ -12,7 +12,7 @@ body {
 .envelope-container {
   width: 100%;
   max-width: 800px;
-  padding-top: 30%;
+  padding-top: 40%;
   position: relative;
   margin-bottom: 20px;
 }
@@ -104,6 +104,7 @@ input[type="number"] {
   border-radius: 8px;
   border: 1px solid var(--input-border-color);
   transition: border-color 0.3s, box-shadow 0.3s;
+  box-sizing: border-box; /* Add this to include padding in width calculation */
 }
 
 input[type="text"]:focus,
@@ -289,18 +290,18 @@ button:active {
   }
 
   .envelope-container {
-    position: absolute;  /* Changed from fixed to absolute */
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: 100vh;  /* Use viewport height instead of 100% */
+    height: 100vh;
     padding-top: 0;
     z-index: 1;
   }
 
   .envelope-image {
     object-fit: cover;
-    position: fixed;  /* Fix the image to create a scrolling background effect */
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
@@ -309,15 +310,24 @@ button:active {
 
   .invite-container,
   .attendees-container {
+    width: 95%; /* Slightly increase width to give more space on small screens */
+    padding: 30px; /* Reduce padding to give more space for content */
     position: relative;
     z-index: 2;
-    background-color: rgba(255, 255, 255, 0.8);
+    background-color: rgba(255, 255, 255, 0.9);
     backdrop-filter: blur(10px);
     margin: 20px auto;
   }
 
   .invite-container {
-    margin-top: 20%;
+    margin-top: 60px;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="number"] {
+    font-size: 16px; /* Prevent zoom on focus in iOS */
+    padding: 10px; /* Slightly reduce padding for smaller screens */
   }
 }
 
@@ -337,6 +347,16 @@ button:active {
 
   .attendees-container h3 {
     font-size: 1.5rem;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="number"] {
+    padding: 8px; /* Further reduce padding for very small screens */
+  }
+
+  .form-group {
+    margin-bottom: 15px; /* Reduce margin between form groups */
   }
 
   .attendance-group {

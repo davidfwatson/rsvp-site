@@ -44,13 +44,13 @@
                         <div class="guests-input" id="guestsInputContainer" style="display: none;">
                           <div class="guest-count-input">
                               <label for="num_adults">Number of Adults</label>
-                              <input type="number" id="num_adults" name="num_adults" min="1" max="{{ event.max_guests_per_invite }}" value="1" required>
+                              <input type="number" id="num_adults" name="num_adults" min="1" value="1" required>
                           </div>
                           <div class="guest-count-input">
                               <label for="num_children">Number of Children</label>
-                              <input type="number" id="num_children" name="num_children" min="0" max="{{ event.max_guests_per_invite - 1 }}" value="0" required>
+                              <input type="number" id="num_children" name="num_children" min="0" value="0" required>
                           </div>
-                        </div>
+                      </div>
                     </div>
                     
                     <button type="submit">Submit RSVP</button>

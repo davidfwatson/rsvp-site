@@ -2,16 +2,19 @@ document.addEventListener('DOMContentLoaded', function() {
   const yesRadio = document.getElementById('yes');
   const noRadio = document.getElementById('no');
   const guestsInputContainer = document.getElementById('guestsInputContainer');
+  const dietaryContainer = document.getElementById('dietaryContainer');
   const numAdultsInput = document.getElementById('num_adults');
   const numChildrenInput = document.getElementById('num_children');
 
   function toggleGuestsInput() {
       if (yesRadio.checked) {
           guestsInputContainer.style.display = 'flex';
+          dietaryContainer.style.display = 'block';
           numAdultsInput.required = true;
           numChildrenInput.required = true;
       } else {
           guestsInputContainer.style.display = 'none';
+          dietaryContainer.style.display = 'none';
           numAdultsInput.required = false;
           numChildrenInput.required = false;
           numAdultsInput.value = '1';

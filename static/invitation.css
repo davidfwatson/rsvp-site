@@ -397,11 +397,13 @@ button:active {
 
 .dietary-restrictions {
   margin-top: 20px;
+  width: 100%;  /* Ensure the container takes full width */
 }
 
 .dietary-restrictions label {
   display: block;
   margin-bottom: 8px;
+  color: var(--text-color);
 }
 
 .optional-label {
@@ -411,7 +413,7 @@ button:active {
 }
 
 .dietary-restrictions textarea {
-  width: 100%;
+  width: 100%;  /* Make textarea take full width */
   padding: 12px;
   font-size: 1rem;
   border-radius: 8px;
@@ -419,6 +421,7 @@ button:active {
   transition: border-color 0.3s, box-shadow 0.3s;
   min-height: 100px;
   resize: vertical;
+  box-sizing: border-box;  /* Include padding in width calculation */
 }
 
 .dietary-restrictions textarea:focus {

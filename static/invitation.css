@@ -394,3 +394,35 @@ button:active {
   max-width: 100%;
   box-sizing: border-box;
 }
+
+.dietary-restrictions {
+  margin-top: 20px;
+}
+
+.dietary-restrictions label {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.optional-label {
+  color: #666;
+  font-size: 0.9em;
+  font-weight: normal;
+}
+
+.dietary-restrictions textarea {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--input-border-color);
+  transition: border-color 0.3s, box-shadow 0.3s;
+  min-height: 100px;
+  resize: vertical;
+}
+
+.dietary-restrictions textarea:focus {
+  outline: none;
+  border-color: var(--input-focus-color);
+  box-shadow: 0 0 0 2px rgba(var(--input-focus-color), 0.2);
+}

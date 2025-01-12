@@ -44,6 +44,12 @@
                 <div>{{ event.description_html | safe }}</div>
             </div>
             {% endif %}
+            {% if dietary_restrictions %}
+            <div class="dietary-notes">
+                <h4>Dietary Restrictions Noted:</h4>
+                <p>{{ dietary_restrictions }}</p>
+            </div>
+            {% endif %}
             <a href="{{ url_for('index', event_id=request.view_args['event_id']) }}" class="button">Back to Event Page</a>
         </div>
     </div>

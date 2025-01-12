@@ -116,19 +116,10 @@ def rsvp():
         'attending': request.form['attending'],
         'num_adults': int(request.form['num_adults']),
         'num_children': int(request.form['num_children']),
+        'dietary_restrictions': request.form.get('dietary_restrictions', ''),
     }
     rsvps.append(new_rsvp)
     save_rsvps(event_config['id'], rsvps)
-    
-    # Send confirmation email
-    subject = f"RSVP Confirmation for {event_config['name']}"
-    body = generate_confirmation_email_body(event_config, new_rsvp)
-    try:
-        send_email(new_rsvp['email'], subject, body)
-    except Exception as e:
-        app.logger.error(f"Failed to send confirmation email: {e}")
-    
-    return redirect(url_for('thank_you', event_id=event_config['id'], **new_rsvp))
 
 @app.route('/<event_id>/thank-you')
 def thank_you(event_id):

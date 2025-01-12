@@ -5,6 +5,9 @@ from datetime import datetime
 from functools import wraps
 import markdown
 import logging
+from export_rsvps import generate_rsvps_csv, get_csv_filename
+from flask import send_file
+from io import StringIO
 
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, session
 from google_auth_oauthlib.flow import Flow
@@ -41,6 +44,36 @@ def load_rsvps(event_id):
 def save_rsvps(event_id, rsvps):
     with open(f'rsvps_{event_id}.json', 'w') as f:
         json.dump(rsvps, f, indent=2)
+
+
+@app.route('/admin/<path:event_domain>/export')
+@admin_required
+def export_rsvps(event_domain):
+    event_config = get_event_config(event_domain)
+    if not event_config:
+        return "Event not found", 404
+        
+    rsvps = load_rsvps(event_config['id'])
+    csv_data = generate_rsvps_csv(rsvps)
+    
+    if not csv_data:
+        flash('No RSVPs to export', 'error')
+        return redirect(url_for('admin', event_domain=event_domain))
+    
+    # Create a StringIO object with the CSV data
+    si = StringIO()
+    si.write(csv_data)
+    si.seek(0)
+    
+    filename = get_csv_filename(event_config['name'])
+    
+    return send_file(
+        si,
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name=filename
+    )
+
 
 @app.before_request
 def before_request():

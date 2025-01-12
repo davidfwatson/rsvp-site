@@ -28,6 +28,21 @@ a:hover {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
+.button {
+  display: inline-block;
+  padding: 10px 15px;
+  background-color: #0066cc;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+  margin: 10px 0;
+}
+
+.button:hover {
+  background-color: #0052a3;
+}
+
 form {
   margin-bottom: 20px;
 }

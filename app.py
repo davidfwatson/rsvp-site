@@ -7,7 +7,7 @@ import markdown
 import logging
 from export_rsvps import generate_rsvps_csv, get_csv_filename
 from flask import send_file
-from io import StringIO
+from io import BytesIO
 
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, session
 from google_auth_oauthlib.flow import Flow
@@ -60,9 +60,8 @@ def export_rsvps(event_domain):
         flash('No RSVPs to export', 'error')
         return redirect(url_for('admin', event_domain=event_domain))
     
-    # Create a StringIO object with the CSV data
-    si = StringIO()
-    si.write(csv_data)
+    si = BytesIO()
+    si.write(csv_data.encode('utf-8-sig'))  # utf-8-sig adds BOM for Excel compatibility
     si.seek(0)
     
     filename = get_csv_filename(event_config['name'])

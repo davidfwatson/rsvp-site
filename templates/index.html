@@ -42,8 +42,14 @@
                             </div>
                         </div>
                         <div class="guests-input" id="guestsInputContainer" style="display: none;">
-                            <label for="num_guests">Guests including you</label>
-                            <input type="number" id="num_guests" name="num_guests" min="1" max="{{ event.max_guests_per_invite }}" value="1" required>
+                          <div class="guest-count-input">
+                              <label for="num_adults">Number of Adults</label>
+                              <input type="number" id="num_adults" name="num_adults" min="1" max="{{ event.max_guests_per_invite }}" value="1" required>
+                          </div>
+                          <div class="guest-count-input">
+                              <label for="num_children">Number of Children</label>
+                              <input type="number" id="num_children" name="num_children" min="0" max="{{ event.max_guests_per_invite - 1 }}" value="0" required>
+                          </div>
                         </div>
                     </div>
                     

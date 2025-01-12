@@ -24,12 +24,18 @@
             <p class="personalized-message">
                 {% if attending == 'yes' %}
                 We're thrilled that you'll be joining us for {{ event.name }}!
-                We can't wait to see you and your {{ num_guests }} guest(s) there and share this special moment together.
+                {% set total_guests = num_adults|int + num_children|int %}
+                {% if total_guests > 1 %}
+                    We can't wait to see you and your 
+                    {% if num_adults|int > 1 %}{{ num_adults|int - 1 }} additional adult{% if num_adults|int > 2 %}s{% endif %}{% endif %}
+                    {% if num_adults|int > 1 and num_children|int > 0 %}and {% endif %}
+                    {% if num_children|int > 0 %}{{ num_children }} child{% if num_children|int > 1 %}ren{% endif %}{% endif %}
+                    there and share this special moment together.
                 {% else %}
-                We're sorry you won't be able to make it to {{ event.name }}, but we appreciate you letting us know.
-                You'll be missed, and we hope to see you soon!
+                    We can't wait to see you there and share this special moment together.
                 {% endif %}
-            </p>
+                {% else %}
+                          </p>
             {% if attending == 'yes' %}
             <div class="event-details">
                 <h3>Event Details:</h3>

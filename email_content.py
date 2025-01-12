@@ -2,6 +2,10 @@ from flask import url_for
 
 def generate_confirmation_email_body(event, rsvp):
     if rsvp['attending'] == 'yes':
+        guest_details = f"{rsvp['num_adults']} adult{'s' if rsvp['num_adults'] != 1 else ''}"
+        if rsvp['num_children'] > 0:
+            guest_details += f" and {rsvp['num_children']} child{'ren' if rsvp['num_children'] != 1 else ''}"
+            
         body = f"""
 # Thank you for your RSVP, {rsvp['name']}!
 
@@ -13,7 +17,7 @@ We're excited that you'll be joining us for **{event['name']}**!
 
 {event['description']}
 
-We have you down for **{rsvp['num_guests']}** guest(s) total.
+We have you down for **{guest_details}**.
 
 If you need to make any changes to your RSVP, please contact us.
 

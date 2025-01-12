@@ -2,16 +2,20 @@ document.addEventListener('DOMContentLoaded', function() {
   const yesRadio = document.getElementById('yes');
   const noRadio = document.getElementById('no');
   const guestsInputContainer = document.getElementById('guestsInputContainer');
-  const numGuestsInput = document.getElementById('num_guests');
+  const numAdultsInput = document.getElementById('num_adults');
+  const numChildrenInput = document.getElementById('num_children');
 
   function toggleGuestsInput() {
       if (yesRadio.checked) {
           guestsInputContainer.style.display = 'flex';
-          numGuestsInput.required = true;
+          numAdultsInput.required = true;
+          numChildrenInput.required = true;
       } else {
           guestsInputContainer.style.display = 'none';
-          numGuestsInput.required = false;
-          numGuestsInput.value = '1';
+          numAdultsInput.required = false;
+          numChildrenInput.required = false;
+          numAdultsInput.value = '1';
+          numChildrenInput.value = '0';
       }
   }
 

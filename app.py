@@ -90,13 +90,15 @@ def index():
     
     rsvps = load_rsvps(event_config['id'])
     attendees = [
-            {
-                'first_name': rsvp['name'].split()[0],
-                'last_initial': rsvp['name'].split()[-1][0].upper(),
-            'guest_info': f" +{rsvp.get('num_guests', 1) - 1}" if rsvp.get('num_guests', 1) > 1 else ""
-            }
-            for rsvp in rsvps if rsvp.get('attending') == 'yes'
-        ]
+        {
+            'first_name': rsvp['name'].split()[0],
+            'last_initial': rsvp['name'].split()[-1][0].upper(),
+            'guest_info': f" +{rsvp.get('num_adults', 1) + rsvp.get('num_children', 0) - 1}" 
+                if (rsvp.get('num_adults', 1) + rsvp.get('num_children', 0)) > 1 
+                else ""
+        }
+        for rsvp in rsvps if rsvp.get('attending') == 'yes'
+    ]
 
     return render_template('index.html', event=event_config, attendees=attendees)
 
@@ -112,7 +114,8 @@ def rsvp():
         'name': request.form['name'],
         'email': request.form['email'],
         'attending': request.form['attending'],
-        'num_guests': int(request.form['num_guests']),
+        'num_adults': int(request.form['num_adults']),
+        'num_children': int(request.form['num_children']),
     }
     rsvps.append(new_rsvp)
     save_rsvps(event_config['id'], rsvps)
@@ -121,9 +124,9 @@ def rsvp():
     subject = f"RSVP Confirmation for {event_config['name']}"
     body = generate_confirmation_email_body(event_config, new_rsvp)
     try:
-      send_email(new_rsvp['email'], subject, body)
+        send_email(new_rsvp['email'], subject, body)
     except Exception as e:
-      app.logger.error(f"Failed to send confirmation email: {e}")
+        app.logger.error(f"Failed to send confirmation email: {e}")
     
     return redirect(url_for('thank_you', event_id=event_config['id'], **new_rsvp))
 

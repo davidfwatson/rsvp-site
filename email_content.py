@@ -40,7 +40,7 @@ Location: {event['location']}
 
 {event['description']}
 
-Please RSVP by visiting: https://{host}
+Please RSVP by visiting: https://{host}/{event['slug']}
 
 We hope to see you there!
 """

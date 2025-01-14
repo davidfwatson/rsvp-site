@@ -6,3 +6,4 @@ __pycache__/*
 event_config.json
 rsvps_*.json
 .DS_Store
+*.py[cod]

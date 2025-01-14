@@ -1,5 +1,44 @@
 # rsvp-site
 
+### Get Started **
+
+#### 1. **Setup the venv for the project**
+First, make sure you're in your project directory:
+
+```bash
+cd rsvp-site
+```
+
+Create a new virtual environment:
+
+```bash
+python3 -m venv venv
+```
+
+Activate the virtual environment:
+
+```bash
+source venv/bin/activate
+```
+
+Install all the required packages from requirements.txt:
+
+```bash
+pip install -r requirements.txt
+```
+
+#### 2. **Add new requiements**
+Install the new packages, e.g.:
+
+```bash
+pip install unidecode pytest
+```
+
+Then update requirements.txt with the new packages:
+
+```bash
+pip freeze > requirements.txt
+```
 
 
 These were the original instructions I used to set up the site.

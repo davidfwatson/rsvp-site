@@ -116,3 +116,42 @@ a[href*="logout"] {
 a[href*="logout"]:hover {
   background-color: #d32f2f;
 }
+
+/* Event link container styles */
+.event-link-container {
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 30px;
+}
+
+.event-link-container h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.link-display {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.link-display input {
+  flex-grow: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: monospace;
+  background-color: #fff;
+}
+
+.copy-button {
+  white-space: nowrap;
+  padding: 8px 15px;
+  background-color: #28a745;
+}
+
+.copy-button:hover {
+  background-color: #218838;
+}

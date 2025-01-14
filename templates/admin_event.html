@@ -9,6 +9,14 @@
 <body>
     <div class="admin-container">
         <h1>Admin - {{ event.name }}</h1>
+
+        <div class="event-link-container">
+            <h3>Event RSVP Link</h3>
+            <div class="link-display">
+                <input type="text" value="https://{{ event_domain }}" readonly id="rsvpLink">
+                <button id="copyButton" class="copy-button">Copy Link</button>
+            </div>
+        </div>
         
         <h2>Edit Event Details</h2>
         <form method="POST">
@@ -50,17 +58,62 @@
 
         <h2>RSVP Responses</h2>
         <table>
-            <!-- ... (RSVP table remains the same) ... -->
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Response</th>
+                <th>Number of Guests</th>
+                <th>Timestamp</th>
+            </tr>
+            {% for rsvp in rsvps %}
+            <tr>
+                <td>{{ rsvp.name }}</td>
+                <td>{{ rsvp.email }}</td>
+                <td>{{ rsvp.attending }}</td>
+                <td>{{ rsvp.num_guests }}</td>
+                <td>{{ rsvp.timestamp }}</td>
+            </tr>
+            {% endfor %}
         </table>
-        
+
         <div style="margin: 20px 0;">
-          <a href="{{ url_for('export_rsvps', event_domain=event_domain) }}" class="button">
-              Export RSVPs to CSV
-          </a>
-        </div>
-      
-      
+            <a href="{{ url_for('export_rsvps', event_domain=event_domain) }}" class="button">
+                Export RSVPs to CSV
+            </a>
+          </div>
+
+
         <a href="{{ url_for('admin_dashboard') }}">Back to Admin Dashboard</a>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const copyButton = document.getElementById('copyButton');
+            const linkInput = document.getElementById('rsvpLink');
+
+            copyButton.addEventListener('click', async () => {
+                linkInput.select();
+                linkInput.setSelectionRange(0, 99999); // For mobile devices
+                
+                const originalText = copyButton.textContent;
+                
+                try {
+                    await navigator.clipboard.writeText(linkInput.value);
+                    copyButton.textContent = 'Copied!';
+                    copyButton.style.backgroundColor = '#28a745'; // Success green
+                } catch (err) {
+                    console.error('Failed to copy text: ', err);
+                    copyButton.textContent = 'Failed to copy';
+                    copyButton.style.backgroundColor = '#dc3545'; // Error red
+                }
+                
+                // Reset button after 2 seconds
+                setTimeout(() => {
+                    copyButton.textContent = originalText;
+                    copyButton.style.backgroundColor = '';
+                }, 2000);
+            });
+        });
+    </script>
 </body>
 </html>

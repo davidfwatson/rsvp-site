@@ -79,9 +79,10 @@ def before_request():
     app.logger.debug(f"Session: {session}")
     app.logger.debug(f"Request path: {request.path}")
 
-@app.route('/')
-def index():
-    event_config = get_event_config(request.host)
+@app.route('/<slug>')
+def event_page(slug):
+    app.logger.info(f"Attempting to load event with slug: {slug}")
+    event_config = get_event_config(slug)
     if not event_config:
         return "Event not found", 404
     
@@ -101,6 +102,11 @@ def index():
     ]
 
     return render_template('index.html', event=event_config, attendees=attendees)
+
+# Modify the index route to handle both domain and slug
+@app.route('/')
+def index():
+    return event_page(request.host)
 
 @app.route('/rsvp', methods=['POST'])
 def rsvp():

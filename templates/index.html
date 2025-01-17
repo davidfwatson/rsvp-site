@@ -20,7 +20,7 @@
                     <p><strong>Location:</strong> {{ event.location }}</p>
                     <div>{{ event.description_html | safe }}</div>
                 </div>
-                <form action="{{ url_for('rsvp', slug=slug) }}" method="POST">
+                <form action="{{ url_for('rsvp', slug=event.slug) }}" method="POST">
                     <div class="form-group">
                         <label for="name">Your Name</label>
                         <input type="text" id="name" name="name" required>

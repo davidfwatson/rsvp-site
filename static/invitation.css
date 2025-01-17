@@ -309,7 +309,6 @@ button:active {
   .envelope-container {
     position: relative;
     width: 100%;
-    min-height: 100vh;
     padding-top: 180px;
     z-index: 1;
     display: flex;

@@ -13,7 +13,7 @@ body {
 .envelope-container {
   width: 100%;
   max-width: 800px;
-  padding-top: 40%;
+  padding-top: 300px;
   position: relative;
   margin-bottom: 20px;
 }
@@ -36,7 +36,7 @@ body {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   padding: 40px;
   text-align: center;
-  margin: -100px auto 40px;
+  margin: -60px auto 40px;
   position: relative;
   z-index: 2;
 }
@@ -105,7 +105,7 @@ input[type="number"] {
   border-radius: 8px;
   border: 1px solid var(--input-border-color);
   transition: border-color 0.3s, box-shadow 0.3s;
-  box-sizing: border-box; /* Add this to include padding in width calculation */
+  box-sizing: border-box;
 }
 
 input[type="text"]:focus,
@@ -199,24 +199,17 @@ button:active {
   padding: 8px;
 }
 
-@media (max-width: 480px) {
-  .guest-count-input {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 5px;
-  }
-  
-  .guest-count-input input[type="number"] {
-      width: 100%;
-  }
-}
-
 .description {
   text-align: left;
   margin-bottom: 20px;
 }
 
-.description h1, .description h2, .description h3, .description h4, .description h5, .description h6 {
+.description h1,
+.description h2,
+.description h3,
+.description h4,
+.description h5,
+.description h6 {
   color: var(--heading-color);
   margin-top: 20px;
   margin-bottom: 10px;
@@ -226,7 +219,8 @@ button:active {
   margin-bottom: 10px;
 }
 
-.description ul, .description ol {
+.description ul,
+.description ol {
   margin-left: 20px;
   margin-bottom: 10px;
 }
@@ -316,7 +310,7 @@ button:active {
     position: relative;
     width: 100%;
     min-height: 100vh;
-    padding-top: 40px;
+    padding-top: 180px;
     z-index: 1;
     display: flex;
     flex-direction: column;
@@ -350,10 +344,10 @@ button:active {
   input[type="text"],
   input[type="email"],
   input[type="number"] {
-    font-size: 16px; /* Prevent zoom on focus in iOS */
-    padding: 10px; /* Slightly reduce padding for smaller screens */
+    font-size: 16px;
+    padding: 10px;
   }
-  }
+}
 
 @media (max-width: 480px) {
   .invite-container,
@@ -376,11 +370,11 @@ button:active {
   input[type="text"],
   input[type="email"],
   input[type="number"] {
-    padding: 8px; /* Further reduce padding for very small screens */
+    padding: 8px;
   }
 
   .form-group {
-    margin-bottom: 15px; /* Reduce margin between form groups */
+    margin-bottom: 15px;
   }
 
   .attendance-group {
@@ -389,7 +383,18 @@ button:active {
     gap: 10px;
   }
 
-  .radio-group, .guests-input {
+  .radio-group,
+  .guests-input {
+    width: 100%;
+  }
+
+  .guest-count-input {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .guest-count-input input[type="number"] {
     width: 100%;
   }
 }
@@ -401,7 +406,7 @@ button:active {
 
 .dietary-restrictions {
   margin-top: 20px;
-  width: 100%;  /* Ensure the container takes full width */
+  width: 100%;
 }
 
 .dietary-restrictions label {
@@ -417,7 +422,7 @@ button:active {
 }
 
 .dietary-restrictions textarea {
-  width: 100%;  /* Make textarea take full width */
+  width: 100%;
   padding: 12px;
   font-size: 1rem;
   border-radius: 8px;
@@ -425,7 +430,7 @@ button:active {
   transition: border-color 0.3s, box-shadow 0.3s;
   min-height: 100px;
   resize: vertical;
-  box-sizing: border-box;  /* Include padding in width calculation */
+  box-sizing: border-box;
 }
 
 .dietary-restrictions textarea:focus {

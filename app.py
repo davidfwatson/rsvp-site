@@ -108,8 +108,8 @@ def event_page(slug):
 def index():
     return event_page(request.host)
 
-@app.route('/rsvp', methods=['POST'])
-def rsvp():
+@app.route('/<slug>/rsvp', methods=['POST'])
+def rsvp(slug):
     event_config = get_event_config(request.host)
     if not event_config:
         return "Event not found", 404

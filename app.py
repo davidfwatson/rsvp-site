@@ -46,10 +46,10 @@ def save_rsvps(slug, rsvps):
         json.dump(rsvps, f, indent=2)
 
 
-@app.route('/admin/<path:event_domain>/export')
+@app.route('/admin/<path:slug>/export')
 @admin_required
-def export_rsvps(event_domain):
-    event_config = get_event_config(event_domain)
+def export_rsvps(slug):
+    event_config = get_event_config(slug)
     if not event_config:
         return "Event not found", 404
         
@@ -58,7 +58,7 @@ def export_rsvps(event_domain):
     
     if not csv_data:
         flash('No RSVPs to export', 'error')
-        return redirect(url_for('admin', event_domain=event_domain))
+        return redirect(url_for('admin', slug=slug))
     
     si = BytesIO()
     si.write(csv_data.encode('utf-8-sig'))  # utf-8-sig adds BOM for Excel compatibility
@@ -235,7 +235,7 @@ def admin(slug):
             else:
                 flash('Failed to send invitation.', 'error')
 
-    return render_template('admin_event.html', event=event_config, rsvps=rsvps, event_domain=event_domain)
+    return render_template('admin_event.html', event=event_config, rsvps=rsvps, slug=slug)
 
 @app.route('/oauth2callback')
 def oauth2callback():

@@ -13,7 +13,7 @@
         <div class="event-link-container">
             <h3>Event RSVP Link</h3>
             <div class="link-display">
-                <input type="text" value="https://{{ event_domain }}" readonly id="rsvpLink">
+                <input type="text" value="https://partymail.app/{{ event.slug }}" readonly id="rsvpLink">
                 <button id="copyButton" class="copy-button">Copy Link</button>
             </div>
         </div>
@@ -77,7 +77,7 @@
         </table>
 
         <div style="margin: 20px 0;">
-            <a href="{{ url_for('export_rsvps', event_domain=event_domain) }}" class="button">
+            <a href="{{ url_for('export_rsvps', slug=event.slug) }}" class="button">
                 Export RSVPs to CSV
             </a>
           </div>

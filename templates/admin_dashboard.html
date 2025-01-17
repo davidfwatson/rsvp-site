@@ -39,7 +39,7 @@
         <h2>Existing Events</h2>
         <ul>
             {% for domain, event in events.items() %}
-                <li><a href="{{ url_for('admin', event_domain=domain) }}">{{ event['name'] }} ({{ domain }})</a></li>
+                <li><a href="{{ url_for('admin', slug=event['slug']) }}">{{ event['name'] }} ({{ domain }})</a></li>
             {% endfor %}
         </ul>
         <a href="{{ url_for('admin_logout') }}">Logout</a>

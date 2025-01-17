@@ -53,7 +53,7 @@
                 <p>{{ dietary_restrictions }}</p>
             </div>
             {% endif %}
-            <a href="{{ url_for('index', event_id=request.view_args['event_id']) }}" class="button">Back to Event Page</a>
+            <a href="{{ url_for('index', slug=request.view_args['slug']) }}" class="button">Back to Event Page</a>
         </div>
     </div>
 </body>

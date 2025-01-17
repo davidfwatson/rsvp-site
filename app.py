@@ -34,15 +34,15 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def load_rsvps(event_id):
+def load_rsvps(slug):
     try:
-        with open(f'rsvps_{event_id}.json', 'r') as f:
+        with open(f'rsvps_{slug}.json', 'r') as f:
             return json.load(f)
     except FileNotFoundError:
         return []
 
-def save_rsvps(event_id, rsvps):
-    with open(f'rsvps_{event_id}.json', 'w') as f:
+def save_rsvps(slug, rsvps):
+    with open(f'rsvps_{slug}.json', 'w') as f:
         json.dump(rsvps, f, indent=2)
 
 
@@ -135,12 +135,12 @@ def rsvp():
     except Exception as e:
       app.logger.error(f"Failed to send confirmation email: {e}")
     
-    return redirect(url_for('thank_you', event_id=event_config['id'], **new_rsvp))
+    return redirect(url_for('thank_you', slug=event_config['slug'], **new_rsvp))
 
-@app.route('/<event_id>/thank-you')
-def thank_you(event_id):
+@app.route('/<slug>/thank-you')
+def thank_you(slug):
     events = get_all_events()
-    event_config = next((event for event in events.values() if event['id'] == event_id), None)
+    event_config = next((event for event in events.values() if event['slug'] == slug), None)
     if not event_config:
         return "Event not found", 404
     

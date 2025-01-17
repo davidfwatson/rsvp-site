@@ -135,7 +135,7 @@ def rsvp():
     except Exception as e:
       app.logger.error(f"Failed to send confirmation email: {e}")
     
-    return redirect(url_for(f'{event_config["slug"]}/thank-you', **new_rsvp))
+    return redirect(url_for('thank_you', slug=event_config['slug'], **new_rsvp))
 
 @app.route('/<slug>/thank-you')
 def thank_you(slug):

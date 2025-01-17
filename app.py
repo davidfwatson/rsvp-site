@@ -106,11 +106,11 @@ def event_page(slug):
 # Modify the index route to handle both domain and slug
 @app.route('/')
 def index():
-    return event_page(request.host)
+    return event_page("ariana4th")
 
 @app.route('/<slug>/rsvp', methods=['POST'])
 def rsvp(slug):
-    event_config = get_event_config(request.host)
+    event_config = get_event_config(slug)
     if not event_config:
         return "Event not found", 404
 
@@ -196,10 +196,10 @@ def new_event():
     return redirect(url_for('admin_dashboard'))
 
 
-@app.route('/admin/<path:event_domain>', methods=['GET', 'POST'])
+@app.route('/admin/<path:slug>', methods=['GET', 'POST'])
 @admin_required
-def admin(event_domain):
-    event_config = get_event_config(event_domain)
+def admin(slug):
+    event_config = get_event_config(slug)
     if not event_config:
         return "Event not found", 404
 
@@ -209,8 +209,9 @@ def admin(event_domain):
         if 'update_event' in request.form:
             # Update event configuration
             new_config = {
-                "domain": event_domain,  # Keep the original domain
+                "domain": "partymail.app",  # Keep the original domain
                 "id": event_config['id'],  # Keep the original ID
+                "slug": slug,
                 "name": request.form['name'],
                 "date": request.form['date'],
                 "time": request.form['time'],
@@ -219,14 +220,14 @@ def admin(event_domain):
                 "max_guests_per_invite": int(request.form['max_guests_per_invite']),
                 "color_scheme": request.form['color_scheme']  # Add color scheme
             }
-            update_event_config(event_domain, new_config)
+            update_event_config(slug, new_config)
             flash('Event details updated successfully!', 'success')
-            return redirect(url_for('admin', event_domain=event_domain))
+            return redirect(url_for('admin', slug=slug))
         elif 'send_invitation' in request.form:
             # Existing invitation sending logic
             email = request.form['email']
             subject = f"RSVP Request for {event_config['name']}"
-            body = generate_invitation_email_body(event_config, event_domain)
+            body = generate_invitation_email_body(event_config)
             html_body = render_template('email_invitation.html', event=event_config)
             
             if send_email(email, subject, body, html_body):

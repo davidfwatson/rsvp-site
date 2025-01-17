@@ -29,7 +29,7 @@ We look forward to seeing you there!
 """
     return body
 
-def generate_invitation_email_body(event, host):
+def generate_invitation_email_body(event):
     return f"""
 You're invited to {event['name']}!
 
@@ -40,7 +40,7 @@ Location: {event['location']}
 
 {event['description']}
 
-Please RSVP by visiting: https://{host}/{event['slug']}
+Please RSVP by visiting: https://partymail.app/{event['slug']}
 
 We hope to see you there!
 """

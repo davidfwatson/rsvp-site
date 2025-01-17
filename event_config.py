@@ -71,9 +71,9 @@ def get_existing_slugs():
     return {event.get('slug') for event in events if isinstance(event, dict)}
 
 
-def update_event_config(domain, new_config):
+def update_event_config(slug, new_config):
   for i, event in enumerate(events):
-    if isinstance(event, dict) and event.get('domain') == domain:
+    if isinstance(event, dict) and event.get('slug') == slug:
       events[i] = new_config
       save_event_config(events)
       return

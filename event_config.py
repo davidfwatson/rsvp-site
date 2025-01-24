@@ -3,108 +3,89 @@ import os
 import uuid
 from event_slug import generate_unique_slug
 
-EVENT_CONFIG_FILE = 'event_config.json'
+class EventConfig:
+    def __init__(self, config_file='event_config.json'):
+        self.config_file = config_file
+        self._events = self._load_config()
 
+    def _load_config(self):
+        if os.path.exists(self.config_file):
+            with open(self.config_file, 'r') as f:
+                data = json.load(f)
+                if isinstance(data, list) and all(isinstance(event, dict) for event in data):
+                    return data
+        return self._create_default_event()
 
-def load_event_config():
-  if os.path.exists(EVENT_CONFIG_FILE):
-    with open(EVENT_CONFIG_FILE, 'r') as f:
-      data = json.load(f)
-      # Ensure the loaded data is a list of dictionaries
-      if isinstance(data, list) and all(
-          isinstance(event, dict) for event in data):
-        return data
-  return []
+    def _save_config(self):
+        with open(self.config_file, 'w') as f:
+            json.dump(self._events, f, indent=2)
 
+    def _create_default_event(self):
+        return [{
+            "domain": "test.davidfwatson.com",
+            "id": "anita_6th",
+            "name": "Anita's 6th Birthday Party",
+            "date": "November, 2024",
+            "time": "7:00 PM",
+            "location": "1787 Montecito Ave, Mountain View",
+            "description": "We're having grilled cheese and mac and cheese.",
+            "max_guests_per_invite": 5,
+            "color_scheme": "pink"
+        }]
 
-def save_event_config(events):
-  with open(EVENT_CONFIG_FILE, 'w') as f:
-    json.dump(events, f, indent=2)
+    def get_event_config(self, domain_or_slug):
+        for event in self._events:
+            if isinstance(event, dict):
+                if event.get('domain') == domain_or_slug:
+                    return event
+                if event.get('slug') == domain_or_slug:
+                    return event
+        
+        if domain_or_slug.startswith(('127.0.0.1', 'localhost')):
+            return self._events[-1] if self._events else None
+            
+        return None
 
+    def get_all_events(self):
+        return {event['domain']: event for event in self._events if isinstance(event, dict)}
 
-def create_default_event():
-    return [{
-        "domain": "test.davidfwatson.com",
-        "id": "anita_6th",
-        "name": "Anita's 6th Birthday Party",
-        "date": "November, 2024",
-        "time": "7:00 PM",
-        "location": "1787 Montecito Ave, Mountain View",
-        "description": "We're having grilled cheese and mac and cheese.",
-        "max_guests_per_invite": 5,
-        "color_scheme": "pink"  # Add default color scheme
-    }]
+    def get_existing_slugs(self):
+        return {event.get('slug') for event in self._events if isinstance(event, dict)}
 
+    def update_event_config(self, slug, new_config):
+        for i, event in enumerate(self._events):
+            if isinstance(event, dict) and event.get('slug') == slug:
+                self._events[i] = new_config
+                self._save_config()
+                return
+        self._events.append(new_config)
+        self._save_config()
 
-events = load_event_config()
+    def add_new_event(self, domain, event_data):
+        event_id = str(uuid.uuid4())[:8]
+        slug = generate_unique_slug(event_data['name'], self.get_existing_slugs())
+        
+        new_event = {
+            "domain": domain,
+            "id": event_id,
+            "slug": slug,
+            "name": event_data['name'],
+            "date": event_data['date'],
+            "time": event_data['time'],
+            "location": event_data['location'],
+            "description": event_data['description'],
+            "max_guests_per_invite": int(event_data['max_guests_per_invite']),
+            "color_scheme": event_data.get('color_scheme', 'pink')
+        }
+        self._events.append(new_event)
+        self._save_config()
+        return event_id
 
-# Check if events is empty, if so, create the default event
-if not events:
-  events = create_default_event()
-  save_event_config(events)
+# Create a singleton instance
+_instance = EventConfig()
 
-def get_event_config(domain_or_slug):
-    # First try to find by domain
-    for event in events:
-        if isinstance(event, dict):
-            if event.get('domain') == domain_or_slug:
-                return event
-            # Then try to find by slug
-            if event.get('slug') == domain_or_slug:
-                return event
-    
-    # For local development
-    if domain_or_slug.startswith('127.0.0.1') or domain_or_slug.startswith('localhost'):
-        return events[-1] if events else None
-    
-    return None
-    
-
-def get_all_events():
-  return {event['domain']: event for event in events if isinstance(event, dict)}
-
-
-def get_existing_slugs():
-    """
-    Get a set of all existing slugs from the events.
-    """
-    return {event.get('slug') for event in events if isinstance(event, dict)}
-
-
-def update_event_config(slug, new_config):
-  for i, event in enumerate(events):
-    if isinstance(event, dict) and event.get('slug') == slug:
-      events[i] = new_config
-      save_event_config(events)
-      return
-  # If the event doesn't exist, add it
-  events.append(new_config)
-  save_event_config(events)
-
-
-def add_new_event(domain, event_data):
-    event_id = str(uuid.uuid4())[:8]
-    
-    # Generate unique slug for the event
-    existing_slugs = get_existing_slugs()
-    slug = generate_unique_slug(event_data['name'], existing_slugs)
-    
-    new_event = {
-        "domain": domain,
-        "id": event_id,
-        "slug": slug,  # Add the slug
-        "name": event_data['name'],
-        "date": event_data['date'],
-        "time": event_data['time'],
-        "location": event_data['location'],
-        "description": event_data['description'],
-        "max_guests_per_invite": int(event_data['max_guests_per_invite']),
-        "color_scheme": event_data.get('color_scheme', 'pink') # Add color scheme with default
-    }
-    events.append(new_event)
-    save_event_config(events)
-    return event_id
-
-
-# Debugging: Print the contents of events
-print("Current events:", events)
+# Export the instance methods as module-level functions
+get_event_config = _instance.get_event_config
+get_all_events = _instance.get_all_events
+update_event_config = _instance.update_event_config
+add_new_event = _instance.add_new_event

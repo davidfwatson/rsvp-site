@@ -140,6 +140,8 @@ def rsvp(slug):
 @app.route('/<slug>/thank-you')
 def thank_you(slug):
     events = get_all_events()
+    for event in events:
+        print(event.values())
     event_config = next((event for event in events.values() if event['slug'] == slug), None)
     if not event_config:
         return "Event not found", 404

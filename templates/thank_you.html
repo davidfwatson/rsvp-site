@@ -16,27 +16,31 @@
             <div class="emoji">
                 {% if attending == 'yes' %}
                 🎉
-                {% else %}
+                {% elif attending == 'no' %}
                 😢
+                {% else %}
+                🤷‍♂️
                 {% endif %}
             </div>
             <h1 class="thank-you-message">Thank You, {{ name }}!</h1>
             <p class="personalized-message">
                 {% if attending == 'yes' %}
-                We're thrilled that you'll be joining us for {{ event.name }}!
-                {% set total_guests = num_adults|int + num_children|int %}
-                {% if total_guests > 1 %}
-                    We can't wait to see you and your 
-                    {% if num_adults|int > 1 %}{{ num_adults|int - 1 }} additional adult{% if num_adults|int > 2 %}s{% endif %}{% endif %}
-                    {% if num_adults|int > 1 and num_children|int > 0 %}and {% endif %}
-                    {% if num_children|int > 0 %}{{ num_children }} child{% if num_children|int > 1 %}ren{% endif %}{% endif %}
-                    there and share this special moment together.
+                    We're thrilled that you'll be joining us for {{ event.name }}!
+                    {% set total_guests = num_adults|int + num_children|int %}
+                    {% if total_guests > 1 %}
+                        We can't wait to see you and your 
+                        {% if num_adults|int > 1 %}{{ num_adults|int - 1 }} additional adult{% if num_adults|int > 2 %}s{% endif %}{% endif %}
+                        {% if num_adults|int > 1 and num_children|int > 0 %}and {% endif %}
+                        {% if num_children|int > 0 %}{{ num_children }} child{% if num_children|int > 1 %}ren{% endif %}{% endif %}
+                        there and share this special moment together.
+                    {% else %}
+                        We can't wait to see you there and share this special moment together.
+                    {% endif %}
+                {% elif attending == 'no' %}
+                    We're sorry you won't be able to make it to {{ event.name }}, but we appreciate you letting us know.
+                    You'll be missed, and we hope to see you soon!
                 {% else %}
-                    We can't wait to see you there and share this special moment together.
-                {% endif %}
-                {% else %}
-                We're sorry you won't be able to make it to {{ event.name }}, but we appreciate you letting us know.
-                You'll be missed, and we hope to see you soon!
+                    Not sure how you managed to fill out the form without saying whether you're going or not. Please contact davidfwatson@gmail.com
                 {% endif %}
             </p>
             {% if attending == 'yes' %}

@@ -40,3 +40,20 @@ We hope to see you another time!
 """
 
   return body
+
+
+def generate_invitation_email_body(event):
+  return f"""
+You're invited to {event['name']}!
+
+Join us for a special event:
+
+Date: {event['date']} at {event['time']}
+Location: {event['location']}
+
+{event['description']}
+
+Please RSVP by visiting: https://partymail.app/{event['slug']}
+
+We hope to see you there!
+"""

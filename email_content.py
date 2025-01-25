@@ -27,20 +27,15 @@ If you need to make any changes to your RSVP, please contact us.
 
 We look forward to seeing you there!
 """
-    return body
+    else:
+        body = f"""
+# Thank you for your RSVP, {rsvp['name']}!
 
-def generate_invitation_email_body(event):
-    return f"""
-You're invited to {event['name']}!
+We're sorry you won't be able to join us for **{event['name']}**, but we appreciate you letting us know.
 
-Join us for a special event:
+If your plans change and you'd like to attend, please contact us.
 
-Date: {event['date']} at {event['time']}
-Location: {event['location']}
-
-{event['description']}
-
-Please RSVP by visiting: https://partymail.app/{event['slug']}
-
-We hope to see you there!
+We hope to see you another time!
 """
+    
+    return body

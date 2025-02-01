@@ -47,7 +47,7 @@ class EventConfig:
         return None
 
     def get_all_events(self):
-        return {event['domain']: event for event in self._events if isinstance(event, dict)}
+        return {event['slug']: event for event in self._events if isinstance(event, dict)}
 
     def get_existing_slugs(self):
         return {event.get('slug') for event in self._events if isinstance(event, dict)}

@@ -6,8 +6,10 @@ from functools import wraps
 import markdown
 import logging
 from export_rsvps import generate_rsvps_csv, get_csv_filename
-from flask import send_file
+from flask import send_file, Response
 from io import BytesIO
+from calendar_utils import generate_google_calendar_url, generate_ics_file
+from date_validation import validate_date_time
 
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, session
 from google_auth_oauthlib.flow import Flow
@@ -179,13 +181,25 @@ def admin_dashboard():
 def new_event():
     if request.method == 'POST':
         domain = request.form['domain']
+        
+        # Validate date and time
+        date_str = request.form['date']
+        time_str = request.form['time']
+        
+        is_valid, error_message = validate_date_time(date_str, time_str)
+        
+        if not is_valid:
+            flash(f'Error: {error_message}', 'error')
+            return redirect(url_for('admin_dashboard'))
+        
         event_data = {
             'name': request.form['name'],
-            'date': request.form['date'],
-            'time': request.form['time'],
+            'date': date_str,
+            'time': time_str,
             'location': request.form['location'],
             'description': request.form['description'],
-            'max_guests_per_invite': request.form['max_guests_per_invite']
+            'max_guests_per_invite': request.form['max_guests_per_invite'],
+            'color_scheme': request.form.get('color_scheme', 'pink')
         }
         try:
             add_new_event(domain, event_data)
@@ -206,14 +220,24 @@ def admin(slug):
 
     if request.method == 'POST':
         if 'update_event' in request.form:
+            # Validate date and time
+            date_str = request.form['date']
+            time_str = request.form['time']
+            
+            is_valid, error_message = validate_date_time(date_str, time_str)
+            
+            if not is_valid:
+                flash(f'Error: {error_message}', 'error')
+                return redirect(url_for('admin', slug=slug))
+                
             # Update event configuration
             new_config = {
                 "domain": "partymail.app",  # Keep the original domain
                 "id": event_config['id'],  # Keep the original ID
                 "slug": slug,
                 "name": request.form['name'],
-                "date": request.form['date'],
-                "time": request.form['time'],
+                "date": date_str,
+                "time": time_str,
                 "location": request.form['location'],
                 "description": request.form['description'],
                 "max_guests_per_invite": int(request.form['max_guests_per_invite']),
@@ -254,6 +278,32 @@ def oauth2callback():
     
     flash('Successfully authenticated with Google', 'success')
     return redirect(url_for('admin_dashboard'))
+
+@app.route('/<slug>/calendar/google')
+def generate_google_calendar_link(slug):
+    """Generate a Google Calendar event link"""
+    event_config = get_event_config(slug)
+    if not event_config:
+        return "Event not found", 404
+        
+    calendar_url = generate_google_calendar_url(event_config)
+    return redirect(calendar_url)
+
+@app.route('/<slug>/calendar/ics')
+def download_ics_file(slug):
+    """Generate and download an ICS file for Apple Calendar, Outlook, etc."""
+    event_config = get_event_config(slug)
+    if not event_config:
+        return "Event not found", 404
+        
+    ics_content = generate_ics_file(event_config)
+    
+    # Return ICS file
+    return Response(
+        ics_content,
+        mimetype="text/calendar",
+        headers={"Content-Disposition": f"attachment;filename={event_config['slug']}.ics"}
+    )
 
 if __name__ == '__main__':
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # To allow OAuth on http://localhost

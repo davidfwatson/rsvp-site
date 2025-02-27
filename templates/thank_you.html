@@ -49,6 +49,20 @@
                 <p><strong>Date:</strong> {{ event.date }} at {{ event.time }}</p>
                 <p><strong>Location:</strong> {{ event.location }}</p>
                 <div>{{ event.description_html | safe }}</div>
+                
+                <div class="calendar-buttons">
+                    <h4>Add to Calendar:</h4>
+                    <div class="calendar-options">
+                        <a href="{{ url_for('generate_google_calendar_link', slug=event.slug) }}" target="_blank" class="calendar-button google-calendar">
+                            <img src="{{ url_for('static', filename='google_calendar_icon.png') }}" alt="Google Calendar">
+                            Google Calendar
+                        </a>
+                        <a href="{{ url_for('download_ics_file', slug=event.slug) }}" class="calendar-button apple-calendar">
+                            <img src="{{ url_for('static', filename='apple_calendar_icon.png') }}" alt="Apple Calendar">
+                            Apple/Outlook Calendar
+                        </a>
+                    </div>
+                </div>
             </div>
             {% endif %}
             {% if dietary_restrictions %}

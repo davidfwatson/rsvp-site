@@ -1,6 +1,7 @@
 import json
 import os
 import pickle
+import re
 from datetime import datetime
 from functools import wraps
 import markdown
@@ -17,6 +18,7 @@ from google_auth_oauthlib.flow import Flow
 from event_config import get_event_config, get_all_events, update_event_config, add_new_event
 from email_handler import send_email
 from email_content import generate_confirmation_email_body, generate_invitation_email_body
+from notifications import notify_phone
 
 app = Flask(__name__)
 
@@ -115,6 +117,19 @@ def rsvp(slug):
     event_config = get_event_config(slug)
     if not event_config:
         return "Event not found", 404
+        
+    # Check honeypot field - if it's filled out, it's probably a bot
+    if request.form.get('website', ''):
+        # Silently redirect to thank you page without saving the RSVP
+        # This way bots don't know they were detected
+        bot_info = f"Bot detected: {request.form.get('name')} / {request.form.get('email')}"
+        app.logger.warning(f"Bot submission detected for event {event_config['name']}: {bot_info}")
+        
+        # Send phone notification about bot submission
+        notify_phone(f"BOT RSVP for {event_config['name']}: {bot_info}")
+        
+        return redirect(url_for('thank_you', slug=event_config['slug'], 
+                               attending=request.form.get('attending', 'no')))
 
     rsvps = load_rsvps(event_config['id'])
     new_rsvp = {
@@ -136,6 +151,10 @@ def rsvp(slug):
       send_email(new_rsvp['email'], subject, body)
     except Exception as e:
       app.logger.error(f"Failed to send confirmation email: {e}")
+    
+    # Notify about legitimate RSVP
+    rsvp_info = f"{new_rsvp['name']} / {new_rsvp['attending']}"
+    notify_phone(f"New RSVP for {event_config['name']}: {rsvp_info}")
     
     return redirect(url_for('thank_you', slug=event_config['slug'], **new_rsvp))
 

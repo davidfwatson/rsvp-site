@@ -439,3 +439,7 @@ button:active {
   border-color: var(--input-focus-color);
   box-shadow: 0 0 0 2px rgba(var(--input-focus-color), 0.2);
 }
+
+.hidden {
+  display: none;
+}

@@ -6,7 +6,8 @@ from event_config import (
     add_new_event,
     get_event_config,
     events,
-    save_event_config
+    save_event_config,
+    _instance
 )
 
 # Test data
@@ -123,7 +124,8 @@ def test_get_event_config_localhost(mock_events):
 
 def test_save_event_config(temp_json_file, mock_events):
     """Test saving events to JSON file"""
-    with patch('event_config.EVENT_CONFIG_FILE', temp_json_file):
+    # Temporarily change the config file of the singleton instance
+    with patch.object(_instance, 'config_file', temp_json_file):
         save_event_config(mock_events)
         
         # Read the file and verify contents

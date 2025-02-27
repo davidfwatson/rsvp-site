@@ -89,3 +89,14 @@ get_event_config = _instance.get_event_config
 get_all_events = _instance.get_all_events
 update_event_config = _instance.update_event_config
 add_new_event = _instance.add_new_event
+get_existing_slugs = _instance.get_existing_slugs
+
+# Define save_event_config for testing
+def save_event_config(events_list):
+    global events
+    _instance._events = events_list
+    events = _instance._events
+    _instance._save_config()
+
+# Export events list for testing
+events = _instance._events

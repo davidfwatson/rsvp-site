@@ -42,12 +42,21 @@ def load_rsvps(slug):
     try:
         with open(f'rsvps_{slug}.json', 'r') as f:
             return json.load(f)
-    except FileNotFoundError:
+    except (FileNotFoundError, json.JSONDecodeError):
         return []
 
 def save_rsvps(slug, rsvps):
-    with open(f'rsvps_{slug}.json', 'w') as f:
+    # Write to temp file first, then atomically rename to avoid data loss
+    temp_file = f'rsvps_{slug}.json.tmp'
+    target_file = f'rsvps_{slug}.json'
+
+    with open(temp_file, 'w') as f:
         json.dump(rsvps, f, indent=2)
+        f.flush()
+        os.fsync(f.fileno())  # Ensure data is written to disk
+
+    # Atomic rename - if this succeeds, we never have a corrupt/empty file
+    os.replace(temp_file, target_file)
 
 
 @app.route('/admin/<path:slug>/export')

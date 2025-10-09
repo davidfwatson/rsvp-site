@@ -208,6 +208,19 @@ def admin_dashboard():
 @admin_required
 def new_event():
     if request.method == 'POST':
+        # Validate event name
+        event_name = request.form.get('name', '').strip()
+        if not event_name:
+            flash('Error: Event name cannot be empty', 'error')
+            return redirect(url_for('admin_dashboard'))
+
+        # Check for duplicate event names
+        existing_events = get_all_events()
+        for slug, event in existing_events.items():
+            if event['name'].lower() == event_name.lower():
+                flash(f'Error: An event named "{event_name}" already exists', 'error')
+                return redirect(url_for('admin_dashboard'))
+
         # Validate date and time
         date_str = request.form['date']
         time_str = request.form['time']
@@ -219,7 +232,7 @@ def new_event():
             return redirect(url_for('admin_dashboard'))
 
         event_data = {
-            'name': request.form['name'],
+            'name': event_name,
             'date': date_str,
             'time': time_str,
             'location': request.form['location'],

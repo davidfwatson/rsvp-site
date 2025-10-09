@@ -14,6 +14,7 @@
         <form action="{{ url_for('new_event') }}" method="POST">
             <label for="name">Event Name:</label>
             <input type="text" id="name" name="name" required>
+            <div id="nameValidation" class="validation-message" style="display: none;"></div>
             <div class="slug-preview">
                 <small>URL will be: <strong>partymail.app/<span id="slugPreview"></span></strong></small>
             </div>
@@ -48,6 +49,13 @@
     </div>
 
     <script>
+        // Existing event names for validation
+        const existingEventNames = [
+            {% for slug, event in events.items() %}
+                "{{ event['name'] | lower }}",
+            {% endfor %}
+        ];
+
         // Generate slug preview as user types
         function generateSlug(name) {
             // Convert to lowercase
@@ -71,10 +79,32 @@
         document.addEventListener('DOMContentLoaded', function() {
             const nameInput = document.getElementById('name');
             const slugPreview = document.getElementById('slugPreview');
+            const nameValidation = document.getElementById('nameValidation');
+            const submitButton = document.querySelector('button[type="submit"]');
 
             nameInput.addEventListener('input', function() {
-                const slug = generateSlug(this.value);
+                const name = this.value.trim();
+                const slug = generateSlug(name);
                 slugPreview.textContent = slug || '...';
+
+                // Check for empty name
+                if (name === '') {
+                    nameValidation.textContent = '';
+                    nameValidation.style.display = 'none';
+                    submitButton.disabled = false;
+                }
+                // Check for duplicate names
+                else if (existingEventNames.includes(name.toLowerCase())) {
+                    nameValidation.textContent = '⚠️ An event with this name already exists';
+                    nameValidation.style.display = 'block';
+                    nameValidation.className = 'validation-message error';
+                    submitButton.disabled = true;
+                } else {
+                    nameValidation.textContent = '✓ Event name is available';
+                    nameValidation.style.display = 'block';
+                    nameValidation.className = 'validation-message success';
+                    submitButton.disabled = false;
+                }
 
                 // Highlight if slug is very long
                 if (slug.length > 40) {

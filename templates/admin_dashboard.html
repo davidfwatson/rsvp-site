@@ -12,12 +12,12 @@
         
         <h2>Create New Event</h2>
         <form action="{{ url_for('new_event') }}" method="POST">
-            <label for="domain">Domain:</label>
-            <input type="text" id="domain" name="domain" required>
-            
             <label for="name">Event Name:</label>
             <input type="text" id="name" name="name" required>
-            
+            <div class="slug-preview">
+                <small>URL will be: <strong>partymail.app/<span id="slugPreview"></span></strong></small>
+            </div>
+
             <label for="date">Date:</label>
             <input type="text" id="date" name="date" required>
             <small class="help-text">Use one of these formats: November 15, 2024 | 2024-11-15 | 11/15/2024</small>
@@ -40,11 +40,50 @@
 
         <h2>Existing Events</h2>
         <ul>
-            {% for domain, event in events.items() %}
-                <li><a href="{{ url_for('admin', slug=event['slug']) }}">{{ event['name'] }} ({{ domain }})</a></li>
+            {% for slug, event in events.items() %}
+                <li><a href="{{ url_for('admin', slug=event['slug']) }}">{{ event['name'] }} ({{ slug }})</a></li>
             {% endfor %}
         </ul>
         <a href="{{ url_for('admin_logout') }}">Logout</a>
     </div>
+
+    <script>
+        // Generate slug preview as user types
+        function generateSlug(name) {
+            // Convert to lowercase
+            let slug = name.toLowerCase();
+
+            // Remove accents (basic ASCII conversion)
+            slug = slug.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+            // Remove non-alphanumeric characters (keep spaces and hyphens)
+            slug = slug.replace(/[^\w\s-]/g, '');
+
+            // Replace multiple spaces/hyphens with single hyphen
+            slug = slug.replace(/[-\s]+/g, '-');
+
+            // Remove leading/trailing hyphens
+            slug = slug.replace(/^-+|-+$/g, '');
+
+            return slug;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const nameInput = document.getElementById('name');
+            const slugPreview = document.getElementById('slugPreview');
+
+            nameInput.addEventListener('input', function() {
+                const slug = generateSlug(this.value);
+                slugPreview.textContent = slug || '...';
+
+                // Highlight if slug is very long
+                if (slug.length > 40) {
+                    slugPreview.style.color = '#ff6b6b';
+                } else {
+                    slugPreview.style.color = '';
+                }
+            });
+        });
+    </script>
 </body>
 </html>

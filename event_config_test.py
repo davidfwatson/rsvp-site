@@ -66,15 +66,15 @@ def test_add_new_event(mock_events):
         "max_guests_per_invite": "3",
         "color_scheme": "blue"
     }
-    
+
     with patch('uuid.uuid4', return_value=MagicMock(hex='12345678' * 4)):
-        event_id = add_new_event("test3.example.com", new_event_data)
-        
+        event_id = add_new_event(new_event_data)
+
         # Check if event was added
         added_event = next((e for e in events if e["id"] == event_id), None)
         assert added_event is not None
         assert added_event["slug"] == "summer-picnic"
-        assert added_event["domain"] == "test3.example.com"
+        assert added_event["domain"] == "partymail.app"
 
 def test_add_new_event_duplicate_slug(mock_events):
     """Test adding new event with duplicate slug"""
@@ -87,11 +87,11 @@ def test_add_new_event_duplicate_slug(mock_events):
         "max_guests_per_invite": "3",
         "color_scheme": "blue"
     }
-    
+
     with patch('uuid.uuid4', return_value=MagicMock(hex='12345678' * 4)):
         with patch('random.choices', return_value=['x', 'y', 'z', 'w']):
-            event_id = add_new_event("test3.example.com", new_event_data)
-            
+            event_id = add_new_event(new_event_data)
+
             # Check if event was added with modified slug
             added_event = next((e for e in events if e["id"] == event_id), None)
             assert added_event is not None

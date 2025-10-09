@@ -164,3 +164,27 @@ a[href*="logout"]:hover {
 .copy-button:hover {
   background-color: #218838;
 }
+
+/* Slug preview styles */
+.slug-preview {
+  margin-top: -5px;
+  margin-bottom: 15px;
+  padding: 8px 12px;
+  background-color: #f8f9fa;
+  border-left: 3px solid #0066cc;
+  border-radius: 3px;
+}
+
+.slug-preview small {
+  color: #666;
+  font-size: 0.9em;
+}
+
+.slug-preview strong {
+  color: #333;
+  font-family: monospace;
+}
+
+#slugPreview {
+  color: #0066cc;
+}

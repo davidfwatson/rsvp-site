@@ -61,12 +61,12 @@ class EventConfig:
         self._events.append(new_config)
         self._save_config()
 
-    def add_new_event(self, domain, event_data):
+    def add_new_event(self, event_data):
         event_id = str(uuid.uuid4())[:8]
         slug = generate_unique_slug(event_data['name'], self.get_existing_slugs())
-        
+
         new_event = {
-            "domain": domain,
+            "domain": "partymail.app",
             "id": event_id,
             "slug": slug,
             "name": event_data['name'],

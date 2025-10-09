@@ -199,18 +199,16 @@ def admin_dashboard():
 @admin_required
 def new_event():
     if request.method == 'POST':
-        domain = request.form['domain']
-        
         # Validate date and time
         date_str = request.form['date']
         time_str = request.form['time']
-        
+
         is_valid, error_message = validate_date_time(date_str, time_str)
-        
+
         if not is_valid:
             flash(f'Error: {error_message}', 'error')
             return redirect(url_for('admin_dashboard'))
-        
+
         event_data = {
             'name': request.form['name'],
             'date': date_str,
@@ -221,7 +219,7 @@ def new_event():
             'color_scheme': request.form.get('color_scheme', 'pink')
         }
         try:
-            add_new_event(domain, event_data)
+            add_new_event(event_data)
             flash('New event created successfully!', 'success')
         except Exception as e:
             flash(f'Error creating new event: {str(e)}', 'error')

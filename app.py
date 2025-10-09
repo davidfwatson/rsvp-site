@@ -116,10 +116,10 @@ def event_page(slug):
 
     return render_template('index.html', event=event_config, attendees=attendees)
 
-# Modify the index route to handle both domain and slug
+# Landing page route
 @app.route('/')
 def index():
-    return event_page("ariana4th")
+    return render_template('landing.html')
 
 @app.route('/<slug>/rsvp', methods=['POST'])
 def rsvp(slug):

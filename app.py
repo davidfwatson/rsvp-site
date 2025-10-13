@@ -233,6 +233,7 @@ def new_event():
 
         event_data = {
             'name': event_name,
+            'slug': request.form.get('slug', '').strip(),
             'date': date_str,
             'time': time_str,
             'location': request.form['location'],

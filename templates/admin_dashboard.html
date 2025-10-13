@@ -15,9 +15,12 @@
             <label for="name">Event Name:</label>
             <input type="text" id="name" name="name" required>
             <div id="nameValidation" class="validation-message" style="display: none;"></div>
+
             <div class="slug-preview">
-                <small>URL will be: <strong>partymail.app/<span id="slugPreview"></span></strong></small>
+                <small>URL will be: <strong>partymail.app/<input type="text" id="slugPreview" name="slug" class="slug-input" required></strong></small>
+                <button type="button" id="autoGenerateSlug" class="slug-auto-btn">↻ Auto</button>
             </div>
+            <div id="slugValidation" class="validation-message" style="display: none;"></div>
 
             <label for="date">Date:</label>
             <input type="text" id="date" name="date" required>
@@ -49,10 +52,16 @@
     </div>
 
     <script>
-        // Existing event names for validation
+        // Existing event names and slugs for validation
         const existingEventNames = [
             {% for slug, event in events.items() %}
                 "{{ event['name'] | lower }}",
+            {% endfor %}
+        ];
+
+        const existingSlugs = [
+            {% for slug, event in events.items() %}
+                "{{ slug }}",
             {% endfor %}
         ];
 
@@ -76,22 +85,89 @@
             return slug;
         }
 
+        // Validate slug format (alphanumeric and hyphens only)
+        function isValidSlugFormat(slug) {
+            // Must contain only lowercase letters, numbers, and hyphens
+            // Cannot start or end with a hyphen
+            return /^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug);
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const nameInput = document.getElementById('name');
-            const slugPreview = document.getElementById('slugPreview');
+            const slugInput = document.getElementById('slugPreview');
             const nameValidation = document.getElementById('nameValidation');
+            const slugValidation = document.getElementById('slugValidation');
             const submitButton = document.querySelector('button[type="submit"]');
+            const autoGenerateButton = document.getElementById('autoGenerateSlug');
 
-            nameInput.addEventListener('input', function() {
-                const name = this.value.trim();
+            let manualSlugEdit = false;
+
+            // Auto-generate slug from name
+            function updateSlugFromName() {
+                const name = nameInput.value.trim();
                 const slug = generateSlug(name);
-                slugPreview.textContent = slug || '...';
+                slugInput.value = slug || '';
+                validateSlug(slug);
+            }
+
+            // Validate slug
+            function validateSlug(slug) {
+                if (!slug) {
+                    slugValidation.textContent = '';
+                    slugValidation.style.display = 'none';
+                    slugInput.classList.remove('invalid');
+                    submitButton.disabled = true;
+                    return false;
+                }
+
+                // Check format
+                if (!isValidSlugFormat(slug)) {
+                    slugValidation.textContent = '⚠️ Slug must contain only lowercase letters, numbers, and hyphens (no spaces, no special characters)';
+                    slugValidation.style.display = 'block';
+                    slugValidation.className = 'validation-message error';
+                    slugInput.classList.add('invalid');
+                    submitButton.disabled = true;
+                    return false;
+                }
+
+                // Check for duplicates
+                if (existingSlugs.includes(slug)) {
+                    slugValidation.textContent = '⚠️ This slug is already in use';
+                    slugValidation.style.display = 'block';
+                    slugValidation.className = 'validation-message error';
+                    slugInput.classList.add('invalid');
+                    submitButton.disabled = true;
+                    return false;
+                }
+
+                // Check length
+                if (slug.length > 50) {
+                    slugValidation.textContent = '⚠️ Slug is too long (max 50 characters)';
+                    slugValidation.style.display = 'block';
+                    slugValidation.className = 'validation-message error';
+                    slugInput.classList.add('invalid');
+                    submitButton.disabled = true;
+                    return false;
+                }
+
+                // All good
+                slugValidation.textContent = '✓ Slug is valid';
+                slugValidation.style.display = 'block';
+                slugValidation.className = 'validation-message success';
+                slugInput.classList.remove('invalid');
+                return true;
+            }
+
+            // Validate name
+            function validateName() {
+                const name = nameInput.value.trim();
 
                 // Check for empty name
                 if (name === '') {
                     nameValidation.textContent = '';
                     nameValidation.style.display = 'none';
-                    submitButton.disabled = false;
+                    submitButton.disabled = true;
+                    return false;
                 }
                 // Check for duplicate names
                 else if (existingEventNames.includes(name.toLowerCase())) {
@@ -99,20 +175,50 @@
                     nameValidation.style.display = 'block';
                     nameValidation.className = 'validation-message error';
                     submitButton.disabled = true;
+                    return false;
                 } else {
                     nameValidation.textContent = '✓ Event name is available';
                     nameValidation.style.display = 'block';
                     nameValidation.className = 'validation-message success';
-                    submitButton.disabled = false;
+                    return true;
+                }
+            }
+
+            // Update submit button state
+            function updateSubmitButton() {
+                const nameValid = validateName();
+                const slugValid = validateSlug(slugInput.value);
+                submitButton.disabled = !(nameValid && slugValid);
+            }
+
+            // Name input handler
+            nameInput.addEventListener('input', function() {
+                validateName();
+
+                // Auto-generate slug if not manually edited
+                if (!manualSlugEdit) {
+                    updateSlugFromName();
                 }
 
-                // Highlight if slug is very long
-                if (slug.length > 40) {
-                    slugPreview.style.color = '#ff6b6b';
-                } else {
-                    slugPreview.style.color = '';
-                }
+                updateSubmitButton();
             });
+
+            // Slug input handler
+            slugInput.addEventListener('input', function() {
+                manualSlugEdit = true;
+                validateSlug(this.value);
+                updateSubmitButton();
+            });
+
+            // Auto-generate button handler
+            autoGenerateButton.addEventListener('click', function() {
+                manualSlugEdit = false;
+                updateSlugFromName();
+                updateSubmitButton();
+            });
+
+            // Initialize
+            updateSubmitButton();
         });
     </script>
 </body>

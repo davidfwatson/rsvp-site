@@ -127,9 +127,63 @@ def test_save_event_config(temp_json_file, mock_events):
     # Temporarily change the config file of the singleton instance
     with patch.object(_instance, 'config_file', temp_json_file):
         save_event_config(mock_events)
-        
+
         # Read the file and verify contents
         with open(temp_json_file, 'r') as f:
             saved_events = json.load(f)
             assert saved_events == SAMPLE_EVENTS
+
+def test_add_new_event_with_manual_slug(mock_events):
+    """Test adding new event with a manually specified slug"""
+    new_event_data = {
+        "name": "Tech Conference",
+        "slug": "techconf2024",
+        "date": "2024-09-01",
+        "time": "09:00",
+        "location": "Convention Center",
+        "description": "Annual tech conference",
+        "max_guests_per_invite": "1",
+        "color_scheme": "blue"
+    }
+
+    with patch('uuid.uuid4', return_value=MagicMock(hex='12345678' * 4)):
+        event_id = add_new_event(new_event_data)
+
+        # Check if event was added with the manual slug
+        added_event = next((e for e in events if e["id"] == event_id), None)
+        assert added_event is not None
+        assert added_event["slug"] == "techconf2024"
+        assert added_event["name"] == "Tech Conference"
+
+def test_add_new_event_with_invalid_manual_slug(mock_events):
+    """Test adding new event with an invalid manual slug"""
+    new_event_data = {
+        "name": "Tech Conference",
+        "slug": "Invalid Slug!",  # Contains spaces and special characters
+        "date": "2024-09-01",
+        "time": "09:00",
+        "location": "Convention Center",
+        "description": "Annual tech conference",
+        "max_guests_per_invite": "1",
+        "color_scheme": "blue"
+    }
+
+    with pytest.raises(ValueError, match="Invalid slug"):
+        add_new_event(new_event_data)
+
+def test_add_new_event_with_duplicate_manual_slug(mock_events):
+    """Test adding new event with a duplicate manual slug"""
+    new_event_data = {
+        "name": "Another Event",
+        "slug": "birthday-party",  # This slug already exists
+        "date": "2024-09-01",
+        "time": "09:00",
+        "location": "Convention Center",
+        "description": "Another event",
+        "max_guests_per_invite": "1",
+        "color_scheme": "blue"
+    }
+
+    with pytest.raises(ValueError, match="already in use"):
+        add_new_event(new_event_data)
 

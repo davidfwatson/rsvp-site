@@ -1,7 +1,7 @@
 import json
 import os
 import uuid
-from event_slug import generate_unique_slug
+from event_slug import generate_unique_slug, validate_slug
 
 class EventConfig:
     def __init__(self, config_file='event_config.json'):
@@ -63,7 +63,23 @@ class EventConfig:
 
     def add_new_event(self, event_data):
         event_id = str(uuid.uuid4())[:8]
-        slug = generate_unique_slug(event_data['name'], self.get_existing_slugs())
+
+        # Use manual slug if provided, otherwise auto-generate
+        if 'slug' in event_data and event_data['slug']:
+            slug = event_data['slug'].strip().lower()
+
+            # Validate slug format
+            is_valid, error_message = validate_slug(slug)
+            if not is_valid:
+                raise ValueError(f"Invalid slug: {error_message}")
+
+            # Check for duplicate slugs
+            existing_slugs = self.get_existing_slugs()
+            if slug in existing_slugs:
+                raise ValueError(f"Slug '{slug}' is already in use")
+        else:
+            # Auto-generate slug from name
+            slug = generate_unique_slug(event_data['name'], self.get_existing_slugs())
 
         new_event = {
             "domain": "partymail.app",

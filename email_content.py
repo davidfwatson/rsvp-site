@@ -1,4 +1,5 @@
 from flask import url_for
+from event_config import format_event_time
 
 
 def generate_confirmation_email_body(event, rsvp):
@@ -11,13 +12,14 @@ def generate_confirmation_email_body(event, rsvp):
     if rsvp.get('dietary_restrictions'):
       dietary_info = f"\n\nYou've noted the following dietary restrictions:\n{rsvp['dietary_restrictions']}"
 
+    event_time = format_event_time(event)
     body = f"""
 # Thank you for your RSVP, {rsvp['name']}!
 
 We're excited that you'll be joining us for **{event['name']}**!
 
 ## Event Details:
-- **Date:** {event['date']} at {event['time']}
+- **Date:** {event['date']} at {event_time}
 - **Location:** {event['location']}
 
 {event['description']}
@@ -43,12 +45,13 @@ We hope to see you another time!
 
 
 def generate_invitation_email_body(event):
+  event_time = format_event_time(event)
   return f"""
 You're invited to {event['name']}!
 
 Join us for a special event:
 
-Date: {event['date']} at {event['time']}
+Date: {event['date']} at {event_time}
 Location: {event['location']}
 
 {event['description']}

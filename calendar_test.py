@@ -16,9 +16,9 @@ def client():
 def test_parse_event_datetime_month_year():
     """Test parsing date in 'Month, Year' format."""
     date_str = "November, 2024"
-    time_str = "7:00 PM"
-    
-    start_date, end_date = parse_event_datetime(date_str, time_str)
+    start_time_str = "7:00 PM"
+
+    start_date, end_date = parse_event_datetime(date_str, start_time_str)
     
     assert start_date.year == 2024
     assert start_date.month == 11
@@ -32,9 +32,9 @@ def test_parse_event_datetime_month_year():
 def test_parse_event_datetime_iso_format():
     """Test parsing date in ISO format."""
     date_str = "2024-07-04"
-    time_str = "2:30 PM"
-    
-    start_date, end_date = parse_event_datetime(date_str, time_str)
+    start_time_str = "2:30 PM"
+
+    start_date, end_date = parse_event_datetime(date_str, start_time_str)
     
     assert start_date.year == 2024
     assert start_date.month == 7
@@ -54,7 +54,8 @@ def test_google_calendar_link(client, monkeypatch):
             'slug': 'test-event',
             'name': 'Test Event',
             'date': '2024-07-04',
-            'time': '2:30 PM',
+            'start_time': '2:30 PM',
+            'end_time': '5:30 PM',
             'location': 'Test Location',
             'description': 'Test Description'
         }
@@ -89,7 +90,8 @@ def test_ics_file_download(client, monkeypatch):
             'slug': 'test-event',
             'name': 'Test Event',
             'date': '2024-07-04',
-            'time': '2:30 PM',
+            'start_time': '2:30 PM',
+            'end_time': '5:30 PM',
             'location': 'Test Location',
             'description': 'Test Description'
         }

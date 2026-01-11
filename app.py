@@ -15,7 +15,7 @@ from date_validation import validate_date_time
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, session
 from google_auth_oauthlib.flow import Flow
 
-from event_config import get_event_config, get_all_events, update_event_config, add_new_event
+from event_config import get_event_config, get_all_events, update_event_config, add_new_event, format_event_time
 from email_handler import send_email
 from email_content import generate_confirmation_email_body, generate_invitation_email_body
 from notifications import notify_phone
@@ -29,6 +29,9 @@ except FileNotFoundError:
     raise FileNotFoundError("config.py file not found. Please create it with the required configuration.")
 
 app.secret_key = app.config['SECRET_KEY']
+
+# Register template filter for formatting event time
+app.jinja_env.filters['format_time'] = format_event_time
 
 def admin_required(f):
     @wraps(f)
@@ -223,9 +226,10 @@ def new_event():
 
         # Validate date and time
         date_str = request.form['date']
-        time_str = request.form['time']
+        start_time_str = request.form['start_time']
+        end_time_str = request.form.get('end_time', '').strip()
 
-        is_valid, error_message = validate_date_time(date_str, time_str)
+        is_valid, error_message = validate_date_time(date_str, start_time_str, end_time_str or None)
 
         if not is_valid:
             flash(f'Error: {error_message}', 'error')
@@ -235,7 +239,8 @@ def new_event():
             'name': event_name,
             'slug': request.form.get('slug', '').strip(),
             'date': date_str,
-            'time': time_str,
+            'start_time': start_time_str,
+            'end_time': end_time_str,
             'location': request.form['location'],
             'description': request.form['description'],
             'max_guests_per_invite': request.form['max_guests_per_invite'],
@@ -262,14 +267,15 @@ def admin(slug):
         if 'update_event' in request.form:
             # Validate date and time
             date_str = request.form['date']
-            time_str = request.form['time']
-            
-            is_valid, error_message = validate_date_time(date_str, time_str)
-            
+            start_time_str = request.form['start_time']
+            end_time_str = request.form.get('end_time', '').strip()
+
+            is_valid, error_message = validate_date_time(date_str, start_time_str, end_time_str or None)
+
             if not is_valid:
                 flash(f'Error: {error_message}', 'error')
                 return redirect(url_for('admin', slug=slug))
-                
+
             # Update event configuration
             new_config = {
                 "domain": "partymail.app",  # Keep the original domain
@@ -277,7 +283,8 @@ def admin(slug):
                 "slug": slug,
                 "name": request.form['name'],
                 "date": date_str,
-                "time": time_str,
+                "start_time": start_time_str,
+                "end_time": end_time_str,
                 "location": request.form['location'],
                 "description": request.form['description'],
                 "max_guests_per_invite": int(request.form['max_guests_per_invite']),

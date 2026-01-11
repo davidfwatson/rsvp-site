@@ -16,7 +16,7 @@
                 <h1>You're Invited!</h1>
                 <h2>{{ event.name }}</h2>
                 <div class="event-details">
-                    <p><strong>Date:</strong> {{ event.date }} at {{ event.time }}</p>
+                    <p><strong>Date:</strong> {{ event.date }} at {{ event|format_time }}</p>
                     <p><strong>Location:</strong> {{ event.location }}</p>
                     <div>{{ event.description_html | safe }}</div>
                 </div>

@@ -26,7 +26,8 @@ class EventConfig:
             "id": "anita_6th",
             "name": "Anita's 6th Birthday Party",
             "date": "November, 2024",
-            "time": "7:00 PM",
+            "start_time": "7:00 PM",
+            "end_time": "",
             "location": "1787 Montecito Ave, Mountain View",
             "description": "We're having grilled cheese and mac and cheese.",
             "max_guests_per_invite": 5,
@@ -87,7 +88,8 @@ class EventConfig:
             "slug": slug,
             "name": event_data['name'],
             "date": event_data['date'],
-            "time": event_data['time'],
+            "start_time": event_data['start_time'],
+            "end_time": event_data.get('end_time', ''),
             "location": event_data['location'],
             "description": event_data['description'],
             "max_guests_per_invite": int(event_data['max_guests_per_invite']),
@@ -116,3 +118,11 @@ def save_event_config(events_list):
 
 # Export events list for testing
 events = _instance._events
+
+def format_event_time(event):
+    """Format start_time and end_time for display."""
+    start = event.get('start_time', '')
+    end = event.get('end_time', '')
+    if end:
+        return f"{start} - {end}"
+    return start

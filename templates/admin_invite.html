@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Invite</title>
+    <link rel="stylesheet" href="/static/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <h1>Admin Invite</h1>
+
+        {% if error %}
+            <div class="validation-message error">{{ error }}</div>
+        {% else %}
+            <p>You've been invited to become an admin. Enter your name and register a passkey to get started.</p>
+
+            <div id="register-form">
+                <label for="invitee-name">Your Name:</label>
+                <input type="text" id="invitee-name" placeholder="Enter your name" required>
+                <button onclick="doRegister()" id="register-btn" style="margin-top:10px">Register with Passkey</button>
+            </div>
+
+            <div id="register-error" class="validation-message error" style="display:none; margin-top:10px"></div>
+            <div id="register-success" class="validation-message success" style="display:none; margin-top:10px"></div>
+        {% endif %}
+    </div>
+
+    {% if not error %}
+    <script src="/static/passkey.js"></script>
+    <script>
+    async function doRegister() {
+        const nameInput = document.getElementById('invitee-name');
+        const name = nameInput.value.trim();
+        const errEl = document.getElementById('register-error');
+        const successEl = document.getElementById('register-success');
+        const btn = document.getElementById('register-btn');
+        errEl.style.display = 'none';
+        successEl.style.display = 'none';
+
+        if (!name) {
+            errEl.textContent = 'Please enter your name.';
+            errEl.style.display = 'block';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Registering...';
+
+        try {
+            // Send name to options endpoint
+            const optRes = await fetch('/admin/invite/{{ token }}/register/options', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name: name}),
+            });
+            if (!optRes.ok) {
+                const err = await optRes.json();
+                throw new Error(err.error || 'Failed to get registration options');
+            }
+            const opts = await optRes.json();
+
+            opts.challenge = base64urlToBuffer(opts.challenge);
+            opts.user.id = base64urlToBuffer(opts.user.id);
+            if (opts.excludeCredentials) {
+                opts.excludeCredentials = opts.excludeCredentials.map(c => ({
+                    ...c, id: base64urlToBuffer(c.id)
+                }));
+            }
+
+            const credential = await navigator.credentials.create({publicKey: opts});
+
+            const body = {
+                id: bufferToBase64url(credential.rawId),
+                rawId: bufferToBase64url(credential.rawId),
+                type: credential.type,
+                name: name + "'s Passkey",
+                response: {
+                    attestationObject: bufferToBase64url(credential.response.attestationObject),
+                    clientDataJSON: bufferToBase64url(credential.response.clientDataJSON),
+                },
+            };
+
+            const verifyRes = await fetch('/admin/invite/{{ token }}/register/verify', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(body),
+            });
+            const result = await verifyRes.json();
+
+            if (result.success) {
+                successEl.textContent = 'Account created! Redirecting...';
+                successEl.style.display = 'block';
+                document.getElementById('register-form').style.display = 'none';
+                setTimeout(() => { window.location.href = '/admin'; }, 1000);
+            } else {
+                errEl.textContent = result.error || 'Registration failed';
+                errEl.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Register with Passkey';
+            }
+        } catch(e) {
+            if (e.name !== 'NotAllowedError') {
+                errEl.textContent = 'Error: ' + e.message;
+                errEl.style.display = 'block';
+            }
+            btn.disabled = false;
+            btn.textContent = 'Register with Passkey';
+        }
+    }
+    </script>
+    {% endif %}
+</body>
+</html>

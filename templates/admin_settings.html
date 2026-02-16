@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Settings</title>
+    <link rel="stylesheet" href="/static/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <h1>Admin Settings</h1>
+        <p>Logged in as <strong>{{ admin.name }}</strong></p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <h2>Your Passkeys</h2>
+        <div id="passkey-list">Loading...</div>
+        <div style="margin-top: 12px; display: flex; gap: 10px; align-items: center;">
+            <input type="text" id="passkey-name" placeholder="Passkey name (e.g. MacBook, iPhone)" style="flex: 1; margin-bottom: 0;">
+            <button onclick="doRegisterPasskey()">Register New Passkey</button>
+        </div>
+        <div id="passkey-error" class="validation-message error" style="display:none; margin-top:10px"></div>
+
+        {% if admin.is_owner %}
+        <h2>Admin Invite Links</h2>
+        <p>Generate one-time invite links for new admins to register with a passkey.</p>
+        <div style="margin-bottom: 12px; display: flex; gap: 10px; align-items: center;">
+            <input type="text" id="invite-label" placeholder="Label (e.g. person's name)" style="flex: 1; margin-bottom: 0;">
+            <button onclick="createInvite()">Create Invite Link</button>
+        </div>
+        <div id="invite-list">Loading...</div>
+        {% endif %}
+
+        <div style="margin-top: 30px;">
+            <a href="{{ url_for('admin_dashboard') }}">Back to Dashboard</a>
+        </div>
+    </div>
+
+    <script src="/static/passkey.js"></script>
+    <script>
+    function refreshPasskeys() {
+        fetch('/admin/passkey/list').then(r => r.json()).then(data => {
+            const list = document.getElementById('passkey-list');
+            if (!data.passkeys || data.passkeys.length === 0) {
+                list.innerHTML = '<p style="color:#666">No passkeys registered yet. Register one to enable passwordless login.</p>';
+                return;
+            }
+            list.innerHTML = '<table><tr><th>Name</th><th>Action</th></tr>' +
+                data.passkeys.map(p =>
+                    '<tr><td>' + escapeHtml(p.name) + '</td>' +
+                    '<td><button onclick="deletePasskey(\'' + escapeHtml(p.credential_id) + '\')" style="background-color:#f44336;padding:6px 12px;font-size:14px">Delete</button></td></tr>'
+                ).join('') + '</table>';
+        });
+    }
+
+    async function doRegisterPasskey() {
+        const nameInput = document.getElementById('passkey-name');
+        const name = nameInput.value.trim() || 'Passkey';
+        const errEl = document.getElementById('passkey-error');
+        errEl.style.display = 'none';
+
+        try {
+            const result = await registerPasskey(
+                '/admin/passkey/register/options',
+                '/admin/passkey/register/verify',
+                name
+            );
+            if (result.success) {
+                nameInput.value = '';
+                refreshPasskeys();
+            } else {
+                errEl.textContent = result.error || 'Registration failed';
+                errEl.style.display = 'block';
+            }
+        } catch(e) {
+            if (e.name !== 'NotAllowedError') {
+                errEl.textContent = 'Error: ' + e.message;
+                errEl.style.display = 'block';
+            }
+        }
+    }
+
+    function deletePasskey(credId) {
+        if (!confirm('Delete this passkey?')) return;
+        fetch('/admin/passkey/delete', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({credential_id: credId}),
+        }).then(r => r.json()).then(data => {
+            refreshPasskeys();
+        });
+    }
+
+    {% if admin.is_owner %}
+    function refreshInvites() {
+        fetch('/admin/invites').then(r => r.json()).then(data => {
+            const list = document.getElementById('invite-list');
+            if (!data.invites || data.invites.length === 0) {
+                list.innerHTML = '<p style="color:#666">No pending invites.</p>';
+                return;
+            }
+            list.innerHTML = '<table><tr><th>Label</th><th>Created</th><th>Link</th><th>Action</th></tr>' +
+                data.invites.map(inv => {
+                    const url = window.location.origin + '/admin/invite/' + inv.token;
+                    const created = new Date(inv.created_at).toLocaleDateString();
+                    return '<tr>' +
+                        '<td>' + escapeHtml(inv.name || '(none)') + '</td>' +
+                        '<td>' + created + '</td>' +
+                        '<td><input type="text" value="' + escapeHtml(url) + '" readonly style="font-family:monospace;font-size:12px;width:300px;margin-bottom:0" onclick="this.select()"></td>' +
+                        '<td><button onclick="deleteInvite(\'' + inv.token + '\')" style="background-color:#f44336;padding:6px 12px;font-size:14px">Delete</button></td>' +
+                        '</tr>';
+                }).join('') + '</table>';
+        });
+    }
+
+    function createInvite() {
+        const label = document.getElementById('invite-label').value.trim();
+        fetch('/admin/invites/create', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({name: label}),
+        }).then(r => r.json()).then(data => {
+            if (data.success) {
+                document.getElementById('invite-label').value = '';
+                refreshInvites();
+            }
+        });
+    }
+
+    function deleteInvite(token) {
+        if (!confirm('Delete this invite link?')) return;
+        fetch('/admin/invites/delete', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({token: token}),
+        }).then(r => r.json()).then(() => refreshInvites());
+    }
+
+    refreshInvites();
+    {% endif %}
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    refreshPasskeys();
+    </script>
+</body>
+</html>

@@ -16,11 +16,61 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
+
+        <div id="passkey-login" style="margin-bottom:20px; display:none">
+            <button type="button" onclick="loginWithPasskey()" style="width:100%;padding:12px;font-size:1.1rem">Login with Passkey</button>
+            <div style="text-align:center;margin:15px 0;color:#666"><span>or use password</span></div>
+        </div>
+
         <form method="POST">
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" required>
             <button type="submit">Login</button>
         </form>
+
+        <div id="passkey-error" style="display:none; margin-top:16px; padding:10px; background:#fff3cd; border:1px solid #ffc107; border-radius:4px; color:#856404"></div>
     </div>
+
+    <script src="/static/passkey.js"></script>
+    <script>
+    // Check if passkeys are available
+    (async function() {
+        if (!window.PublicKeyCredential) return;
+        try {
+            const res = await fetch('/admin/passkey/auth/options', {method: 'POST'});
+            if (res.ok) {
+                const opts = await res.json();
+                if (!opts.allowCredentials || opts.allowCredentials.length > 0) {
+                    document.getElementById('passkey-login').style.display = 'block';
+                }
+            }
+        } catch(e) {}
+    })();
+
+    async function loginWithPasskey() {
+        const errEl = document.getElementById('passkey-error');
+        errEl.style.display = 'none';
+
+        try {
+            const result = await authenticatePasskey(
+                '/admin/passkey/auth/options',
+                '/admin/passkey/auth/verify'
+            );
+
+            if (result.success) {
+                const params = new URLSearchParams(window.location.search);
+                window.location.href = params.get('next') || '/admin';
+            } else {
+                errEl.textContent = result.error || 'Authentication failed';
+                errEl.style.display = 'block';
+            }
+        } catch(e) {
+            if (e.name !== 'NotAllowedError') {
+                errEl.textContent = 'Passkey error: ' + e.message;
+                errEl.style.display = 'block';
+            }
+        }
+    }
+    </script>
 </body>
 </html>

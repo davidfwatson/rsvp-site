@@ -23,3 +23,7 @@
 - Event slug generation in event_slug.py
 - Tests with fixtures in conftest.py
 - Template styling via static/invitation.css
+
+## Deployment
+- Production runs on a cloud Linode instance (accessible via SSH)
+- Local development on the developer's machine

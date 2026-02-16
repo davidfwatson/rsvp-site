@@ -2,7 +2,11 @@ from flask import url_for
 from event_config import format_event_time
 
 
-def generate_confirmation_email_body(event, rsvp):
+def generate_confirmation_email_body(event, rsvp, update_url=None):
+  update_info = ""
+  if update_url:
+    update_info = f"\n\n[Update your RSVP]({update_url}) if your plans change."
+
   if rsvp['attending'] == 'yes':
     guest_details = f"{rsvp['num_adults']} adult{'s' if rsvp['num_adults'] != 1 else ''}"
     if rsvp['num_children'] > 0:
@@ -26,9 +30,7 @@ We're excited that you'll be joining us for **{event['name']}**!
 
 We have you down for **{guest_details}**.{dietary_info}
 
-If you need to make any changes to your RSVP, please contact us.
-
-We look forward to seeing you there!
+We look forward to seeing you there!{update_info}
 """
   else:
     body = f"""
@@ -36,9 +38,7 @@ We look forward to seeing you there!
 
 We're sorry you won't be able to join us for **{event['name']}**, but we appreciate you letting us know.
 
-If your plans change and you'd like to attend, please contact us.
-
-We hope to see you another time!
+We hope to see you another time!{update_info}
 """
 
   return body

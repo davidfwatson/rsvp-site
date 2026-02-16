@@ -52,6 +52,7 @@
                 <li><a href="{{ url_for('admin', slug=event['slug']) }}">{{ event['name'] }} ({{ slug }})</a></li>
             {% endfor %}
         </ul>
+        <a href="{{ url_for('passkey.admin_settings') }}" class="button" style="background-color:#0066cc;margin-right:10px">Settings</a>
         <a href="{{ url_for('admin_logout') }}">Logout</a>
     </div>
 

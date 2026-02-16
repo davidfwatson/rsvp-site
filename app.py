@@ -2,8 +2,8 @@ import json
 import os
 import pickle
 import re
+import uuid
 from datetime import datetime
-from functools import wraps
 import markdown
 import logging
 from export_rsvps import generate_rsvps_csv, get_csv_filename
@@ -19,6 +19,7 @@ from event_config import get_event_config, get_all_events, update_event_config, 
 from email_handler import send_email
 from email_content import generate_confirmation_email_body, generate_invitation_email_body
 from notifications import notify_phone
+from passkey_auth import passkey_bp, admin_required, get_current_admin
 
 app = Flask(__name__)
 
@@ -30,16 +31,11 @@ except FileNotFoundError:
 
 app.secret_key = app.config['SECRET_KEY']
 
+# Register passkey blueprint
+app.register_blueprint(passkey_bp)
+
 # Register template filter for formatting event time
 app.jinja_env.filters['format_time'] = format_event_time
-
-def admin_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not session.get('admin_logged_in'):
-            return redirect(url_for('admin_login', next=request.url))
-        return f(*args, **kwargs)
-    return decorated_function
 
 def load_rsvps(slug):
     try:
@@ -144,6 +140,7 @@ def rsvp(slug):
                                attending=request.form.get('attending', 'no')))
 
     rsvps = load_rsvps(event_config['id'])
+    rsvp_token = str(uuid.uuid4())
     new_rsvp = {
         'timestamp': datetime.now().isoformat(),
         'name': request.form['name'],
@@ -152,13 +149,16 @@ def rsvp(slug):
         'num_adults': int(request.form['num_adults']),
         'num_children': int(request.form['num_children']),
         'dietary_restrictions': request.form.get('dietary_restrictions', ''),
+        'comment': request.form.get('comment', ''),
+        'token': rsvp_token,
     }
     rsvps.append(new_rsvp)
     save_rsvps(event_config['id'], rsvps)
     
     # Send confirmation email
+    update_url = url_for('update_rsvp', slug=event_config['slug'], token=rsvp_token, _external=True)
     subject = f"RSVP Confirmation for {event_config['name']}"
-    body = generate_confirmation_email_body(event_config, new_rsvp)
+    body = generate_confirmation_email_body(event_config, new_rsvp, update_url)
     try:
       send_email(new_rsvp['email'], subject, body)
     except Exception as e:
@@ -181,6 +181,37 @@ def thank_you(slug):
     
     return render_template('thank_you.html', event=event_config, **request.args)
 
+@app.route('/<slug>/update-rsvp/<token>', methods=['GET', 'POST'])
+def update_rsvp(slug, token):
+    event_config = get_event_config(slug)
+    if not event_config:
+        return "Event not found", 404
+
+    rsvps = load_rsvps(event_config['id'])
+    rsvp_entry = next((r for r in rsvps if r.get('token') == token), None)
+    if not rsvp_entry:
+        return "RSVP not found", 404
+
+    if request.method == 'POST':
+        new_attending = request.form['attending']
+        rsvp_entry['attending'] = new_attending
+        if new_attending == 'no':
+            rsvp_entry['num_adults'] = 0
+            rsvp_entry['num_children'] = 0
+        elif new_attending == 'yes':
+            rsvp_entry['num_adults'] = int(request.form.get('num_adults', 1))
+            rsvp_entry['num_children'] = int(request.form.get('num_children', 0))
+            rsvp_entry['dietary_restrictions'] = request.form.get('dietary_restrictions', '')
+        rsvp_entry['updated_at'] = datetime.now().isoformat()
+        save_rsvps(event_config['id'], rsvps)
+
+        notify_phone(f"RSVP updated for {event_config['name']}: {rsvp_entry['name']} → {new_attending}")
+
+        return redirect(url_for('thank_you', slug=slug, name=rsvp_entry['name'], attending=new_attending))
+
+    event_config['description_html'] = markdown.markdown(event_config['description'])
+    return render_template('update_rsvp.html', event=event_config, rsvp=rsvp_entry)
+
 @app.route('/static/<path:file>')
 def serve_static(file):
     return send_from_directory('static', file)
@@ -189,7 +220,23 @@ def serve_static(file):
 def admin_login():
     if request.method == 'POST':
         if request.form['password'] == app.config['ADMIN_PASSWORD']:
-            session['admin_logged_in'] = True
+            # Password login: find or create the owner admin
+            from passkey_auth import _load_data, _save_data
+            data = _load_data()
+            owner = next((a for a in data['admins'] if a.get('is_owner')), None)
+            if not owner:
+                # Bootstrap: create owner admin on first password login
+                import uuid as _uuid
+                owner = {
+                    'id': str(_uuid.uuid4()),
+                    'name': 'Owner',
+                    'is_owner': True,
+                    'credentials': [],
+                    'created_at': datetime.now().isoformat(),
+                }
+                data['admins'].append(owner)
+                _save_data(data)
+            session['admin_id'] = owner['id']
             next_page = request.args.get('next')
             return redirect(next_page or url_for('admin_dashboard'))
         else:
@@ -198,7 +245,7 @@ def admin_login():
 
 @app.route('/admin/logout')
 def admin_logout():
-    session.pop('admin_logged_in', None)
+    session.pop('admin_id', None)
     return redirect(url_for('admin_login'))
 
 @app.route('/admin')

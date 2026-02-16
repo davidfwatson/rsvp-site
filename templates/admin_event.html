@@ -69,6 +69,7 @@
                 <th>Email</th>
                 <th>Response</th>
                 <th>Number of Guests</th>
+                <th>Comment</th>
                 <th>Timestamp</th>
             </tr>
             {% for rsvp in rsvps %}
@@ -77,6 +78,7 @@
                 <td>{{ rsvp.email }}</td>
                 <td>{{ rsvp.attending }}</td>
                 <td>{{ rsvp.num_guests }}</td>
+                <td>{{ rsvp.comment }}</td>
                 <td>{{ rsvp.timestamp }}</td>
             </tr>
             {% endfor %}

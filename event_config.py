@@ -3,36 +3,66 @@ import os
 import uuid
 from event_slug import generate_unique_slug, validate_slug
 
+DEFAULT_EVENTS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data', 'events'))
+
+
 class EventConfig:
-    def __init__(self, config_file='event_config.json'):
-        self.config_file = config_file
+    def __init__(self, events_dir=None):
+        self.events_dir = events_dir if events_dir is not None else DEFAULT_EVENTS_DIR
         self._events = self._load_config()
 
     def _load_config(self):
-        if os.path.exists(self.config_file):
-            with open(self.config_file, 'r') as f:
-                data = json.load(f)
-                if isinstance(data, list) and all(isinstance(event, dict) for event in data):
-                    return data
-        return self._create_default_event()
+        if not os.path.isdir(self.events_dir):
+            return []
+        events = []
+        for filename in sorted(os.listdir(self.events_dir)):
+            if not filename.endswith('.json'):
+                continue
+            path = os.path.join(self.events_dir, filename)
+            try:
+                with open(path, 'r') as f:
+                    event = json.load(f)
+                if isinstance(event, dict):
+                    events.append(event)
+            except (json.JSONDecodeError, OSError):
+                continue
+        return events
+
+    def _assert_safe_write(self):
+        if os.environ.get('PYTEST_CURRENT_TEST') and os.path.abspath(self.events_dir) == DEFAULT_EVENTS_DIR:
+            raise RuntimeError(
+                "event_config: refusing to write to prod events_dir during pytest. "
+                "conftest.py's autouse _isolate_event_config fixture must be active."
+            )
+
+    def _event_path(self, slug):
+        return os.path.join(self.events_dir, f'{slug}.json')
+
+    def _save_event(self, event):
+        self._assert_safe_write()
+        os.makedirs(self.events_dir, exist_ok=True)
+        slug = event.get('slug')
+        if not slug:
+            raise ValueError("Event must have a slug")
+        target = self._event_path(slug)
+        tmp = target + '.tmp'
+        with open(tmp, 'w') as f:
+            json.dump(event, f, indent=2)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, target)
+
+    def _delete_event_file(self, slug):
+        self._assert_safe_write()
+        path = self._event_path(slug)
+        if os.path.exists(path):
+            os.remove(path)
 
     def _save_config(self):
-        with open(self.config_file, 'w') as f:
-            json.dump(self._events, f, indent=2)
-
-    def _create_default_event(self):
-        return [{
-            "domain": "test.davidfwatson.com",
-            "id": "anita_6th",
-            "name": "Anita's 6th Birthday Party",
-            "date": "November, 2024",
-            "start_time": "7:00 PM",
-            "end_time": "",
-            "location": "1787 Montecito Ave, Mountain View",
-            "description": "We're having grilled cheese and mac and cheese.",
-            "max_guests_per_invite": 5,
-            "color_scheme": "pink"
-        }]
+        # Batch save: write every in-memory event to its own file.
+        for event in self._events:
+            if isinstance(event, dict) and event.get('slug'):
+                self._save_event(event)
 
     def get_event_config(self, domain_or_slug):
         for event in self._events:
@@ -41,10 +71,10 @@ class EventConfig:
                     return event
                 if event.get('slug') == domain_or_slug:
                     return event
-        
+
         if domain_or_slug.startswith(('127.0.0.1', 'localhost')):
             return self._events[-1] if self._events else None
-            
+
         return None
 
     def get_all_events(self):
@@ -54,13 +84,16 @@ class EventConfig:
         return {event.get('slug') for event in self._events if isinstance(event, dict)}
 
     def update_event_config(self, slug, new_config):
+        new_slug = new_config.get('slug', slug)
         for i, event in enumerate(self._events):
             if isinstance(event, dict) and event.get('slug') == slug:
                 self._events[i] = new_config
-                self._save_config()
+                self._save_event(new_config)
+                if new_slug != slug:
+                    self._delete_event_file(slug)
                 return
         self._events.append(new_config)
-        self._save_config()
+        self._save_event(new_config)
 
     def add_new_event(self, event_data):
         event_id = str(uuid.uuid4())[:8]
@@ -96,7 +129,7 @@ class EventConfig:
             "color_scheme": event_data.get('color_scheme', 'pink')
         }
         self._events.append(new_event)
-        self._save_config()
+        self._save_event(new_event)
         return event_id
 
 # Create a singleton instance

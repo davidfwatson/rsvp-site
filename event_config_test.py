@@ -1,3 +1,4 @@
+import os
 import pytest
 from unittest.mock import patch, MagicMock
 import json
@@ -42,13 +43,13 @@ SAMPLE_EVENTS = [
 
 @pytest.fixture
 def mock_events():
-    # Save original events
+    # The autouse _isolate_event_config fixture in conftest.py already
+    # redirects _instance.events_dir to a tmp path, so writes here never
+    # touch prod. We only need to swap in/out the in-memory list.
     original_events = events.copy()
-    # Set test events
     events.clear()
     events.extend(SAMPLE_EVENTS)
     yield events
-    # Restore original events
     events.clear()
     events.extend(original_events)
     
@@ -126,16 +127,15 @@ def test_get_event_config_localhost(mock_events):
     assert event == mock_events[-1]
 
 
-def test_save_event_config(temp_json_file, mock_events):
-    """Test saving events to JSON file"""
-    # Temporarily change the config file of the singleton instance
-    with patch.object(_instance, 'config_file', temp_json_file):
-        save_event_config(mock_events)
+def test_save_event_config(mock_events):
+    """Test saving events to per-event JSON files"""
+    save_event_config(mock_events)
 
-        # Read the file and verify contents
-        with open(temp_json_file, 'r') as f:
-            saved_events = json.load(f)
-            assert saved_events == SAMPLE_EVENTS
+    # Verify each event was written to its own file named by slug
+    for event in SAMPLE_EVENTS:
+        path = os.path.join(_instance.events_dir, f"{event['slug']}.json")
+        with open(path, 'r') as f:
+            assert json.load(f) == event
 
 def test_add_new_event_with_manual_slug(mock_events):
     """Test adding new event with a manually specified slug"""

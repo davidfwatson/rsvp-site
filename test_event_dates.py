@@ -1,14 +1,12 @@
-import json
 import dateutil.parser
 from calendar_utils import parse_event_datetime
 from date_validation import validate_date_time
+from event_config import get_all_events
 
 def test_event_config_dates():
-    # Load event config
-    with open('event_config.json', 'r') as f:
-        events = json.load(f)
+    events = list(get_all_events().values())
 
-    print("\nTesting date/time parsing for events in event_config.json:")
+    print("\nTesting date/time parsing for events in data/events/:")
     print("=" * 70)
 
     for i, event in enumerate(events):

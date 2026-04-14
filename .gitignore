@@ -7,5 +7,7 @@ event_config.json
 event_config.json.pre-migration.bak
 data/
 rsvps_*.json
+rsvps.json
+admins.json
 .DS_Store
 *.py[cod]

@@ -140,35 +140,54 @@ def rsvp(slug):
                                attending=request.form.get('attending', 'no')))
 
     rsvps = load_rsvps(event_config['id'])
-    rsvp_token = str(uuid.uuid4())
-    new_rsvp = {
-        'timestamp': datetime.now().isoformat(),
-        'name': request.form['name'],
-        'email': request.form['email'],
-        'attending': request.form['attending'],
-        'num_adults': int(request.form['num_adults']),
-        'num_children': int(request.form['num_children']),
-        'dietary_restrictions': request.form.get('dietary_restrictions', ''),
-        'comment': request.form.get('comment', ''),
-        'token': rsvp_token,
-    }
-    rsvps.append(new_rsvp)
-    save_rsvps(event_config['id'], rsvps)
-    
+    submitted_email = request.form['email'].strip().lower()
+
+    # Dedupe by email: if this email already RSVP'd, update in place
+    existing_rsvp = next((r for r in rsvps if r.get('email', '').strip().lower() == submitted_email), None)
+
+    if existing_rsvp:
+        # Update the existing entry, keeping the original token
+        existing_rsvp['name'] = request.form['name']
+        existing_rsvp['attending'] = request.form['attending']
+        existing_rsvp['num_adults'] = int(request.form['num_adults'])
+        existing_rsvp['num_children'] = int(request.form['num_children'])
+        existing_rsvp['dietary_restrictions'] = request.form.get('dietary_restrictions', '')
+        existing_rsvp['comment'] = request.form.get('comment', '')
+        existing_rsvp['updated_at'] = datetime.now().isoformat()
+        save_rsvps(event_config['id'], rsvps)
+
+        rsvp_token = existing_rsvp['token']
+        rsvp_entry = existing_rsvp
+
+        notify_phone(f"Updated RSVP for {event_config['name']}: {rsvp_entry['name']} / {rsvp_entry['attending']}")
+    else:
+        rsvp_token = str(uuid.uuid4())
+        rsvp_entry = {
+            'timestamp': datetime.now().isoformat(),
+            'name': request.form['name'],
+            'email': request.form['email'],
+            'attending': request.form['attending'],
+            'num_adults': int(request.form['num_adults']),
+            'num_children': int(request.form['num_children']),
+            'dietary_restrictions': request.form.get('dietary_restrictions', ''),
+            'comment': request.form.get('comment', ''),
+            'token': rsvp_token,
+        }
+        rsvps.append(rsvp_entry)
+        save_rsvps(event_config['id'], rsvps)
+
+        notify_phone(f"New RSVP for {event_config['name']}: {rsvp_entry['name']} / {rsvp_entry['attending']}")
+
     # Send confirmation email
     update_url = url_for('update_rsvp', slug=event_config['slug'], token=rsvp_token, _external=True)
     subject = f"RSVP Confirmation for {event_config['name']}"
-    body = generate_confirmation_email_body(event_config, new_rsvp, update_url)
+    body = generate_confirmation_email_body(event_config, rsvp_entry, update_url)
     try:
-      send_email(new_rsvp['email'], subject, body)
+      send_email(rsvp_entry['email'], subject, body)
     except Exception as e:
       app.logger.error(f"Failed to send confirmation email: {e}")
-    
-    # Notify about legitimate RSVP
-    rsvp_info = f"{new_rsvp['name']} / {new_rsvp['attending']}"
-    notify_phone(f"New RSVP for {event_config['name']}: {rsvp_info}")
-    
-    return redirect(url_for('thank_you', slug=event_config['slug'], **new_rsvp))
+
+    return redirect(url_for('thank_you', slug=event_config['slug'], **rsvp_entry))
 
 @app.route('/<slug>/thank-you')
 def thank_you(slug):

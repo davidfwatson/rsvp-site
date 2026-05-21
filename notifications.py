@@ -1,50 +1,41 @@
 #!/usr/bin/python3
+"""Compatibility shim — forwards to notify-service.
 
-import http.client
-import urllib
-import sys
-import logging
+The Pushover token + outbound HTTPS call live in the notify-service
+microservice (https://github.com/davidfwatson/notify-service). This
+module keeps the legacy notify_phone(message, url=None) signature so
+app.py callers don't change.
+"""
+
 import datetime
+import logging
+import sys
 
-def notify_phone(message:str="Hello World", url=None):
-    """
-    Send a push notification to phone using Pushover API.
-    
-    Args:
-        message: The notification message
-        url: Optional URL to include in the notification
-    """
-    if 'unittest' in sys.modules.keys():
-        logging.error(f"Skip Notify Phone in Tests: {message}")
-        return
-        
-    conn = http.client.HTTPSConnection("api.pushover.net:443")
-    
-    payload = {
-        "token": "ag736guuyi6uqvb6udugvdjn1p5zv9",
-        "user": "u4qmnr2hzb7ime2cg6751brue1wd4d",
-        "message": message
-    }
-    
-    if url:
-        payload["url"] = url
-        
-    conn.request(
-        "POST", 
-        "/1/messages.json",
-        urllib.parse.urlencode(payload), 
-        {"Content-type": "application/x-www-form-urlencoded"}
-    )
-    
-    response = conn.getresponse()
-    return response.status == 200
+from notify_service.client import NotifyClient
+
+
+_client = NotifyClient()
+
+
+def notify_phone(message: str = "Hello World", url=None):
+  """Send a push notification to phone via notify-service.
+
+  Returns True on success, False on failure (matches legacy behavior of
+  returning a bool that callers ignore in practice).
+  """
+  if "unittest" in sys.modules.keys():
+    logging.error(f"Skip Notify Phone in Tests: {message}")
+    return True
+
+  try:
+    status, body = _client.phone(message=message, url=url)
+    return bool(body and body.get("ok"))
+  except Exception as e:
+    logging.warning("notify_phone failed: %s (msg=%r)", e, str(message)[:80])
+    return False
+
 
 if __name__ == "__main__":
-    # When run directly, send a test notification
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    result = notify_phone(f"Test notification from RSVP site at {timestamp}")
-    
-    if result:
-        print("✅ Notification sent successfully!")
-    else:
-        print("❌ Failed to send notification.")
+  timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+  result = notify_phone(f"Test notification from RSVP site at {timestamp}")
+  print("Notification sent successfully!" if result else "Failed to send notification.")

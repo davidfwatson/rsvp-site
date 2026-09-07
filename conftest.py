@@ -28,14 +28,17 @@ def _isolate_event_config(tmp_path, monkeypatch):
     # loads its own events would otherwise leak them into every test that runs
     # after it. Snapshot the contents and restore them afterwards.
     #
-    # Mutate in place, never rebind: event_config.events is the same list
-    # object, and tests reach the singleton's state through both names.
+    # Restore the contents in place rather than assigning a new list:
+    # event_config.events must keep pointing at the very list the singleton
+    # uses, since tests reach that state through both names.
     saved_events = list(_instance._events)
     _instance._events.clear()
     try:
         yield
     finally:
         _instance._events[:] = saved_events
+        # Belt and braces: if a test rebound the module-level alias to some
+        # other list, point it back at the singleton's own.
         event_config.events = _instance._events
 
 

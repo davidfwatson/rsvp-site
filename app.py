@@ -37,6 +37,17 @@ app.register_blueprint(passkey_bp)
 # Register template filter for formatting event time
 app.jinja_env.filters['format_time'] = format_event_time
 
+def get_public_event(slug):
+    """Return the event for a public-facing page, or None if it isn't public.
+
+    Archived events stay fully visible in the admin panel (their guest lists
+    are the reason we keep them) but are not reachable from the open web.
+    """
+    event_config = get_event_config(slug)
+    if not event_config or event_config.get('archived'):
+        return None
+    return event_config
+
 def load_rsvps(slug):
     try:
         with open(f'rsvps_{slug}.json', 'r') as f:
@@ -94,7 +105,7 @@ def before_request():
 @app.route('/<slug>')
 def event_page(slug):
     app.logger.info(f"Attempting to load event with slug: {slug}")
-    event_config = get_event_config(slug)
+    event_config = get_public_event(slug)
     if not event_config:
         return "Event not found", 404
     
@@ -122,7 +133,7 @@ def index():
 
 @app.route('/<slug>/rsvp', methods=['POST'])
 def rsvp(slug):
-    event_config = get_event_config(slug)
+    event_config = get_public_event(slug)
     if not event_config:
         return "Event not found", 404
         
@@ -191,7 +202,7 @@ def rsvp(slug):
 
 @app.route('/<slug>/thank-you')
 def thank_you(slug):
-    event_config = get_event_config(slug)
+    event_config = get_public_event(slug)
     if not event_config:
         return "Event not found", 404
     
@@ -202,7 +213,7 @@ def thank_you(slug):
 
 @app.route('/<slug>/update-rsvp/<token>', methods=['GET', 'POST'])
 def update_rsvp(slug, token):
-    event_config = get_event_config(slug)
+    event_config = get_public_event(slug)
     if not event_config:
         return "Event not found", 404
 
@@ -271,7 +282,18 @@ def admin_logout():
 @admin_required
 def admin_dashboard():
     events = get_all_events()
-    return render_template('admin_dashboard.html', events=events)
+    # Split here rather than in the template: one null-safe .get() instead of a
+    # Jinja selectattr path that would break under StrictUndefined. `events`
+    # still goes through whole, because the duplicate-name and duplicate-slug
+    # validation must see archived events too.
+    active_events = {s: e for s, e in events.items() if not e.get('archived')}
+    archived_events = {s: e for s, e in events.items() if e.get('archived')}
+    return render_template(
+        'admin_dashboard.html',
+        events=events,
+        active_events=active_events,
+        archived_events=archived_events,
+    )
 
 @app.route('/admin/new_event', methods=['POST'])
 @admin_required
@@ -336,7 +358,13 @@ def admin(slug):
             start_time_str = request.form['start_time']
             end_time_str = request.form.get('end_time', '').strip()
 
-            is_valid, error_message = validate_date_time(date_str, start_time_str, end_time_str or None)
+            # Editing an existing event does not require a future date. A past
+            # event is a record to correct, not a party to schedule — and every
+            # archived event is in the past by definition, so requiring the
+            # future here would make them permanently uneditable (including
+            # un-archiving one). Creating an event still requires a future date.
+            is_valid, error_message = validate_date_time(
+                date_str, start_time_str, end_time_str or None, require_future=False)
 
             if not is_valid:
                 flash(f'Error: {error_message}', 'error')
@@ -354,7 +382,8 @@ def admin(slug):
                 "location": request.form['location'],
                 "description": request.form['description'],
                 "max_guests_per_invite": int(request.form['max_guests_per_invite']),
-                "color_scheme": request.form['color_scheme']  # Add color scheme
+                "color_scheme": request.form['color_scheme'],  # Add color scheme
+                "archived": 'archived' in request.form,
             }
             update_event_config(slug, new_config)
             flash('Event details updated successfully!', 'success')
@@ -395,7 +424,7 @@ def oauth2callback():
 @app.route('/<slug>/calendar/google')
 def generate_google_calendar_link(slug):
     """Generate a Google Calendar event link"""
-    event_config = get_event_config(slug)
+    event_config = get_public_event(slug)
     if not event_config:
         return "Event not found", 404
         
@@ -405,7 +434,7 @@ def generate_google_calendar_link(slug):
 @app.route('/<slug>/calendar/ics')
 def download_ics_file(slug):
     """Generate and download an ICS file for Apple Calendar, Outlook, etc."""
-    event_config = get_event_config(slug)
+    event_config = get_public_event(slug)
     if not event_config:
         return "Event not found", 404
         

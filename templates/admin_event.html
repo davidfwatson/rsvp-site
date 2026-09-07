@@ -10,8 +10,19 @@
     <div class="admin-container">
         <h1>Admin - {{ event.name }}</h1>
 
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
         <div class="event-link-container">
             <h3>Event RSVP Link</h3>
+            {% if event.get('archived') %}
+                <p class="help-text">This event is archived, so the link below is switched off and returns "Event not found". Untick "Archived" below to turn it back on.</p>
+            {% endif %}
             <div class="link-display">
                 <input type="text" value="https://partymail.app/{{ event.slug }}" readonly id="rsvpLink">
                 <button id="copyButton" class="copy-button">Copy Link</button>
@@ -52,6 +63,11 @@
                 <option value="black" {% if event.color_scheme == 'black' %}selected{% endif %}>Black</option>
             </select>
             
+            <label class="checkbox-label">
+                <input type="checkbox" id="archived" name="archived" {% if event.get('archived') %}checked{% endif %}>
+                Archived (hide the public event page; keep the guest list here)
+            </label>
+
             <button type="submit" name="update_event">Update Event</button>
         </form>
 

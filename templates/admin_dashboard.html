@@ -9,7 +9,15 @@
 <body>
     <div class="admin-container">
         <h1>Admin Dashboard</h1>
-        
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
         <h2>Create New Event</h2>
         <form action="{{ url_for('new_event') }}" method="POST">
             <label for="name">Event Name:</label>
@@ -48,17 +56,16 @@
 
         <h2>Existing Events</h2>
         <ul>
-            {% for slug, event in events.items() if not event.get('archived') %}
+            {% for slug, event in active_events.items() %}
                 <li><a href="{{ url_for('admin', slug=event['slug']) }}">{{ event['name'] }} ({{ slug }})</a></li>
             {% endfor %}
         </ul>
 
-        {% set archived_events = events.items() | selectattr('1.archived') | list %}
         {% if archived_events %}
         <h2>Past Events</h2>
         <p class="help-text">Archived: guest lists stay here, but the public event page is turned off.</p>
         <ul>
-            {% for slug, event in archived_events %}
+            {% for slug, event in archived_events.items() %}
                 <li><a href="{{ url_for('admin', slug=event['slug']) }}">{{ event['name'] }} ({{ slug }})</a></li>
             {% endfor %}
         </ul>

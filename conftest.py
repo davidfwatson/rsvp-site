@@ -39,32 +39,42 @@ def _isolate_event_config(tmp_path, monkeypatch):
         event_config.events = _instance._events
 
 
-_TEMP_CONFIG = None
+# Values used only when the checkout has no config.py of its own.
+_TEST_CONFIG = {
+    'SENDER_EMAIL': 'test@example.com',
+    'ADMIN_PASSWORD': 'test',
+    'SECRET_KEY': 'test-secret-key',
+    'WEBAUTHN_RP_ID': 'localhost',
+    'WEBAUTHN_RP_NAME': 'Test',
+    'WEBAUTHN_ORIGIN': 'http://localhost',
+}
 
 
 def pytest_configure(config):
     """app.py loads config.py at import time, but config.py is gitignored.
 
-    On a checkout that has no config.py (a fresh clone, CI), write a throwaway
-    one before collection imports the app. An existing config.py — prod's,
-    notably — is left completely alone.
+    On a checkout that has no config.py (a fresh clone, CI) the suite could not
+    even be collected. Rather than writing a config.py — a file left behind by
+    a hard crash would be a real config.py holding test credentials, which a
+    later app start in that directory would happily load — teach from_pyfile to
+    fall back to in-memory defaults for the missing file. Nothing touches disk,
+    and a checkout that has its own config.py (prod's, notably) is unaffected:
+    from_pyfile finds it and this fallback never fires.
     """
-    global _TEMP_CONFIG
-    path = os.path.join(os.path.dirname(__file__), 'config.py')
-    if os.path.exists(path):
+    if os.path.exists(os.path.join(os.path.dirname(__file__), 'config.py')):
         return
-    with open(path, 'w') as f:
-        f.write(
-            'SENDER_EMAIL = "test@example.com"\n'
-            'ADMIN_PASSWORD = "test"\n'
-            'SECRET_KEY = "test-secret-key"\n'
-            'WEBAUTHN_RP_ID = "localhost"\n'
-            'WEBAUTHN_RP_NAME = "Test"\n'
-            'WEBAUTHN_ORIGIN = "http://localhost"\n'
-        )
-    _TEMP_CONFIG = path
 
+    from flask import Config
 
-def pytest_unconfigure(config):
-    if _TEMP_CONFIG and os.path.exists(_TEMP_CONFIG):
-        os.remove(_TEMP_CONFIG)
+    original_from_pyfile = Config.from_pyfile
+
+    def from_pyfile_with_test_defaults(self, filename, silent=False):
+        try:
+            return original_from_pyfile(self, filename, silent=silent)
+        except FileNotFoundError:
+            if os.path.basename(filename) != 'config.py':
+                raise
+            self.update(_TEST_CONFIG)
+            return True
+
+    Config.from_pyfile = from_pyfile_with_test_defaults

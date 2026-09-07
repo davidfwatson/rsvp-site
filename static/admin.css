@@ -21,6 +21,25 @@ h1, h2 {
   color: #000;
 }
 
+.alert {
+  padding: 10px 14px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  border: 1px solid transparent;
+}
+
+.alert-error {
+  background-color: #fdecea;
+  border-color: #f5c6cb;
+  color: #a3282f;
+}
+
+.alert-success {
+  background-color: #e8f5e9;
+  border-color: #c3e6cb;
+  color: #256029;
+}
+
 .checkbox-label {
   display: flex;
   align-items: center;

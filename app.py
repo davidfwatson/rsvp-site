@@ -282,7 +282,18 @@ def admin_logout():
 @admin_required
 def admin_dashboard():
     events = get_all_events()
-    return render_template('admin_dashboard.html', events=events)
+    # Split here rather than in the template: one null-safe .get() instead of a
+    # Jinja selectattr path that would break under StrictUndefined. `events`
+    # still goes through whole, because the duplicate-name and duplicate-slug
+    # validation must see archived events too.
+    active_events = {s: e for s, e in events.items() if not e.get('archived')}
+    archived_events = {s: e for s, e in events.items() if e.get('archived')}
+    return render_template(
+        'admin_dashboard.html',
+        events=events,
+        active_events=active_events,
+        archived_events=archived_events,
+    )
 
 @app.route('/admin/new_event', methods=['POST'])
 @admin_required
@@ -347,7 +358,13 @@ def admin(slug):
             start_time_str = request.form['start_time']
             end_time_str = request.form.get('end_time', '').strip()
 
-            is_valid, error_message = validate_date_time(date_str, start_time_str, end_time_str or None)
+            # Editing an existing event does not require a future date. A past
+            # event is a record to correct, not a party to schedule — and every
+            # archived event is in the past by definition, so requiring the
+            # future here would make them permanently uneditable (including
+            # un-archiving one). Creating an event still requires a future date.
+            is_valid, error_message = validate_date_time(
+                date_str, start_time_str, end_time_str or None, require_future=False)
 
             if not is_valid:
                 flash(f'Error: {error_message}', 'error')

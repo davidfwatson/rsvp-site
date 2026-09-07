@@ -52,6 +52,11 @@
                 <option value="black" {% if event.color_scheme == 'black' %}selected{% endif %}>Black</option>
             </select>
             
+            <label class="checkbox-label">
+                <input type="checkbox" id="archived" name="archived" {% if event.get('archived') %}checked{% endif %}>
+                Archived (hide the public event page; keep the guest list here)
+            </label>
+
             <button type="submit" name="update_event">Update Event</button>
         </form>
 

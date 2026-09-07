@@ -48,10 +48,21 @@
 
         <h2>Existing Events</h2>
         <ul>
-            {% for slug, event in events.items() %}
+            {% for slug, event in events.items() if not event.get('archived') %}
                 <li><a href="{{ url_for('admin', slug=event['slug']) }}">{{ event['name'] }} ({{ slug }})</a></li>
             {% endfor %}
         </ul>
+
+        {% set archived_events = events.items() | selectattr('1.archived') | list %}
+        {% if archived_events %}
+        <h2>Past Events</h2>
+        <p class="help-text">Archived: guest lists stay here, but the public event page is turned off.</p>
+        <ul>
+            {% for slug, event in archived_events %}
+                <li><a href="{{ url_for('admin', slug=event['slug']) }}">{{ event['name'] }} ({{ slug }})</a></li>
+            {% endfor %}
+        </ul>
+        {% endif %}
         <a href="{{ url_for('passkey.admin_settings') }}" class="button" style="background-color:#0066cc;margin-right:10px">Settings</a>
         <a href="{{ url_for('admin_logout') }}">Logout</a>
     </div>

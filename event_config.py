@@ -145,7 +145,10 @@ get_existing_slugs = _instance.get_existing_slugs
 # Define save_event_config for testing
 def save_event_config(events_list):
     global events
-    _instance._events = events_list
+    # Replace the contents rather than the list object: `events` below and any
+    # `from event_config import events` alias must keep pointing at the same
+    # list the singleton uses, or they silently drift apart.
+    _instance._events[:] = events_list
     events = _instance._events
     _instance._save_config()
 

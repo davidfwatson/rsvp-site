@@ -17,6 +17,7 @@ itsdangerous==2.2.0
 Jinja2==3.1.5
 Markdown==3.7
 MarkupSafe==3.0.2
+notify-service @ git+ssh://git@github.com/davidfwatson/notify-service.git@9047d6f1fb3cf05989c88c3fc2c7a2fe709ddd47
 oauthlib==3.2.2
 packaging==24.2
 pluggy==1.5.0

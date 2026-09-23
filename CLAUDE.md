@@ -1,10 +1,10 @@
 # RSVP Site Development Guide
 
 ## Commands
-- Run app locally: `python3.10 app.py`
-- Run all tests: `python3.10 -m pytest -v`
-- Run specific test: `python3.10 -m pytest -v event_config_test.py::test_function_name`
-- Run tests with coverage: `python3.10 -m pytest --cov=. --cov-report=term`
+- Run app locally: `venv/bin/python app.py`
+- Run all tests: `venv/bin/python -m pytest -v`
+- Run specific test: `venv/bin/python -m pytest -v event_config_test.py::test_function_name`
+- Run tests with coverage: `venv/bin/python -m pytest --cov=. --cov-report=term`
 - Activate virtual environment: `source venv/bin/activate`
 
 ## Code Style Guidelines

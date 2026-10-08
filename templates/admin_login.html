@@ -1,207 +1,62 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - Party Mail</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .login-card {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            width: 100%;
-            max-width: 420px;
-            padding: 48px 40px;
-            text-align: center;
-        }
-
-        .brand {
-            margin-bottom: 36px;
-        }
-
-        .brand h1 {
-            font-size: 2em;
-            font-weight: 600;
-            color: #667eea;
-            margin-bottom: 6px;
-        }
-
-        .brand p {
-            color: #888;
-            font-size: 0.95em;
-            font-weight: 300;
-        }
-
-        .alert {
-            padding: 12px 16px;
-            border-radius: 10px;
-            font-size: 0.9em;
-            margin-bottom: 20px;
-            text-align: left;
-        }
-
-        .alert-error,
-        .alert-danger {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .alert-success {
-            background: #f0fdf4;
-            color: #166534;
-        }
-
-        .alert-info {
-            background: #eff6ff;
-            color: #1e40af;
-        }
-
-        .btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            width: 100%;
-            padding: 14px 20px;
-            border: none;
-            border-radius: 12px;
-            font-family: inherit;
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.2s, background 0.2s;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.55);
-        }
-
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .footer-link {
-            margin-top: 28px;
-            padding-top: 20px;
-            border-top: 1px solid #f3f4f6;
-        }
-
-        .footer-link a {
-            color: #888;
-            font-size: 0.85em;
-            text-decoration: none;
-            font-weight: 400;
-            transition: color 0.2s;
-        }
-
-        .footer-link a:hover {
-            color: #667eea;
-        }
-
-        .passkey-error {
-            display: none;
-            margin-top: 16px;
-            padding: 12px 16px;
-            background: #fef3c7;
-            border: 1px solid #fcd34d;
-            border-radius: 10px;
-            color: #92400e;
-            font-size: 0.85em;
-            text-align: left;
-        }
-
-        @media (max-width: 480px) {
-            .login-card {
-                padding: 36px 24px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="login-card">
-        <div class="brand">
-            <h1>🎉 Party Mail</h1>
-            <p>Administrator Access</p>
-        </div>
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <div id="passkey-login">
-            <button type="button" class="btn btn-primary" onclick="loginWithPasskey()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3-3.5 3.5z"></path></svg>
-                Login with Passkey
-            </button>
-        </div>
-
-        <div id="passkey-error" class="passkey-error"></div>
-
-        <div class="footer-link">
-            <a href="/">← Back to Party Mail</a>
-        </div>
-    </div>
-
-    <script src="/static/passkey.js"></script>
-    <script>
-    async function loginWithPasskey() {
-        const errEl = document.getElementById('passkey-error');
-        errEl.style.display = 'none';
-
-        try {
-            const result = await authenticatePasskey(
-                '/admin/passkey/auth/options',
-                '/admin/passkey/auth/verify'
-            );
-
-            if (result.success) {
-                const params = new URLSearchParams(window.location.search);
-                window.location.href = params.get('next') || '/admin';
-            } else {
-                errEl.textContent = result.error || 'Authentication failed';
-                errEl.style.display = 'block';
-            }
-        } catch(e) {
-            if (e.name !== 'NotAllowedError') {
-                errEl.textContent = 'Passkey error: ' + e.message;
-                errEl.style.display = 'block';
-            }
-        }
+{% extends "admin_base.html" %}
+{% block title %}Sign in{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+{% block content %}
+<div class="auth-card panel">
+    <a class="auth-brand" href="{{ url_for('index') }}">Party Mail <span aria-hidden="true">✦</span></a>
+    <p class="eyebrow">Your next great gathering starts here</p>
+    <h1>{% if signin_link %}Welcome back{% else %}Make yourself at home.{% endif %}</h1>
+    {% if error %}<p class="alert alert-error" role="alert">{{ error }}</p>{% endif %}
+    {% if signin_link %}
+        {% if link_error %}
+        <p class="alert alert-error" role="alert">{{ link_error }}</p>
+        <a class="button" href="{{ url_for('admin_login') }}">Back to sign in</a>
+        {% else %}
+        <p class="muted">Sign in as <strong>{{ link_admin.name }}</strong>. This private link expires after 30 minutes and can be used once.</p>
+        <form method="post" class="stack">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="button">Continue to your account <span aria-hidden="true">→</span></button>
+        </form>
+        <p class="muted">Once you're in, add a passkey for easy access next time.</p>
+        {% endif %}
+    {% else %}
+        <p class="muted">Use your fingerprint, face, or device PIN to open your workspace.</p>
+        <button type="button" id="passkey-login-btn" class="button" onclick="loginWithPasskey()">Sign in with a passkey <span aria-hidden="true">→</span></button>
+        <p id="passkey-error" class="alert alert-error" role="alert" hidden></p>
+        <div class="auth-divider"><span>Joining the party?</span></div>
+        <p class="muted">Open the invitation or sign-in link your workspace owner shared with you.</p>
+        {% if password_login_enabled|default(config.get('ADMIN_PASSWORD', '')|length > 0) %}
+        <details class="auth-recovery">
+            <summary>Owner recovery</summary>
+            <form method="post" class="stack">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-field"><label for="password">Owner password</label><input type="password" id="password" name="password" autocomplete="current-password" required></div>
+                <button class="button button-secondary" type="submit">Sign in as owner</button>
+            </form>
+        </details>
+        {% endif %}
+    {% endif %}
+    <a class="auth-back muted" href="{{ url_for('index') }}">← Back to Party Mail</a>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='passkey.js') }}"></script>
+<script>
+async function loginWithPasskey() {
+    const error = document.getElementById('passkey-error');
+    const button = document.getElementById('passkey-login-btn');
+    error.hidden = true;
+    button.disabled = true;
+    button.textContent = 'Waiting for your passkey…';
+    try {
+        const result = await authenticatePasskey({{ url_for('passkey.auth_options')|tojson }}, {{ url_for('passkey.auth_verify')|tojson }});
+        window.location.assign(result.redirect || {{ url_for('admin_dashboard')|tojson }});
+    } catch (exception) {
+        error.textContent = passkeyError(exception);
+        error.hidden = false;
+        button.disabled = false;
+        button.textContent = 'Sign in with a passkey →';
     }
-    </script>
-</body>
-</html>
+}
+</script>
+{% endblock %}

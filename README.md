@@ -1,233 +1,80 @@
-# rsvp-site
+# Party Mail
 
-### Get Started **
+A Flask invitation and RSVP app with a responsive administrator workspace,
+passkey accounts, one-use access links, invitation customization, and a guest
+list for each event.
 
-#### 1. **Setup the venv for the project**
-First, make sure you're in your project directory:
+## Development
 
-```bash
-cd rsvp-site
-```
-
-Create a new virtual environment:
+Use Python 3.12:
 
 ```bash
-python3 -m venv venv
-```
-
-Activate the virtual environment:
-
-```bash
+python3.12 -m venv venv
 source venv/bin/activate
+python -m pip install -r requirements-dev.txt
+python -m pytest -q
+RSVP_ADMIN_PASSWORD=local-development-only python app.py
 ```
 
-Install all the required packages from requirements.txt:
+Local `config.py` is optional and gitignored. Environment variables override
+its values. Development data defaults to `data/`; use `RSVP_DATA_DIR` to choose
+another directory. Development and tests default to email delivery disabled.
+The optional private `notify-service` integration is kept out of the public
+runtime requirements so a clean clone can install and test without SSH access
+to another repository.
 
-```bash
-pip install -r requirements.txt
-```
+Open `http://localhost:5000/admin/login`, expand **Owner recovery**, and use
+`local-development-only` for the command above. Add your first passkey in
+**People & access**. Use localhost for local passkey testing; an IP address is
+not a valid WebAuthn relying-party domain. The example password is for local
+development only; production uses its separate environment configuration.
 
-#### 2. **Add new requiements**
-Install the new packages, e.g.:
+## Configuration
 
-```bash
-pip install unidecode pytest
-```
+| Variable | Purpose |
+| --- | --- |
+| `RSVP_ENV` | `development` (default), `test`, or `production` |
+| `RSVP_DATA_DIR` | Persistent data root, required outside the checkout in production |
+| `RSVP_SECRET_KEY` | Random Flask session/CSRF signing secret, required in production |
+| `RSVP_PUBLIC_URL` | Canonical origin, e.g. `https://partymail.app` |
+| `RSVP_WEBAUTHN_RP_ID` | Passkey hostname; keep `partymail.app` for existing accounts |
+| `RSVP_WEBAUTHN_ORIGIN` | Matching HTTPS public origin |
+| `RSVP_WEBAUTHN_RP_NAME` | Account/passkey display name |
+| `RSVP_SENDER_EMAIL` | Authorized Gmail sender |
+| `RSVP_EMAIL_ENABLED` | Enable real mail delivery; false for development/tests |
+| `RSVP_GA_MEASUREMENT_ID` | Google Analytics property; empty disables tracking |
+| `RSVP_ADMIN_PASSWORD` | Optional owner bootstrap/emergency password |
+| `RSVP_TRUST_PROXY` | Enable only behind the documented single trusted nginx proxy |
 
-Then update requirements.txt with the new packages:
+`deploy/production.env.example` supplies a concrete production configuration.
+The previously hardcoded Google Analytics property is `G-52ZJ7PXYEC`; verify
+its ownership and web stream before reusing it. Guest tracking is configured
+centrally and requires consent; admin and private link pages are excluded.
 
-```bash
-pip freeze > requirements.txt
-```
+## Storage and production
 
+Events are versioned JSON files under `<data root>/events`; accounts, RSVPs,
+uploads, and Gmail credentials also stay inside the data root. Storage uses
+process locks, atomic replacement, directory fsync, and 20 recoverable prior
+revisions. Corrupt data fails visibly. Event saves reject stale versions, and
+workers pick up edits made by other workers.
 
-These were the original instructions I used to set up the site.
----
+Tests override inherited production settings before importing app or storage
+modules. Every test gets fresh temporary data, and storage refuses writes
+outside its temporary test root. Do not point ad hoc scripts at production
+unless they explicitly implement a reviewed migration.
 
-### **Setup Instructions for `rsvp-site` Flask Application**
+The production workflow tests each main commit, uploads a source artifact,
+checks it again on the server, starts a candidate privately, and promotes a
+release symlink only after health succeeds. Failed promotion restores the
+previous code. Persistent data is never replaced by deployment.
 
-#### 1. **Create a Separate Flask App for `rsvp-site`:**
-   - Set up a new Flask app directory for the RSVP site. You can create a directory like `/home/david/webserver/rsvp-site/`.
+Follow [the production and recovery runbook](docs/production.md) for the
+one-time data copy, systemd/nginx setup, CI secrets, merge deployment, backups,
+and rollback. `/healthz` reports the running release for deployment checks.
+Ready-to-install nightly restic backup units make a consistent local copy
+under app locks, then encrypt/upload it offsite after releasing those locks.
+They require a configured remote repository and password before activation.
 
-   - Inside this directory, create a basic Flask app:
-
-     ```bash
-     mkdir -p /home/david/webserver/rsvp-site
-     cd /home/david/webserver/rsvp-site
-     nano app.py
-     ```
-
-     Here’s an example `app.py`:
-
-     ```python
-     from flask import Flask, render_template, request, redirect
-
-     app = Flask(__name__)
-
-     @app.route('/')
-     def index():
-         return render_template('index.html')
-
-     @app.route('/rsvp', methods=['POST'])
-     def rsvp():
-         name = request.form['name']
-         attending = request.form['attending']
-         # Here, you'd save the RSVP to a database or file
-         with open('rsvp.txt', 'a') as f:
-             f.write(f'{name} - Attending: {attending}\n')
-         return redirect('/thank-you')
-
-     @app.route('/thank-you')
-     def thank_you():
-         return 'Thank you for your RSVP!'
-
-     if __name__ == '__main__':
-         app.run()
-     ```
-
-#### 2. **Create the HTML Templates:**
-   - Create a `templates` directory and an `index.html` file for the invite form:
-
-     ```bash
-     mkdir templates
-     nano templates/index.html
-     ```
-
-     Example content for `index.html`:
-
-     ```html
-     <!DOCTYPE html>
-     <html lang="en">
-     <head>
-         <meta charset="UTF-8">
-         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-         <title>RSVP for the Event</title>
-     </head>
-     <body>
-         <h1>You're Invited!</h1>
-         <form action="/rsvp" method="POST">
-             <label for="name">Your Name:</label>
-             <input type="text" id="name" name="name" required><br><br>
-             <label for="attending">Will you attend?</label>
-             <input type="radio" id="yes" name="attending" value="yes" required>
-             <label for="yes">Yes</label>
-             <input type="radio" id="no" name="attending" value="no" required>
-             <label for="no">No</label><br><br>
-             <button type="submit">Submit RSVP</button>
-         </form>
-     </body>
-     </html>
-     ```
-
-#### 3. **Set Up uWSGI for the Flask App:**
-   - Create a `uwsgi` configuration file for this app:
-
-     ```bash
-     nano /home/david/webserver/rsvp-site/rsvp-site.ini
-     ```
-
-     Example content:
-
-     ```ini
-    [uwsgi]
-    module = app:app
-    master = true
-    process = 5
-    socket = /home/david/webserver/rsvp-site/rsvp-site.sock
-    chmod-socket = 660
-    vacuum = true
-    die-on-term = true
-     ```
-
-#### 4. **Configure Nginx for the Flask App:**
-   - Modify `/etc/nginx/sites-available/test-davidfwatson` to proxy requests to the new Flask app.
-
-     Update the location block to use uWSGI for the Flask app:
-
-     ```nginx
-server {
-    server_name test.davidfwatson.com;
-    
-    location ~ /.well-known {
-        root /etc/letsencrypt/verification;
-    }
-
-    listen 443 ssl; # managed by Certbot
-    
-    # Proxy to uWSGI for Flask app
-    location / {
-        include uwsgi_params;
-        uwsgi_pass unix:/home/david/webserver/rsvp-site/rsvp-site.sock;  # Path to the uWSGI socket for rsvp-site
-    }
-
-    client_max_body_size 100M;
-
-    ssl_certificate /etc/letsencrypt/live/test.davidfwatson.com/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/test.davidfwatson.com/privkey.pem; # managed by Certbot
-    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
-}
-
-server {
-    if ($host = test.davidfwatson.com) {
-        return 301 https://$host$request_uri;
-    } # managed by Certbot
-
-    listen 80;
-    server_name test.davidfwatson.com;
-    return 404; # managed by Certbot
-}
-
-     ```
-
-#### 5. **Set Up a Systemd Service for the Flask App:**
-   - Create a new systemd service file to manage the `rsvp-site` Flask app.
-
-     ```bash
-     sudo nano /etc/systemd/system/rsvp-site.service
-     ```
-
-     Example content:
-
-     ```ini
-[Unit]
-Description=uWSGI instance to serve rsvp-site
-After=network.target
-
-[Service]
-User=david
-Group=www-data
-WorkingDirectory=/home/david/webserver/rsvp-site
-Environment="PATH=/home/david/webserver/rsvp-site/venv/bin:/usr/local/bin:/usr/bin:/bin"
-ExecStart=/home/david/webserver/rsvp-site/venv/bin/uwsgi --ini rsvp-site.ini
-
-[Install]
-WantedBy=multi-user.target
-     ```
-
-   - Reload systemd and start the service:
-
-     ```bash
-     sudo systemctl daemon-reload
-     sudo systemctl start rsvp-site
-     sudo systemctl enable rsvp-site
-     ```
-
-#### 6. **Test the Setup:**
-   - After starting the service, restart Nginx:
-     ```bash
-     sudo systemctl restart nginx
-     ```
-
-   - Visit `https://test.davidfwatson.com` and you should see your RSVP form. Submissions will be saved to a text file (`rsvp.txt`), or you can modify it to store the data in a database.
-
----
-
-### Summary:
-- **Project Name**: `rsvp-site`
-- **Directory**: `/home/david/webserver/rsvp-site`
-- **Flask app**: Handles the form submission and RSVP storage
-- **Nginx**: Configured to proxy requests to the uWSGI instance running the Flask app
-- **Systemd Service**: Manages the uWSGI instance
-
-With these instructions saved, you can easily adapt this setup for other RSVP-style sites or expand it further as needed.
+The existing `requirements.txt` and `rsvp-site.ini` remain for legacy setups;
+new release deployments use `requirements-runtime.txt` and gunicorn.

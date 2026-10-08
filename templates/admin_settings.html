@@ -1,157 +1,268 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Settings</title>
-    <link rel="stylesheet" href="/static/admin.css">
-</head>
-<body>
-    <div class="admin-container">
-        <h1>Admin Settings</h1>
-        <p>Logged in as <strong>{{ admin.name }}</strong></p>
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <h2>Your Passkeys</h2>
-        <div id="passkey-list">Loading...</div>
-        <div style="margin-top: 12px; display: flex; gap: 10px; align-items: center;">
-            <input type="text" id="passkey-name" placeholder="Passkey name (e.g. MacBook, iPhone)" style="flex: 1; margin-bottom: 0;">
-            <button onclick="doRegisterPasskey()">Register New Passkey</button>
-        </div>
-        <div id="passkey-error" class="validation-message error" style="display:none; margin-top:10px"></div>
-
-        {% if admin.is_owner %}
-        <h2>Admin Invite Links</h2>
-        <p>Generate one-time invite links for new admins to register with a passkey.</p>
-        <div style="margin-bottom: 12px; display: flex; gap: 10px; align-items: center;">
-            <input type="text" id="invite-label" placeholder="Label (e.g. person's name)" style="flex: 1; margin-bottom: 0;">
-            <button onclick="createInvite()">Create Invite Link</button>
-        </div>
-        <div id="invite-list">Loading...</div>
-        {% endif %}
-
-        <div style="margin-top: 30px;">
-            <a href="{{ url_for('admin_dashboard') }}">Back to Dashboard</a>
-        </div>
+{% extends "admin_base.html" %}
+{% block title %}Account & access{% endblock %}
+{% block content %}
+<div class="page-heading">
+    <div><p class="eyebrow">Your workspace</p><h1>Account & access</h1><p class="muted">A warm welcome. A secure way in.</p></div>
+    <span class="badge">{{ 'Workspace owner' if admin.is_owner else 'Administrator' }}</span>
+</div>
+<p id="account-message" class="alert" role="status" aria-live="polite" hidden></p>
+<div class="settings-grid">
+    <section class="panel">
+        <p class="eyebrow">The essentials</p><h2>Your profile</h2>
+        <form id="profile-form" class="stack">
+            <div class="form-field"><label for="profile-name">Display name</label><input id="profile-name" type="text" maxlength="80" autocomplete="name" value="{{ admin.name }}" required></div>
+            <div class="settings-actions"><button class="button button-secondary" type="submit">Save name</button><span id="profile-status" class="save-status" role="status" aria-live="polite">All changes saved</span></div>
+        </form>
+        <p class="muted">Your name saves automatically as you type.</p>
+    </section>
+    <section class="panel">
+        <p class="eyebrow">Peace of mind</p><h2>Session security</h2>
+        <p class="muted">Shared a device or want a fresh start? Sign out all your active sessions, including this one. Your passkeys stay ready for your next sign-in.</p>
+        <button class="button button-secondary" type="button" id="signout-all">Sign out everywhere</button>
+    </section>
+</div>
+<section class="panel settings-section">
+    <div class="settings-section-heading"><div><p class="eyebrow">A key that's yours</p><h2>Your passkeys</h2><p class="muted">Add a backup device so you'll always have a way in.</p></div><span class="badge" id="passkey-count">Loading…</span></div>
+    <div id="passkey-list" class="stack" aria-live="polite"><p class="muted">Loading your passkeys…</p></div>
+    <form id="passkey-form" class="settings-inline-form">
+        <div class="form-field"><label for="passkey-name">Device name</label><input id="passkey-name" type="text" maxlength="80" placeholder="e.g. MacBook or iPhone" autocomplete="off"></div>
+        <button class="button" type="submit" id="register-passkey">Add a passkey <span aria-hidden="true">+</span></button>
+    </form>
+    <p class="muted">Your last passkey is protected from deletion. Passkeys use your device's security; Party Mail never sees your fingerprint, face, or PIN.</p>
+</section>
+{% if admin.is_owner %}
+<section class="panel settings-section">
+    <div class="settings-section-heading"><div><p class="eyebrow">Good company</p><h2>Workspace members</h2><p class="muted">Everyone here can manage events and guests. The owner also manages access.</p></div><span class="badge" id="member-count">Loading…</span></div>
+    <div id="account-list" class="stack"><p class="muted">Loading members…</p></div>
+    <div id="fresh-link" class="access-link-result" hidden>
+        <strong>Your one-use sign-in link is ready</strong>
+        <p class="muted">Share privately with this member. It expires in 30 minutes. Copy it now; the full link is only shown here.</p>
+        <div class="settings-actions"><input id="fresh-link-url" readonly aria-label="One-use sign-in link"><button type="button" class="button button-secondary" id="copy-fresh-link">Copy link</button></div>
     </div>
-
-    <script src="/static/passkey.js"></script>
-    <script>
-    function refreshPasskeys() {
-        fetch('/admin/passkey/list').then(r => r.json()).then(data => {
-            const list = document.getElementById('passkey-list');
-            if (!data.passkeys || data.passkeys.length === 0) {
-                list.innerHTML = '<p style="color:#666">No passkeys registered yet. Register one to enable passwordless login.</p>';
-                return;
-            }
-            list.innerHTML = '<table><tr><th>Name</th><th>Action</th></tr>' +
-                data.passkeys.map(p =>
-                    '<tr><td>' + escapeHtml(p.name) + '</td>' +
-                    '<td><button onclick="deletePasskey(\'' + escapeHtml(p.credential_id) + '\')" style="background-color:#f44336;padding:6px 12px;font-size:14px">Delete</button></td></tr>'
-                ).join('') + '</table>';
-        });
+    <div id="signin-link-list" class="stack"></div>
+</section>
+<section class="panel settings-section">
+    <div class="settings-section-heading"><div><p class="eyebrow">Pull up a chair</p><h2>Invite someone new</h2><p class="muted">Share an invitation to let a new member create their account and passkey. Each link works once and expires in seven days.</p></div></div>
+    <form id="invite-form" class="settings-inline-form">
+        <div class="form-field"><label for="invite-label">Invitee name</label><input id="invite-label" type="text" maxlength="80" placeholder="Who are you inviting?" autocomplete="off" required></div>
+        <button class="button" type="submit">Create invitation <span aria-hidden="true">+</span></button>
+    </form>
+    <div id="invite-list" class="stack"><p class="muted">Loading invitations…</p></div>
+</section>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='passkey.js') }}"></script>
+<script>
+const currentAccountId = {{ admin.id|tojson }};
+const ownerAccount = {{ admin.is_owner|tojson }};
+const message = document.getElementById('account-message');
+function notify(text, error = false) {
+    message.className = 'alert ' + (error ? 'alert-error' : 'alert-success');
+    message.textContent = text;
+    message.hidden = false;
+}
+function element(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+}
+function action(label, handler, className = 'button button-secondary') {
+    const button = element('button', className, label);
+    button.type = 'button';
+    button.addEventListener('click', async () => {
+        button.disabled = true;
+        try { await handler(); } catch (error) { notify(error.message, true); }
+        finally { button.disabled = false; }
+    });
+    return button;
+}
+function dateLabel(value) {
+    if (!value) return 'Not yet';
+    const date = new Date(value.endsWith('Z') || /[+-]\d\d:\d\d$/.test(value) ? value : value + 'Z');
+    return Number.isNaN(date.valueOf()) ? 'Not yet' : date.toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'});
+}
+async function copyLink(value) {
+    try { await navigator.clipboard.writeText(value); notify('Link copied. Share it privately with your invitee.'); }
+    catch (_) { notify('Select and copy the link from the field.'); }
+}
+function accessLink(value, label = 'Copy link') {
+    const row = element('div', 'settings-actions');
+    const input = element('input', 'access-link-input');
+    input.value = value;
+    input.readOnly = true;
+    input.setAttribute('aria-label', 'Private invitation link');
+    input.addEventListener('click', () => input.select());
+    row.append(input, action(label, () => copyLink(value)));
+    return row;
+}
+let profileTimer, profileSaving = false, profilePending = false;
+let savedName = document.getElementById('profile-name').value;
+async function saveProfile() {
+    const input = document.getElementById('profile-name');
+    const status = document.getElementById('profile-status');
+    const name = input.value.trim();
+    if (!name) { status.textContent = 'Enter your display name'; status.dataset.state = 'error'; return; }
+    if (name === savedName) { status.textContent = 'All changes saved'; status.dataset.state = 'saved'; return; }
+    if (profileSaving) { profilePending = true; return; }
+    profileSaving = true;
+    status.textContent = 'Saving…';
+    status.dataset.state = 'saving';
+    try {
+        await accountRequest('/admin/accounts/update', {name});
+        savedName = name;
+        const changedAgain = input.value.trim() !== name;
+        status.textContent = changedAgain ? 'Unsaved changes' : 'All changes saved';
+        status.dataset.state = changedAgain ? 'saving' : 'saved';
+        if (changedAgain) profilePending = true;
+        if (ownerAccount) await refreshAccounts();
+    } catch (error) {
+        status.textContent = 'Could not save · try again';
+        status.dataset.state = 'error';
+        notify(error.message, true);
+    } finally {
+        profileSaving = false;
+        if (profilePending) { profilePending = false; saveProfile(); }
     }
-
-    async function doRegisterPasskey() {
-        const nameInput = document.getElementById('passkey-name');
-        const name = nameInput.value.trim() || 'Passkey';
-        const errEl = document.getElementById('passkey-error');
-        errEl.style.display = 'none';
-
+}
+document.getElementById('profile-name').addEventListener('input', () => {
+    clearTimeout(profileTimer);
+    document.getElementById('profile-status').textContent = 'Unsaved changes';
+    profileTimer = setTimeout(saveProfile, 650);
+});
+document.getElementById('profile-form').addEventListener('submit', event => { event.preventDefault(); clearTimeout(profileTimer); saveProfile(); });
+document.getElementById('signout-all').addEventListener('click', async () => {
+    if (!confirm('Sign out all your active sessions? You will need your passkey or a new owner sign-in link to return.')) return;
+    try { await accountRequest('/admin/accounts/sessions/revoke', {}); window.location.assign('/admin/login'); }
+    catch (error) { notify(error.message, true); }
+});
+async function refreshPasskeys() {
+    const data = await accountRequest('/admin/passkey/list');
+    const list = document.getElementById('passkey-list');
+    list.replaceChildren();
+    document.getElementById('passkey-count').textContent = data.passkeys.length + ' registered';
+    if (!data.passkeys.length) list.append(element('p', 'empty-state', 'Add your first passkey to unlock easy, secure sign-in.'));
+    for (const passkey of data.passkeys) {
+        const row = element('div', 'member-row');
+        const detail = element('div', 'member-detail');
+        detail.append(element('strong', '', passkey.name || 'Passkey'), element('span', 'muted', (passkey.created_at ? 'Added ' + dateLabel(passkey.created_at) : 'Ready to use') + (passkey.last_used_at ? ' · Last used ' + dateLabel(passkey.last_used_at) : '')));
+        const remove = action('Remove', async () => {
+            if (!confirm('Remove this passkey? You will not be able to use it to sign in again.')) return;
+            await accountRequest('/admin/passkey/delete', {credential_id: passkey.credential_id});
+            notify('Passkey removed.');
+            await refreshPasskeys();
+        }, 'button button-quiet button-danger');
+        remove.disabled = data.passkeys.length === 1;
+        if (remove.disabled) remove.title = 'Add a second passkey before removing your last one.';
+        row.append(element('span', 'member-avatar', '↗'), detail, remove);
+        list.append(row);
+    }
+}
+document.getElementById('passkey-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    const button = document.getElementById('register-passkey');
+    button.disabled = true;
+    button.textContent = 'Waiting for your device…';
+    try {
+        await registerPasskey('/admin/passkey/register/options', '/admin/passkey/register/verify', document.getElementById('passkey-name').value.trim() || 'Passkey');
+        document.getElementById('passkey-name').value = '';
+        notify('Your new passkey is ready.');
+        await refreshPasskeys();
+        if (ownerAccount) await refreshAccounts();
+    } catch (error) { notify(passkeyError(error), true); }
+    finally { button.disabled = false; button.textContent = 'Add a passkey +'; }
+});
+async function refreshAccounts() {
+    const data = await accountRequest('/admin/accounts');
+    const list = document.getElementById('account-list');
+    list.replaceChildren();
+    document.getElementById('member-count').textContent = data.accounts.length + ' members';
+    for (const account of data.accounts) {
+        const row = element('div', 'member-row');
+        const detail = element('div', 'member-detail');
+        detail.append(element('strong', '', account.name + (account.id === currentAccountId ? ' (you)' : '')),
+            element('span', 'muted', (account.is_owner ? 'Owner' : 'Administrator') + ' · ' + account.passkey_count + ' passkeys · Last sign-in ' + dateLabel(account.last_login_at)));
+        const menu = element('details', 'member-menu');
+        const summary = element('summary', 'button button-secondary', 'Manage');
+        summary.setAttribute('aria-label', 'Manage ' + account.name);
+        const controls = element('div', 'member-menu-content');
+        const rename = element('input');
+        rename.value = account.name;
+        rename.maxLength = 80;
+        rename.setAttribute('aria-label', 'Display name for ' + account.name);
+        controls.append(rename, action('Save name', async () => {
+            await accountRequest('/admin/accounts/update', {admin_id: account.id, name: rename.value.trim()});
+            if (account.id === currentAccountId) { savedName = rename.value.trim(); document.getElementById('profile-name').value = savedName; }
+            notify('Member name updated.'); await refreshAccounts();
+        }), action('Create sign-in link', async () => {
+            const result = await accountRequest('/admin/signin-links/create', {admin_id: account.id});
+            document.getElementById('fresh-link-url').value = result.url;
+            document.getElementById('fresh-link').hidden = false;
+            notify('One-use sign-in link created for ' + account.name + '.');
+            await refreshAccounts();
+            document.getElementById('fresh-link').scrollIntoView({behavior: 'smooth', block: 'nearest'});
+        }), action('Sign out all sessions', async () => {
+            if (!confirm('Sign out all sessions for ' + account.name + '? Pending sign-in links will also be revoked.')) return;
+            const result = await accountRequest('/admin/accounts/sessions/revoke', {admin_id: account.id});
+            if (result.signed_out) { window.location.assign('/admin/login'); return; }
+            notify('All sessions signed out.'); await refreshAccounts();
+        }));
+        if (!account.is_owner) controls.append(action('Remove access', async () => {
+            if (!confirm('Remove ' + account.name + ' from this workspace? Their passkeys and active sessions will stop working immediately.')) return;
+            await accountRequest('/admin/accounts/revoke', {admin_id: account.id});
+            notify('Workspace access removed.'); await refreshAccounts();
+        }, 'button button-danger'));
+        menu.append(summary, controls);
+        row.append(element('span', 'member-avatar', account.name.slice(0, 1).toUpperCase()), detail, menu);
+        list.append(row);
+    }
+    const links = document.getElementById('signin-link-list');
+    links.replaceChildren();
+    if (data.signin_links.length) links.append(element('h3', '', 'Active sign-in links'));
+    for (const link of data.signin_links) {
+        const row = element('div', 'member-row');
+        const account = data.accounts.find(a => a.id === link.admin_id);
+        row.append(element('span', 'member-detail muted', (account?.name || 'Member') + ' · Expires ' + new Date(link.expires_at).toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'})),
+            action('Revoke link', async () => { await accountRequest('/admin/signin-links/delete', {id: link.id}); notify('Sign-in link revoked.'); await refreshAccounts(); }, 'button button-quiet button-danger'));
+        links.append(row);
+    }
+}
+async function refreshInvites() {
+    const data = await accountRequest('/admin/invites');
+    const list = document.getElementById('invite-list');
+    list.replaceChildren();
+    if (!data.invites.length) list.append(element('p', 'empty-state', 'No pending invitations. Your next collaborator is one link away.'));
+    for (const invite of data.invites) {
+        const row = element('div', 'invite-row');
+        const heading = element('div', 'settings-actions');
+        heading.append(element('strong', 'member-detail', invite.name || 'New administrator'),
+            action('Revoke', async () => {
+                await accountRequest('/admin/invites/delete', {token: invite.token}); notify('Invitation revoked.'); await refreshInvites();
+            }, 'button button-quiet button-danger'));
+        const url = new URL('/admin/invite/' + encodeURIComponent(invite.token), window.location.origin).href;
+        row.append(heading, element('p', 'muted', 'Created ' + dateLabel(invite.created_at)), accessLink(url));
+        list.append(row);
+    }
+}
+if (ownerAccount) {
+    document.getElementById('copy-fresh-link').addEventListener('click', () => copyLink(document.getElementById('fresh-link-url').value));
+    document.getElementById('fresh-link-url').addEventListener('click', event => event.target.select());
+    document.getElementById('invite-form').addEventListener('submit', async event => {
+        event.preventDefault();
+        const button = event.currentTarget.querySelector('button');
+        button.disabled = true;
         try {
-            const result = await registerPasskey(
-                '/admin/passkey/register/options',
-                '/admin/passkey/register/verify',
-                name
-            );
-            if (result.success) {
-                nameInput.value = '';
-                refreshPasskeys();
-            } else {
-                errEl.textContent = result.error || 'Registration failed';
-                errEl.style.display = 'block';
-            }
-        } catch(e) {
-            if (e.name !== 'NotAllowedError') {
-                errEl.textContent = 'Error: ' + e.message;
-                errEl.style.display = 'block';
-            }
-        }
-    }
-
-    function deletePasskey(credId) {
-        if (!confirm('Delete this passkey?')) return;
-        fetch('/admin/passkey/delete', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({credential_id: credId}),
-        }).then(r => r.json()).then(data => {
-            refreshPasskeys();
-        });
-    }
-
-    {% if admin.is_owner %}
-    function refreshInvites() {
-        fetch('/admin/invites').then(r => r.json()).then(data => {
-            const list = document.getElementById('invite-list');
-            if (!data.invites || data.invites.length === 0) {
-                list.innerHTML = '<p style="color:#666">No pending invites.</p>';
-                return;
-            }
-            list.innerHTML = '<table><tr><th>Label</th><th>Created</th><th>Link</th><th>Action</th></tr>' +
-                data.invites.map(inv => {
-                    const url = window.location.origin + '/admin/invite/' + inv.token;
-                    const created = new Date(inv.created_at).toLocaleDateString();
-                    return '<tr>' +
-                        '<td>' + escapeHtml(inv.name || '(none)') + '</td>' +
-                        '<td>' + created + '</td>' +
-                        '<td><input type="text" value="' + escapeHtml(url) + '" readonly style="font-family:monospace;font-size:12px;width:300px;margin-bottom:0" onclick="this.select()"></td>' +
-                        '<td><button onclick="deleteInvite(\'' + inv.token + '\')" style="background-color:#f44336;padding:6px 12px;font-size:14px">Delete</button></td>' +
-                        '</tr>';
-                }).join('') + '</table>';
-        });
-    }
-
-    function createInvite() {
-        const label = document.getElementById('invite-label').value.trim();
-        fetch('/admin/invites/create', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({name: label}),
-        }).then(r => r.json()).then(data => {
-            if (data.success) {
-                document.getElementById('invite-label').value = '';
-                refreshInvites();
-            }
-        });
-    }
-
-    function deleteInvite(token) {
-        if (!confirm('Delete this invite link?')) return;
-        fetch('/admin/invites/delete', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({token: token}),
-        }).then(r => r.json()).then(() => refreshInvites());
-    }
-
-    refreshInvites();
-    {% endif %}
-
-    function escapeHtml(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    }
-
-    refreshPasskeys();
-    </script>
-</body>
-</html>
+            await accountRequest('/admin/invites/create', {name: document.getElementById('invite-label').value.trim()});
+            document.getElementById('invite-label').value = '';
+            notify('Invitation created. Copy the link below to share it.');
+            await refreshInvites();
+        } catch (error) { notify(error.message, true); }
+        finally { button.disabled = false; }
+    });
+    refreshAccounts().catch(error => notify(error.message, true));
+    refreshInvites().catch(error => notify(error.message, true));
+}
+refreshPasskeys().catch(error => notify(error.message, true));
+</script>
+{% endblock %}

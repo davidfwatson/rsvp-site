@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="robots" content="noindex,nofollow">
+  <title>{% block title %}Workspace{% endblock %} · PartyMail</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='color_schemes.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+</head>
+<body class="{% block body_class %}admin-app{% endblock %}{% if not current_admin %} auth-page{% endif %}">
+<a class="skip-link" href="#main-content">Skip to content</a>
+{% if current_admin and request.endpoint not in ['admin_login','passkey.invite_page','passkey.signin_link'] %}
+<aside class="sidebar" id="workspace-nav">
+  <a class="brand" href="{{ url_for('admin_dashboard') }}"><span class="brand-mark" aria-hidden="true">✉</span>PartyMail<span class="brand-dot">.</span></a>
+  <p class="nav-label">YOUR WORKSPACE</p>
+  <nav aria-label="Workspace">
+    <a class="nav-item {% if request.endpoint in ['admin_dashboard','admin','preview_event'] %}is-active{% endif %}" href="{{ url_for('admin_dashboard') }}"><span aria-hidden="true">▦</span>Events</a>
+    <a class="nav-item {% if request.endpoint == 'passkey.admin_settings' %}is-active{% endif %}" href="{{ url_for('passkey.admin_settings') }}"><span aria-hidden="true">♧</span>People & access</a>
+    <a class="nav-item {% if request.endpoint == 'admin_system' %}is-active{% endif %}" href="{{ url_for('admin_system') }}"><span aria-hidden="true">⚙</span>Connections</a>
+  </nav>
+  <div class="sidebar-bottom"><div class="workspace-note"><span class="status-dot"></span>A little less planning.<br>A lot more celebrating.</div>
+    <div class="account-chip"><span class="avatar">{{ current_admin.get('name','Host')[:1]|upper }}</span><div><strong>{{ current_admin.get('name','Host') }}</strong><small>{{ 'Workspace owner' if current_admin.is_owner else 'Event host' }}</small></div></div>
+    <form action="{{ url_for('admin_logout') }}" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="signout" type="submit">Sign out <span aria-hidden="true">↗</span></button></form>
+  </div>
+</aside>
+<div class="mobile-bar"><a class="brand" href="{{ url_for('admin_dashboard') }}">✉ PartyMail.</a><button class="button-quiet" id="nav-toggle" aria-controls="workspace-nav" aria-expanded="false">Menu</button></div>
+{% endif %}
+<main id="main-content" class="workspace-main">
+  {% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<div class="alert alert-{{ category }}" role="status">{{ message }}</div>{% endfor %}{% endwith %}
+  {% block content %}{% endblock %}
+</main>
+<div class="toast" id="workspace-toast" role="status" hidden></div>
+<script src="{{ url_for('static', filename='admin.js') }}" defer></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

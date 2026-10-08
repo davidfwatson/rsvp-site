@@ -18,6 +18,9 @@ def format_rsvp_for_export(rsvp: Dict[str, Any]) -> Dict[str, Any]:
 
   # Process each key in the original RSVP
   for key, value in rsvp.items():
+    # Private edit tokens are credentials, not spreadsheet data.
+    if key == 'token':
+      continue
     # Special handling for timestamp
     if key == 'timestamp':
       try:
@@ -27,6 +30,8 @@ def format_rsvp_for_export(rsvp: Dict[str, Any]) -> Dict[str, Any]:
 
     # Convert key from snake_case to Title Case for header
     header = key.replace('_', ' ').title()
+    if isinstance(value, str) and value.lstrip().startswith(('=', '+', '-', '@')):
+      value = "'" + value
     formatted_rsvp[header] = value
 
   return formatted_rsvp

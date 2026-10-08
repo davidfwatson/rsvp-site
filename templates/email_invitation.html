@@ -1,46 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>You're Invited!</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f9f9f9;
-        }
-        h1 {
-            color: #ff69b4;
-        }
-        .button {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #ff69b4;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>You're Invited!</h1>
-        <h2>{{ event.name }}</h2>
-        <p>We cordially invite you to join us for a special event:</p>
-        <p><strong>Date:</strong> {{ event.date }} at {{ event|format_time }}</p>
-        <p><strong>Location:</strong> {{ event.location }}</p>
-        <p>{{ event.description }}</p>
-        <p>
-            <a href="{{ url_for('index', slug=event.slug, _external=True) }}" class="button">RSVP Now</a>
-        </p>
-        <p>We hope to see you there!</p>
-    </div>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>You're invited to {{ event.name }}</title></head>
+<body style="margin:0;padding:0;background:#f2ede4;color:#302e28;font-family:Arial,sans-serif;">
+    <div style="display:none;max-height:0;overflow:hidden;">You're invited to {{ event.name }}. {{ event.date }} · {{ event.location }}</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2ede4;"><tr><td align="center" style="padding:36px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;background:#fffdf8;border:1px solid #e5dfd2;border-radius:6px;">
+            {% if event.cover_image %}<tr><td><img src="{{ config.PUBLIC_URL.rstrip('/') + event.cover_image if event.cover_image.startswith('/') else event.cover_image }}" alt="" width="580" style="display:block;width:100%;max-width:580px;height:auto;border-radius:6px 6px 0 0;"></td></tr>{% endif %}
+            <tr><td style="padding:40px 30px 34px;text-align:center;">
+                <p style="font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#716a5d;margin:0 0 20px;">You're warmly invited</p>
+                <h1 style="font-family:Georgia,serif;font-size:38px;font-weight:normal;line-height:1.15;margin:0 0 24px;">{{ event.name }}</h1>
+                <div style="height:1px;width:44px;background:{{ event.accent_color|default('#9c5c69', true) }};margin:0 auto 25px;"></div>
+                <p style="font-size:14px;line-height:1.8;margin:0 0 5px;"><strong>{{ event.date }}</strong>{% if event.start_time or event.time %}<br>{{ event|format_time }}{% endif %}</p>
+                <p style="font-size:14px;line-height:1.8;margin:0 0 25px;">{{ event.location }}</p>
+                <div style="font-size:14px;line-height:1.8;color:#605a4f;text-align:left;margin:0 0 28px;">{% if event.description_html %}{{ event.description_html|safe }}{% else %}<p style="white-space:pre-line;">{{ event.description }}</p>{% endif %}</div>
+                <table role="presentation" cellpadding="0" cellspacing="0" align="center"><tr><td style="background:#302e28;border-radius:5px;"><a href="{{ public_url(event.slug) }}" style="display:inline-block;padding:15px 28px;color:#fffdf8;font-size:14px;font-weight:bold;text-decoration:none;border:1px solid #302e28;border-radius:5px;">Open invitation &amp; RSVP →</a></td></tr></table>
+                <p style="font-size:12px;color:#716a5d;line-height:1.8;margin:23px 0 0;">We hope you can join us.</p>
+            </td></tr>
+        </table>
+        <p style="margin:22px 0 0;font-size:11px;color:#716a5d;">Sent with <a href="{{ config.PUBLIC_URL }}" style="color:#716a5d;text-decoration:none;">Party Mail</a></p>
+    </td></tr></table>
 </body>
 </html>

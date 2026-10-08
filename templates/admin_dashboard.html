@@ -1,248 +1,31 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
-    <link rel="stylesheet" href="/static/admin.css">
-</head>
-<body>
-    <div class="admin-container">
-        <h1>Admin Dashboard</h1>
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <h2>Create New Event</h2>
-        <form action="{{ url_for('new_event') }}" method="POST">
-            <label for="name">Event Name:</label>
-            <input type="text" id="name" name="name" required>
-            <div id="nameValidation" class="validation-message" style="display: none;"></div>
-
-            <div class="slug-preview">
-                <small>URL will be: <strong>partymail.app/<input type="text" id="slugPreview" name="slug" class="slug-input" required></strong></small>
-                <button type="button" id="autoGenerateSlug" class="slug-auto-btn">↻ Auto</button>
-            </div>
-            <div id="slugValidation" class="validation-message" style="display: none;"></div>
-
-            <label for="date">Date:</label>
-            <input type="text" id="date" name="date" required>
-            <small class="help-text">Use one of these formats: November 15, 2024 | 2024-11-15 | 11/15/2024</small>
-            
-            <label for="start_time">Start Time:</label>
-            <input type="text" id="start_time" name="start_time" required>
-            <small class="help-text">Use one of these formats: 7:00 PM | 19:00 | 7:30 AM</small>
-
-            <label for="end_time">End Time (optional):</label>
-            <input type="text" id="end_time" name="end_time">
-            <small class="help-text">Leave blank if no specific end time</small>
-            
-            <label for="location">Location:</label>
-            <input type="text" id="location" name="location" required>
-            
-            <label for="description">Description:</label>
-            <textarea id="description" name="description" required></textarea>
-            
-            <label for="max_guests_per_invite">Max Guests per Invite:</label>
-            <input type="number" id="max_guests_per_invite" name="max_guests_per_invite" required>
-            
-            <button type="submit">Create Event</button>
-        </form>
-
-        <h2>Existing Events</h2>
-        <ul>
-            {% for slug, event in active_events.items() %}
-                <li><a href="{{ url_for('admin', slug=event['slug']) }}">{{ event['name'] }} ({{ slug }})</a></li>
-            {% endfor %}
-        </ul>
-
-        {% if archived_events %}
-        <h2>Past Events</h2>
-        <p class="help-text">Archived: guest lists stay here, but the public event page is turned off.</p>
-        <ul>
-            {% for slug, event in archived_events.items() %}
-                <li><a href="{{ url_for('admin', slug=event['slug']) }}">{{ event['name'] }} ({{ slug }})</a></li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-        <a href="{{ url_for('passkey.admin_settings') }}" class="button" style="background-color:#0066cc;margin-right:10px">Settings</a>
-        <a href="{{ url_for('admin_logout') }}">Logout</a>
-    </div>
-
-    <script>
-        // Existing event names and slugs for validation
-        const existingEventNames = [
-            {% for slug, event in events.items() %}
-                "{{ event['name'] | lower }}",
-            {% endfor %}
-        ];
-
-        const existingSlugs = [
-            {% for slug, event in events.items() %}
-                "{{ slug }}",
-            {% endfor %}
-        ];
-
-        // Generate slug preview as user types
-        function generateSlug(name) {
-            // Convert to lowercase
-            let slug = name.toLowerCase();
-
-            // Remove accents (basic ASCII conversion)
-            slug = slug.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-
-            // Remove non-alphanumeric characters (keep spaces and hyphens)
-            slug = slug.replace(/[^\w\s-]/g, '');
-
-            // Replace multiple spaces/hyphens with single hyphen
-            slug = slug.replace(/[-\s]+/g, '-');
-
-            // Remove leading/trailing hyphens
-            slug = slug.replace(/^-+|-+$/g, '');
-
-            return slug;
-        }
-
-        // Validate slug format (alphanumeric and hyphens only)
-        function isValidSlugFormat(slug) {
-            // Must contain only lowercase letters, numbers, and hyphens
-            // Cannot start or end with a hyphen
-            return /^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug);
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const nameInput = document.getElementById('name');
-            const slugInput = document.getElementById('slugPreview');
-            const nameValidation = document.getElementById('nameValidation');
-            const slugValidation = document.getElementById('slugValidation');
-            const submitButton = document.querySelector('button[type="submit"]');
-            const autoGenerateButton = document.getElementById('autoGenerateSlug');
-
-            let manualSlugEdit = false;
-
-            // Auto-generate slug from name
-            function updateSlugFromName() {
-                const name = nameInput.value.trim();
-                const slug = generateSlug(name);
-                slugInput.value = slug || '';
-                validateSlug(slug);
-            }
-
-            // Validate slug
-            function validateSlug(slug) {
-                if (!slug) {
-                    slugValidation.textContent = '';
-                    slugValidation.style.display = 'none';
-                    slugInput.classList.remove('invalid');
-                    submitButton.disabled = true;
-                    return false;
-                }
-
-                // Check format
-                if (!isValidSlugFormat(slug)) {
-                    slugValidation.textContent = '⚠️ Slug must contain only lowercase letters, numbers, and hyphens (no spaces, no special characters)';
-                    slugValidation.style.display = 'block';
-                    slugValidation.className = 'validation-message error';
-                    slugInput.classList.add('invalid');
-                    submitButton.disabled = true;
-                    return false;
-                }
-
-                // Check for duplicates
-                if (existingSlugs.includes(slug)) {
-                    slugValidation.textContent = '⚠️ This slug is already in use';
-                    slugValidation.style.display = 'block';
-                    slugValidation.className = 'validation-message error';
-                    slugInput.classList.add('invalid');
-                    submitButton.disabled = true;
-                    return false;
-                }
-
-                // Check length
-                if (slug.length > 50) {
-                    slugValidation.textContent = '⚠️ Slug is too long (max 50 characters)';
-                    slugValidation.style.display = 'block';
-                    slugValidation.className = 'validation-message error';
-                    slugInput.classList.add('invalid');
-                    submitButton.disabled = true;
-                    return false;
-                }
-
-                // All good
-                slugValidation.textContent = '✓ Slug is valid';
-                slugValidation.style.display = 'block';
-                slugValidation.className = 'validation-message success';
-                slugInput.classList.remove('invalid');
-                return true;
-            }
-
-            // Validate name
-            function validateName() {
-                const name = nameInput.value.trim();
-
-                // Check for empty name
-                if (name === '') {
-                    nameValidation.textContent = '';
-                    nameValidation.style.display = 'none';
-                    submitButton.disabled = true;
-                    return false;
-                }
-                // Check for duplicate names
-                else if (existingEventNames.includes(name.toLowerCase())) {
-                    nameValidation.textContent = '⚠️ An event with this name already exists';
-                    nameValidation.style.display = 'block';
-                    nameValidation.className = 'validation-message error';
-                    submitButton.disabled = true;
-                    return false;
-                } else {
-                    nameValidation.textContent = '✓ Event name is available';
-                    nameValidation.style.display = 'block';
-                    nameValidation.className = 'validation-message success';
-                    return true;
-                }
-            }
-
-            // Update submit button state
-            function updateSubmitButton() {
-                const nameValid = validateName();
-                const slugValid = validateSlug(slugInput.value);
-                submitButton.disabled = !(nameValid && slugValid);
-            }
-
-            // Name input handler
-            nameInput.addEventListener('input', function() {
-                validateName();
-
-                // Auto-generate slug if not manually edited
-                if (!manualSlugEdit) {
-                    updateSlugFromName();
-                }
-
-                updateSubmitButton();
-            });
-
-            // Slug input handler
-            slugInput.addEventListener('input', function() {
-                manualSlugEdit = true;
-                validateSlug(this.value);
-                updateSubmitButton();
-            });
-
-            // Auto-generate button handler
-            autoGenerateButton.addEventListener('click', function() {
-                manualSlugEdit = false;
-                updateSlugFromName();
-                updateSubmitButton();
-            });
-
-            // Initialize
-            updateSubmitButton();
-        });
-    </script>
-</body>
-</html>
+{% extends 'admin_base.html' %}
+{% block title %}Your events{% endblock %}
+{% block content %}
+<header class="page-heading"><div><p class="eyebrow">GOOD TIMES START HERE</p><h1>Your events<span class="heading-dot">.</span></h1><p class="muted">A thoughtful invitation. A full room. All the details in one place.</p></div><button class="button" data-open-dialog="new-event"><span aria-hidden="true">＋</span> Create event</button></header>
+<section class="welcome-banner"><div><span class="badge">MADE FOR GETTING TOGETHER</span><h2>Make something<br>worth showing up for.</h2><p>Design your invitation, share a link, and leave the guest list to us.</p></div><div class="banner-art" aria-hidden="true"><div class="art-letter"><span>YOU'RE INVITED</span><strong>Let's<br>celebrate.</strong><i>with good company</i></div><div class="art-envelope"></div><span class="art-spark">✳</span></div></section>
+<div class="section-heading"><h2>Upcoming & active <span class="count">{{ active_events|length }}</span></h2><label class="search-field"><span aria-hidden="true">⌕</span><input id="event-search" type="search" placeholder="Find an event…" aria-label="Search events"></label></div>
+<div class="event-grid" id="active-events">
+{% for slug, event in active_events.items() %}
+<a class="event-card" data-event-name="{{ event.name|lower }}" href="{{ url_for('admin', slug=slug) }}">
+  <div class="event-art scheme-{{ event.get('color_scheme','pink') }}" {% if event.get('cover_image') %}style="background-image:url('{{ event.cover_image }}');background-size:cover;background-position:center"{% endif %}><span class="event-art-label">PARTYMAIL INVITATION</span><div class="mini-invite"><small>YOU'RE INVITED</small><strong>{{ event.name }}</strong><span>{{ event.date }}</span></div><span class="art-corner">↗</span></div>
+  <div class="event-card-body"><div class="event-card-title"><h3>{{ event.name }}</h3><span class="badge badge-success">Active</span></div><p>{{ event.date }} <span aria-hidden="true">·</span> {{ event.start_time }}</p><div class="event-card-footer"><span><strong>{{ stats[slug].attending }}</strong> guests attending</span><span>{{ stats[slug].responses }} responses <span aria-hidden="true">↗</span></span></div></div>
+</a>
+{% else %}<div class="empty-state"><span class="empty-icon" aria-hidden="true">✉</span><h3>Your next gathering starts here</h3><p>Create your first invitation and make it feel like you.</p><button class="button" data-open-dialog="new-event">Create an event</button></div>{% endfor %}
+</div>
+<p id="no-events-match" class="muted" hidden>No events match your search.</p>
+{% if archived_events %}
+<div class="section-heading"><div><h2>Past Events <span class="count">{{ archived_events|length }}</span></h2><p class="muted">Archived invitations are closed. Your guest lists are kept safely here.</p></div></div>
+<div class="archived-list">{% for slug, event in archived_events.items() %}<a class="archived-row" data-event-name="{{ event.name|lower }}" href="{{ url_for('admin', slug=slug) }}"><span class="archive-icon" aria-hidden="true">✉</span><div><strong>{{ event.name }}</strong><small>{{ event.date }} · {{ stats[slug].responses }} responses</small></div><span class="badge">Archived</span><span aria-hidden="true">↗</span></a>{% endfor %}</div>
+{% endif %}
+<dialog id="new-event" class="create-dialog"><div class="dialog-heading"><div><p class="eyebrow">A NEW REASON TO GATHER</p><h2>Create your event</h2></div><button type="button" class="button-quiet" data-close-dialog aria-label="Close">✕</button></div>
+<form action="{{ url_for('new_event') }}" method="post" id="new-event-form" class="stack">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="color_scheme" value="pink">
+<div class="form-field"><label for="new-name">Event name</label><input id="new-name" name="name" required maxlength="160" placeholder="A birthday, a dinner, a just-because…"></div>
+<div class="field-grid"><div class="form-field"><label for="new-date">Date</label><input type="date" id="new-date" name="date" required></div><div class="form-field"><label for="new-time">Starts at</label><input type="time" id="new-time" name="start_time" required></div><div class="form-field"><label for="new-end">Ends at <span class="muted">optional</span></label><input type="time" id="new-end" name="end_time"></div><div class="form-field"><label for="new-limit">Guests per invitation</label><input type="number" id="new-limit" name="max_guests_per_invite" value="5" min="1" max="100" required></div></div>
+<div class="form-field"><label for="new-location">Where are we meeting?</label><input id="new-location" name="location" required maxlength="500" placeholder="Venue or address"></div>
+<div class="form-field"><label for="new-description">A note for your guests</label><textarea id="new-description" name="description" rows="3" maxlength="20000" placeholder="What should everyone know?"></textarea></div>
+<div class="form-field"><label for="new-slug">Invitation link</label><div class="input-prefix"><span>{{ config.PUBLIC_URL }}/</span><input id="new-slug" name="slug" maxlength="50" pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="your-event"></div><small class="help-text">A unique link for sharing. You can customize it before creating.</small></div>
+<p class="form-error" id="new-event-error" role="status" hidden></p><div class="dialog-actions"><button type="button" class="button-secondary" data-close-dialog>Cancel</button><button class="button" type="submit">Create invitation <span aria-hidden="true">→</span></button></div>
+</form></dialog>
+<script type="application/json" id="existing-events">{{ {'names': events.values()|map(attribute='name')|map('lower')|list, 'slugs': events.keys()|list}|tojson }}</script>
+{% endblock %}

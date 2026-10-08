@@ -1,0 +1,29 @@
+[Unit]
+Description=Consistent encrypted offsite backup of Party Mail data
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=/etc/rsvp-backup.env
+ConditionPathExists=/var/lib/rsvp-site/.rsvp-data
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+EnvironmentFile=/etc/rsvp-backup.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+# Install this helper and storage.py in a root-owned directory. Never execute
+# release code owned by the web/deploy account from this privileged service.
+WorkingDirectory=/usr/local/lib/rsvp-backup
+ExecStart=/usr/bin/python3 -E /usr/local/lib/rsvp-backup/backup_data.py
+StateDirectory=rsvp-backup
+StateDirectoryMode=0700
+UMask=0077
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/rsvp-site /var/lib/rsvp-backup
+TimeoutStartSec=2h

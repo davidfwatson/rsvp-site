@@ -1,0 +1,86 @@
+name: Test and deploy Party Mail
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: |
+            requirements-runtime.txt
+            requirements-dev.txt
+      - name: Install runtime and test dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Run isolated tests
+        run: python -m pytest -q
+      - name: Package the tested commit
+        if: github.event_name != 'pull_request'
+        run: |
+          git archive --format=tar.gz --output=rsvp-release.tar.gz "$GITHUB_SHA"
+          sha256sum rsvp-release.tar.gz > rsvp-release.sha256
+      - uses: actions/upload-artifact@v4
+        if: github.event_name != 'pull_request'
+        with:
+          name: rsvp-${{ github.sha }}
+          path: |
+            rsvp-release.tar.gz
+            rsvp-release.sha256
+            scripts/deploy_release.py
+          retention-days: 14
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.RSVP_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: rsvp-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: rsvp-${{ github.sha }}
+      - name: Upload and promote the tested release
+        env:
+          DEPLOY_KEY: ${{ secrets.RSVP_DEPLOY_KEY }}
+          KNOWN_HOSTS: ${{ secrets.RSVP_DEPLOY_KNOWN_HOSTS }}
+          DEPLOY_HOST: ${{ secrets.RSVP_DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.RSVP_DEPLOY_USER }}
+          DEPLOY_PORT: ${{ secrets.RSVP_DEPLOY_PORT }}
+          RELEASE: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          : "${DEPLOY_KEY:?Set RSVP_DEPLOY_KEY}"
+          : "${KNOWN_HOSTS:?Set RSVP_DEPLOY_KNOWN_HOSTS}"
+          : "${DEPLOY_HOST:?Set RSVP_DEPLOY_HOST}"
+          : "${DEPLOY_USER:?Set RSVP_DEPLOY_USER}"
+          DEPLOY_PORT="${DEPLOY_PORT:-22}"
+          [[ "$DEPLOY_PORT" =~ ^[0-9]+$ ]]
+          [[ "$RELEASE" =~ ^[a-f0-9]{40}$ ]]
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/rsvp_deploy
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/rsvp_deploy ~/.ssh/known_hosts
+          trap 'rm -f ~/.ssh/rsvp_deploy' EXIT
+          sha256sum --check rsvp-release.sha256
+          DIGEST=$(cut -d ' ' -f 1 rsvp-release.sha256)
+          [[ "$DIGEST" =~ ^[a-f0-9]{64}$ ]]
+          ssh_args=(-i ~/.ssh/rsvp_deploy -o BatchMode=yes -o StrictHostKeyChecking=yes)
+          remote="$DEPLOY_USER@$DEPLOY_HOST"
+          ssh "${ssh_args[@]}" -p "$DEPLOY_PORT" "$remote" 'mkdir -p /srv/rsvp/incoming'
+          scp "${ssh_args[@]}" -P "$DEPLOY_PORT" rsvp-release.tar.gz "$remote:/srv/rsvp/incoming/$RELEASE.tar.gz"
+          scp "${ssh_args[@]}" -P "$DEPLOY_PORT" scripts/deploy_release.py "$remote:/srv/rsvp/incoming/$RELEASE-deploy.py"
+          ssh "${ssh_args[@]}" -p "$DEPLOY_PORT" "$remote" \
+            "python3.12 /srv/rsvp/incoming/$RELEASE-deploy.py --artifact /srv/rsvp/incoming/$RELEASE.tar.gz --sha256 $DIGEST --release $RELEASE"

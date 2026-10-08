@@ -1,4 +1,4 @@
-from flask import url_for
+from flask import current_app, url_for
 from event_config import format_event_time
 
 
@@ -56,7 +56,7 @@ Location: {event['location']}
 
 {event['description']}
 
-Please RSVP by visiting: https://partymail.app/{event['slug']}
+Please RSVP by visiting: {current_app.config['PUBLIC_URL'].rstrip('/')}{url_for('event_page', slug=event['slug'])}
 
 We hope to see you there!
 """

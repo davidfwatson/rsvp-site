@@ -1,59 +1,35 @@
+{% from '_guest_theme.html' import theme_attributes, guest_background %}
+{% from '_rsvp_fields.html' import attendance_fields %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Your RSVP</title>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-52ZJ7PXYEC"></script>
-    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-52ZJ7PXYEC');</script>
-    <link rel="stylesheet" href="/static/color_schemes.css">
-    <link rel="stylesheet" href="/static/invitation.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow"><meta name="referrer" content="same-origin">
+    <title>Update your RSVP · {{ event.name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='color_schemes.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='invitation.css') }}">
+    {% include '_analytics.html' ignore missing %}
+    <script src="{{ url_for('static', filename='rsvp.js') }}" defer></script>
 </head>
-<body class="color-scheme-{{ event.color_scheme }}">
-    <div class="envelope-container">
-        <img src="{{ url_for('static', filename='env_' + event.color_scheme + '.png') }}" alt="Envelope" class="envelope-image">
-        <div class="invite-container">
-            <div class="invite-text">
-                <h1>Update Your RSVP</h1>
-                <h2>{{ event.name }}</h2>
-                <p>Hi {{ rsvp.name }}, you're currently marked as <strong>{{ "attending" if rsvp.attending == "yes" else "not attending" }}</strong>.</p>
-                <form method="POST">
-                    <div class="form-group attendance-group">
-                        <div class="radio-group">
-                            <label>Will you attend?</label>
-                            <div class="radio-options">
-                                <input type="radio" id="yes" name="attending" value="yes" required {% if rsvp.attending == 'yes' %}checked{% endif %}>
-                                <label for="yes">Yes</label>
-                                <input type="radio" id="no" name="attending" value="no" required {% if rsvp.attending == 'no' %}checked{% endif %}>
-                                <label for="no">No</label>
-                            </div>
-                        </div>
-                        <div class="guests-input" id="guestsInputContainer" style="display: none;">
-                            <div class="guest-count-input">
-                                <label for="num_adults">Number of Adults</label>
-                                <input type="number" id="num_adults" name="num_adults" min="1" value="{{ rsvp.num_adults or 1 }}" required>
-                            </div>
-                            <div class="guest-count-input">
-                                <label for="num_children">Number of Children</label>
-                                <input type="number" id="num_children" name="num_children" min="0" value="{{ rsvp.num_children or 0 }}" required>
-                            </div>
-                        </div>
-                        <div class="form-group dietary-restrictions" style="display: none;" id="dietaryContainer">
-                            <label for="dietary_restrictions">Dietary Restrictions <span class="optional-label">(optional)</span></label>
-                            <textarea
-                                id="dietary_restrictions"
-                                name="dietary_restrictions"
-                                placeholder="Please let us know about any dietary restrictions or allergies we should be aware of."
-                                rows="4"
-                            >{{ rsvp.dietary_restrictions or '' }}</textarea>
-                        </div>
-                    </div>
-                    <button type="submit">Update RSVP</button>
-                </form>
-            </div>
-        </div>
-    </div>
-    <script src="/static/rsvp.js"></script>
+<body {{ theme_attributes(event) }}>
+    {{ guest_background(event) }}
+    <main class="simple-shell">
+        <p class="eyebrow">Plans change. That's okay.</p>
+        <article class="invitation-card"><div class="card-content">
+            <header class="simple-heading"><span class="card-ornament" aria-hidden="true">✦</span><p class="eyebrow">{{ event.name }}</p><h1>Update your RSVP.</h1><p>Hi {{ rsvp.name }}. You're currently marked as <strong>{{ 'attending' if rsvp.attending == 'yes' else 'not attending' }}</strong>.</p></header>
+            {% include '_event_details.html' %}
+            {% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<p class="form-notice {{ category }}" role="alert">{{ message }}</p>{% endfor %}{% endwith %}
+            {% if error %}<p class="form-notice error" role="alert">{{ error }}</p>{% endif %}
+            <form method="POST" class="rsvp-form" data-max-guests="{{ event.max_guests_per_invite|default(10, true) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {{ attendance_fields(event, request.form if error else rsvp) }}
+                <p class="form-status" role="status" aria-live="polite"></p>
+                <button type="submit" class="primary-button">Update my RSVP<span aria-hidden="true">↗</span></button>
+                <p class="form-footnote">Your host will receive your updated response.</p>
+            </form>
+            <a href="{{ url_for('event_page', slug=event.slug) }}" class="text-link">Back to the invitation</a>
+        </div></article>
+        <footer class="guest-footer"><span class="brand-mark" aria-hidden="true">✉</span>Sent with <a href="{{ url_for('index') }}">Party Mail</a></footer>
+    </main>
 </body>
 </html>

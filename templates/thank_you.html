@@ -1,80 +1,47 @@
+{% from '_guest_theme.html' import theme_attributes, guest_background %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thank You for Your RSVP!</title>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-52ZJ7PXYEC"></script>
-    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-52ZJ7PXYEC');</script>
-    <link rel="stylesheet" href="/static/color_schemes.css">
-    <link rel="stylesheet" href="/static/invitation.css">
-    <link rel="stylesheet" href="/static/thank_you.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow"><meta name="referrer" content="same-origin">
+    <title>RSVP received · {{ event.name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='color_schemes.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='invitation.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='thank_you.css') }}">
+    {% include '_analytics.html' ignore missing %}
 </head>
-<body class="color-scheme-{{ event.color_scheme }}">
-    <div class="envelope-container">
-        <img src="{{ url_for('static', filename='env_' + event.color_scheme + '.png') }}" alt="Envelope" class="envelope-image">
-        <div class="thank-you-container">
-            <div class="emoji">
-                {% if attending == 'yes' %}
-                🎉
-                {% elif attending == 'no' %}
-                😢
-                {% else %}
-                🤷‍♂️
-                {% endif %}
-            </div>
-            <h1 class="thank-you-message">Thank You, {{ name }}!</h1>
-            <p class="personalized-message">
-                {% if attending == 'yes' %}
-                    We're thrilled that you'll be joining us for {{ event.name }}!
-                    {% set total_guests = num_adults|int + num_children|int %}
-                    {% if total_guests > 1 %}
-                        We can't wait to see you and your 
-                        {% if num_adults|int > 1 %}{{ num_adults|int - 1 }} additional adult{% if num_adults|int > 2 %}s{% endif %}{% endif %}
-                        {% if num_adults|int > 1 and num_children|int > 0 %}and {% endif %}
-                        {% if num_children|int > 0 %}{{ num_children }} child{% if num_children|int > 1 %}ren{% endif %}{% endif %}
-                        there and share this special moment together.
-                    {% else %}
-                        We can't wait to see you there and share this special moment together.
-                    {% endif %}
-                {% elif attending == 'no' %}
-                    We're sorry you won't be able to make it to {{ event.name }}, but we appreciate you letting us know.
-                    You'll be missed, and we hope to see you soon!
-                {% else %}
-                    Not sure how you managed to fill out the form without saying whether you're going or not. Please contact davidfwatson@gmail.com
-                {% endif %}
-            </p>
+<body {{ theme_attributes(event) }}>
+    {{ guest_background(event) }}
+    <main class="simple-shell">
+        <p class="eyebrow">Your reply, delivered</p>
+        <article class="invitation-card"><div class="card-content thank-you-content">
+            <div class="confirmation-mark" aria-hidden="true">{{ '✉' if check_email else '✓' }}</div>
+            <header class="simple-heading">
+                <p class="eyebrow">{{ 'Your response' if check_email else 'RSVP received' }}</p>
+                <h1>{% if check_email %}Your invitation is waiting.{% else %}Thank you{% if name %}, {{ name }}{% endif %}.{% endif %}</h1>
+                {% if check_email %}<p>If you already responded, use the private link in your confirmation email to update it.</p>
+                {% elif attending == 'yes' %}<p>You're on the list for {{ event.name }}.<br>We look forward to seeing you there.</p>
+                {% elif attending == 'no' %}<p>Your host knows you won't be able to join {{ event.name }}.<br>Thank you for letting them know. You'll be missed.</p>
+                {% else %}<p>Your response has been received by your host.</p>{% endif %}
+            </header>
+            {% if email_delivery_failed %}<p class="form-notice">{% if check_email %}We couldn't send a new confirmation email. Use your original private update link, or contact your host for help.{% else %}Your response is saved, but we couldn't send a confirmation email. Contact your host if your plans change.{% endif %}</p>{% endif %}
             {% if attending == 'yes' %}
-            <div class="event-details">
-                <h3>Event Details:</h3>
-                <p><strong>Date:</strong> {{ event.date }} at {{ event|format_time }}</p>
-                <p><strong>Location:</strong> {{ event.location }}</p>
-                <div>{{ event.description_html | safe }}</div>
-                
-                <div class="calendar-buttons">
-                    <h4>Add to Calendar:</h4>
+                {% set adults = num_adults|default(1, true)|int %}{% set children = num_children|default(0, true)|int %}
+                {% if adults or children %}<p class="confirmed-party">{{ adults }} adult{{ 's' if adults != 1 else '' }}{% if children %} &amp; {{ children }} child{{ 'ren' if children != 1 else '' }}{% endif %} confirmed</p>{% endif %}
+                {% include '_event_details.html' %}
+                <section class="calendar-section" aria-labelledby="calendarTitle">
+                    <h2 id="calendarTitle">Save the date</h2><p>Add the gathering to your calendar.</p>
                     <div class="calendar-options">
-                        <a href="{{ url_for('generate_google_calendar_link', slug=event.slug) }}" target="_blank" class="calendar-button google-calendar">
-                            <img src="{{ url_for('static', filename='google_calendar_icon.png') }}" alt="Google Calendar">
-                            Google Calendar
-                        </a>
-                        <a href="{{ url_for('download_ics_file', slug=event.slug) }}" class="calendar-button apple-calendar">
-                            <img src="{{ url_for('static', filename='apple_calendar_icon.png') }}" alt="Apple Calendar">
-                            Apple/Outlook Calendar
-                        </a>
+                        <a href="{{ url_for('generate_google_calendar_link', slug=event.slug) }}" target="_blank" rel="noopener" class="calendar-button"><span aria-hidden="true">▦</span>Google Calendar<span aria-hidden="true">↗</span></a>
+                        <a href="{{ url_for('download_ics_file', slug=event.slug) }}" class="calendar-button"><span aria-hidden="true">▦</span>Apple / Outlook<span aria-hidden="true">↓</span></a>
                     </div>
-                </div>
-            </div>
+                </section>
             {% endif %}
-            {% if dietary_restrictions %}
-            <div class="dietary-notes">
-                <h4>Dietary Restrictions Noted:</h4>
-                <p>{{ dietary_restrictions }}</p>
-            </div>
-            {% endif %}
-            <a href="{{ url_for('index', slug=request.view_args['slug']) }}" class="button">Back to Event Page</a>
-        </div>
-    </div>
+            {% if dietary_restrictions %}<aside class="dietary-notes"><h2>We've noted your dietary needs</h2><p>{{ dietary_restrictions }}</p></aside>{% endif %}
+            <a href="{{ url_for('event_page', slug=event.slug) }}" class="text-link">Back to the invitation</a>
+            {% if token %}<a href="{{ url_for('update_rsvp', slug=event.slug, token=token) }}" class="text-link">Change your RSVP</a>{% endif %}
+        </div></article>
+        <footer class="guest-footer"><span class="brand-mark" aria-hidden="true">✉</span>Sent with <a href="{{ url_for('index') }}">Party Mail</a></footer>
+    </main>
 </body>
 </html>

@@ -1,143 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - {{ event.name }}</title>
-    <link rel="stylesheet" href="/static/admin.css">
-</head>
-<body>
-    <div class="admin-container">
-        <h1>Admin - {{ event.name }}</h1>
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <div class="event-link-container">
-            <h3>Event RSVP Link</h3>
-            {% if event.get('archived') %}
-                <p class="help-text">This event is archived, so the link below is switched off and returns "Event not found". Untick "Archived" below to turn it back on.</p>
-            {% endif %}
-            <div class="link-display">
-                <input type="text" value="https://partymail.app/{{ event.slug }}" readonly id="rsvpLink">
-                <button id="copyButton" class="copy-button">Copy Link</button>
-            </div>
-        </div>
-        
-        <h2>Edit Event Details</h2>
-        <form method="POST">
-            <label for="name">Event Name:</label>
-            <input type="text" id="name" name="name" value="{{ event.name }}" required>
-            
-            <label for="date">Date:</label>
-            <input type="text" id="date" name="date" value="{{ event.date }}" required>
-            <small class="help-text">Use one of these formats: November 15, 2024 | 2024-11-15 | 11/15/2024</small>
-            
-            <label for="start_time">Start Time:</label>
-            <input type="text" id="start_time" name="start_time" value="{{ event.start_time }}" required>
-            <small class="help-text">Use one of these formats: 7:00 PM | 19:00 | 7:30 AM</small>
-
-            <label for="end_time">End Time (optional):</label>
-            <input type="text" id="end_time" name="end_time" value="{{ event.end_time }}">
-            <small class="help-text">Leave blank if no specific end time</small>
-            
-            <label for="location">Location:</label>
-            <input type="text" id="location" name="location" value="{{ event.location }}" required>
-            
-            <label for="description">Description:</label>
-            <textarea id="description" name="description" required>{{ event.description }}</textarea>
-            
-            <label for="max_guests_per_invite">Max Guests per Invite:</label>
-            <input type="number" id="max_guests_per_invite" name="max_guests_per_invite" value="{{ event.max_guests_per_invite }}" required>
-            
-            <label for="color_scheme">Color Scheme:</label>
-            <select id="color_scheme" name="color_scheme" required>
-                <option value="pink" {% if event.color_scheme == 'pink' %}selected{% endif %}>Pink</option>
-                <option value="blue" {% if event.color_scheme == 'blue' %}selected{% endif %}>Blue</option>
-                <option value="red" {% if event.color_scheme == 'red' %}selected{% endif %}>Red</option>
-                <option value="black" {% if event.color_scheme == 'black' %}selected{% endif %}>Black</option>
-            </select>
-            
-            <label class="checkbox-label">
-                <input type="checkbox" id="archived" name="archived" {% if event.get('archived') %}checked{% endif %}>
-                Archived (hide the public event page; keep the guest list here)
-            </label>
-
-            <button type="submit" name="update_event">Update Event</button>
-        </form>
-
-        <h2>Send Invitation</h2>
-        <form method="POST">
-            <label for="email">Recipient Email:</label>
-            <input type="email" id="email" name="email" required>
-            <button type="submit" name="send_invitation">Send Invitation</button>
-        </form>
-
-        <h2>RSVP Responses</h2>
-        <table>
-            <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Response</th>
-                <th>Number of Guests</th>
-                <th>Comment</th>
-                <th>Timestamp</th>
-            </tr>
-            {% for rsvp in rsvps %}
-            <tr>
-                <td>{{ rsvp.name }}</td>
-                <td>{{ rsvp.email }}</td>
-                <td>{{ rsvp.attending }}</td>
-                <td>{{ rsvp.num_guests }}</td>
-                <td>{{ rsvp.comment }}</td>
-                <td>{{ rsvp.timestamp }}</td>
-            </tr>
-            {% endfor %}
-        </table>
-
-        <div style="margin: 20px 0;">
-            <a href="{{ url_for('export_rsvps', slug=event.slug) }}" class="button">
-                Export RSVPs to CSV
-            </a>
-          </div>
-
-
-        <a href="{{ url_for('admin_dashboard') }}">Back to Admin Dashboard</a>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const copyButton = document.getElementById('copyButton');
-            const linkInput = document.getElementById('rsvpLink');
-
-            copyButton.addEventListener('click', async () => {
-                linkInput.select();
-                linkInput.setSelectionRange(0, 99999); // For mobile devices
-                
-                const originalText = copyButton.textContent;
-                
-                try {
-                    await navigator.clipboard.writeText(linkInput.value);
-                    copyButton.textContent = 'Copied!';
-                    copyButton.style.backgroundColor = '#28a745'; // Success green
-                } catch (err) {
-                    console.error('Failed to copy text: ', err);
-                    copyButton.textContent = 'Failed to copy';
-                    copyButton.style.backgroundColor = '#dc3545'; // Error red
-                }
-                
-                // Reset button after 2 seconds
-                setTimeout(() => {
-                    copyButton.textContent = originalText;
-                    copyButton.style.backgroundColor = '';
-                }, 2000);
-            });
-        });
-    </script>
-</body>
-</html>
+{% extends 'admin_base.html' %}
+{% block title %}{{ event.name }}{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ url_for('admin_dashboard') }}">← All events</a>
+<header class="page-heading editor-heading"><div><p class="eyebrow">INVITATION STUDIO</p><h1 id="editor-title">{{ event.name }}</h1><div class="heading-meta"><span class="badge {{ '' if event.get('archived') else 'badge-success' }}" id="event-state">{{ 'Archived' if event.get('archived') else 'Active invitation' }}</span><span class="save-status" id="save-status" role="status" aria-live="polite" data-state="saved"><span class="status-dot"></span><span id="save-status-text">All changes saved</span></span></div></div><div class="heading-actions"><button class="button-secondary" data-copy="{{ public_url(event.slug) }}">Copy link</button><a class="button" href="{{ url_for('preview_event', slug=event.slug) }}" target="_blank" rel="noopener">Preview <span aria-hidden="true">↗</span></a></div></header>
+<div class="editor-tabs" role="tablist" aria-label="Invitation editor"><button class="is-active" role="tab" aria-selected="true" aria-controls="tab-details" id="details-tab" data-editor-tab="details">Details</button><button role="tab" aria-selected="false" aria-controls="tab-design" id="design-tab" data-editor-tab="design" tabindex="-1">Design</button><button role="tab" aria-selected="false" aria-controls="tab-guests" id="guests-tab" data-editor-tab="guests" tabindex="-1">Guest list <span class="count">{{ rsvps|length }}</span></button><button role="tab" aria-selected="false" aria-controls="tab-share" id="share-tab" data-editor-tab="share" tabindex="-1">Share invitation</button></div>
+<div class="editor-layout" id="editor-layout" data-active-tab="details">
+<div class="editor-content">
+<form method="post" id="event-editor" data-save-url="{{ url_for('autosave_event',slug=slug) }}" data-preview-url="{{ url_for('preview_event',slug=slug,view='opening') }}" data-upload-url="{{ url_for('upload_image',slug=slug) }}" class="stack">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="version" value="{{ event.get('version',0) }}"><input type="hidden" name="update_event" value="1">
+<section class="panel tab-panel" id="tab-details" role="tabpanel" aria-labelledby="details-tab"><div class="panel-heading"><span class="section-number">01</span><div><h2>The essentials</h2><p class="muted">Let your guests know what, when, and where.</p></div></div>
+<div class="stack"><div class="form-field"><label for="name">Event name</label><input id="name" name="name" value="{{ event.name }}" required maxlength="160"></div><div class="form-field"><label for="date">Date</label><input id="date" name="date" value="{{ event.date }}" required placeholder="December 12, 2026"><small class="help-text">A written date or YYYY-MM-DD both work.</small></div><div class="field-grid"><div class="form-field"><label for="start_time">Starts at</label><input id="start_time" name="start_time" value="{{ event.start_time }}" required placeholder="6:00 PM"></div><div class="form-field"><label for="end_time">Ends at <span class="muted">optional</span></label><input id="end_time" name="end_time" value="{{ event.get('end_time','') }}" placeholder="9:00 PM"></div></div><div class="form-field"><label for="location">Location</label><input id="location" name="location" value="{{ event.location }}" required maxlength="500" placeholder="Venue or address"></div><div class="form-field"><label for="description">A note for your guests</label><textarea id="description" name="description" rows="6" maxlength="20000">{{ event.description }}</textarea><small class="help-text">Make it personal. Use **bold**, *italics*, and links for a little emphasis.</small></div><div class="field-grid"><div class="form-field"><label for="max_guests_per_invite">Guests per invitation</label><input type="number" id="max_guests_per_invite" name="max_guests_per_invite" value="{{ event.max_guests_per_invite }}" min="1" max="100" required><small class="help-text">Includes the person responding.</small></div></div>
+<div class="toggle-row"><div><strong>Show who's coming</strong><p class="muted">Display first names and last initials on the invitation.</p></div><input type="checkbox" class="toggle" id="show_attendees" name="show_attendees" aria-label="Show attendees" {% if event.show_attendees %}checked{% endif %}></div>
+<div class="toggle-row archive-toggle"><div><strong>Archive this event</strong><p class="muted">Close the public invitation and keep every response.</p></div><input type="checkbox" class="toggle" id="archived" name="archived" aria-label="Archive event" {% if event.get('archived') %}checked{% endif %}></div></div></section>
+<section class="panel tab-panel" id="tab-design" role="tabpanel" aria-labelledby="design-tab" hidden><div class="panel-heading"><span class="section-number">02</span><div><h2>Make it yours</h2><p class="muted">A little personality goes a long way.</p></div></div><div class="stack">
+<fieldset class="theme-picker"><legend>Envelope color</legend>{% for color, label in [('pink','Rose'),('blue','Blue'),('red','Terracotta'),('black','Ink')] %}<label class="theme-choice"><input type="radio" name="color_scheme" value="{{ color }}" {% if event.color_scheme == color %}checked{% endif %}><span class="theme-swatch scheme-{{ color }}"></span><span>{{ label }}</span></label>{% endfor %}</fieldset>
+<div class="field-grid"><div class="form-field"><label for="font_style">Typography</label><select id="font_style" name="font_style"><option value="serif" {% if event.font_style == 'serif' %}selected{% endif %}>Editorial serif</option><option value="sans" {% if event.font_style == 'sans' %}selected{% endif %}>Modern sans</option></select></div><div class="form-field"><label for="envelope_style">Envelope</label><select id="envelope_style" name="envelope_style"><option value="classic" {% if event.envelope_style == 'classic' %}selected{% endif %}>Classic · animated opening</option><option value="minimal" {% if event.envelope_style == 'minimal' %}selected{% endif %}>Minimal · matte finish</option></select></div></div>
+<div class="form-field"><label for="background_style">Background</label><select id="background_style" name="background_style">{% for value,label in [('linen','Textured linen'),('gradient','Soft gradient'),('solid','Solid color'),('image','Your photograph')] %}<option value="{{ value }}" {% if event.background_style == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+<div class="field-grid"><div class="form-field"><label for="background_color">Background color</label><div class="color-input"><input type="color" id="background_color" name="background_color" value="{{ event.background_color }}"><span data-color-label="background_color">{{ event.background_color }}</span></div></div><div class="form-field"><label for="accent_color">Card accent</label><div class="color-input"><input type="color" id="accent_color" name="accent_color" value="{{ event.accent_color }}"><span data-color-label="accent_color">{{ event.accent_color }}</span></div></div></div>
+{% for field,label,help in [('cover_image','Invitation photograph','An image at the top of your card.'),('background_image','Background photograph','Sets the scene behind your envelope.')] %}
+<div class="form-field"><label for="upload-{{ field }}">{{ label }}</label><input type="hidden" name="{{ field }}" id="{{ field }}" value="{{ event[field] }}"><div class="upload-box"><span class="upload-icon" aria-hidden="true">↥</span><div><strong>Choose a photograph</strong><p class="muted">{{ help }} JPEG, PNG, WebP · up to 8 MB</p><input type="file" id="upload-{{ field }}" data-upload-field="{{ field }}" accept="image/jpeg,image/png,image/webp"><button type="button" class="button-quiet" data-remove-image="{{ field }}" {% if not event[field] %}hidden{% endif %}>Remove image</button></div><img class="upload-thumbnail" data-image-preview="{{ field }}" {% if event[field] %}src="{{ event[field] }}"{% else %}hidden{% endif %} alt="{{ label }} preview"></div></div>
+{% endfor %}</div></section>
+<div class="editor-save-bar"><p class="muted">Changes save automatically as you go.</p><button class="button-secondary" id="save-now" type="submit">Save now</button></div><p class="form-error" id="editor-error" role="alert" hidden></p><button type="button" class="button-secondary" id="retry-save" hidden>Retry saving</button><a href="{{ url_for('admin',slug=slug) }}" class="button-secondary" id="reload-editor" hidden>Reload latest version</a>
+</form>
+<section class="panel tab-panel" id="tab-guests" role="tabpanel" aria-labelledby="guests-tab" hidden><div class="section-heading"><div><h2>Your guest list</h2><p class="muted">Every response, all in one place.</p></div><a class="button-secondary" href="{{ url_for('export_rsvps',slug=slug) }}">Export CSV ↗</a></div><div class="stats-grid"><div><strong>{{ stats.attending }}</strong><span>Guests attending</span></div><div><strong>{{ stats.accepted }}</strong><span>Accepted</span></div><div><strong>{{ stats.declined }}</strong><span>Declined</span></div></div>
+{% if rsvps %}<label class="search-field"><input type="search" id="guest-search" placeholder="Search guests…" aria-label="Search guests"></label><div class="table-wrap"><table><thead><tr><th>Guest</th><th>Response</th><th>Party size</th><th>Notes</th><th>Responded</th></tr></thead><tbody>{% for rsvp in rsvps %}<tr data-guest="{{ (rsvp.get('name','') ~ ' ' ~ rsvp.get('email',''))|lower }}"><td><strong>{{ rsvp.name }}</strong><small>{{ rsvp.email }}</small></td><td><span class="badge {{ 'badge-success' if rsvp.attending == 'yes' else '' }}">{{ 'Attending' if rsvp.attending == 'yes' else 'Declined' }}</span></td><td>{{ (rsvp.get('num_adults',1)+rsvp.get('num_children',0)) if rsvp.attending == 'yes' else 0 }}<small>{{ rsvp.get('num_adults',0) }} adults · {{ rsvp.get('num_children',0) }} children</small></td><td>{{ rsvp.get('comment','') or '—' }}{% if rsvp.get('dietary_restrictions') %}<small>Dietary: {{ rsvp.dietary_restrictions }}</small>{% endif %}</td><td><small>{{ rsvp.get('updated_at',rsvp.get('timestamp',''))[:10] }}</small></td></tr>{% endfor %}</tbody></table></div><p class="muted" id="no-guests-match" hidden>No guests match your search.</p>{% else %}<div class="empty-state"><span class="empty-icon" aria-hidden="true">♧</span><h3>Good company is on its way</h3><p>Share your invitation. Responses will appear here.</p></div>{% endif %}</section>
+<section class="panel tab-panel" id="tab-share" role="tabpanel" aria-labelledby="share-tab" hidden><div class="panel-heading"><span class="section-number">03</span><div><h2>Spread the word</h2><p class="muted">Good things are better together.</p></div></div>{% if event.get('archived') %}<p class="alert alert-error">This invitation is archived. Restore it in Details before sharing.</p>{% endif %}<div class="stack"><div class="form-field"><label for="rsvpLink">Your invitation link</label><div class="link-display"><input id="rsvpLink" readonly value="{{ public_url(event.slug) }}"><button class="button" data-copy="{{ public_url(event.slug) }}">Copy</button></div><small class="help-text">Share in a message, group chat, or anywhere your people are.</small></div><hr><div><h3>Send a personal invitation</h3><p class="muted">Send a beautifully formatted invitation by email.</p></div><form method="post" id="send-invitation" class="stack"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="send_invitation" value="1"><div class="form-field"><label for="recipient-email">Recipient's email</label><input type="email" name="email" id="recipient-email" required placeholder="friend@example.com"></div><button type="submit" class="button">Send invitation ↗</button><small class="help-text">Email delivery can be connected in Connections.</small></form></div></section>
+</div>
+<aside class="preview-panel" id="live-preview-panel" aria-label="Envelope animation preview"><div class="preview-toolbar"><div><span class="status-dot"></span><strong>Opening animation</strong></div><button type="button" class="preview-replay" id="preview-replay" disabled><span aria-hidden="true">↻</span><span id="preview-replay-label">Replay opening</span></button></div><div class="preview-stage"><iframe id="live-preview" title="Envelope opening animation preview" src="{{ url_for('preview_event',slug=slug,view='opening') }}" sandbox="allow-scripts allow-same-origin"></iframe></div><p class="preview-caption" id="preview-caption" role="status">Your envelope, updated as you edit.</p></aside>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static',filename='admin_editor.js') }}" defer></script>{% endblock %}

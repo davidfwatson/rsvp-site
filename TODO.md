@@ -1,5 +1,15 @@
-# TODO
+# Production activation
 
-- [ ] Allow guests to change RSVP from yes to no (currently no way to cancel after confirming)
-- [ ] Add a comment/message field for guests (people have been using the dietary restrictions field as a workaround)
-- [ ] Implement passkey-based multi-admin authentication — owner admin can generate a one-time invite link that lets someone register a passkey and become an admin
+- [ ] Follow `docs/production.md` to copy existing events, RSVPs, and passkeys into the external data directory and configure the release service.
+- [ ] Add verified SSH deployment secrets and enable the GitHub production workflow.
+- [ ] Reconnect Gmail to create `token.json`; verify real invitation and confirmation delivery.
+- [ ] Verify ownership of Analytics property `G-52ZJ7PXYEC`, disable enhanced measurement, and set the measurement ID.
+- [ ] Configure the encrypted backup repository and enable the nightly backup timer; test a restore.
+
+# Implemented
+
+- [x] Passkey accounts, one-use enrollment and sign-in links, user and session management.
+- [x] Responsive admin workspace, invitation design controls, autosave status and live preview.
+- [x] Image upload, custom backgrounds, CSS 3D envelope and card opening.
+- [x] Guest RSVP changes through private links, comments, attendance counts and CSV export.
+- [x] Isolated tests, durable storage, stale-editor protection, and health-checked release deployments.

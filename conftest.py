@@ -1,83 +1,57 @@
+"""Force isolation before collection imports the app or any persistent store."""
+from copy import deepcopy
 import os
+import sys
+import tempfile
 
 import pytest
 
 
+# Fixtures execute after collection imports. Override inherited production
+# configuration immediately, including when tests run on the production host.
+_session_data = tempfile.TemporaryDirectory(prefix='rsvp-pytest-')
+os.environ['RSVP_ENV'] = 'test'
+os.environ['RSVP_DATA_DIR'] = _session_data.name
+os.environ['RSVP_TEST_DATA_ROOT'] = _session_data.name
+os.environ['RSVP_EMAIL_ENABLED'] = 'false'
+os.environ['RSVP_SECRET_KEY'] = 'test-only-secret-key'
+os.environ['RSVP_PUBLIC_URL'] = 'http://localhost:5000'
+os.environ['RSVP_WEBAUTHN_RP_ID'] = 'localhost'
+os.environ['RSVP_WEBAUTHN_ORIGIN'] = 'http://localhost:5000'
+
+
 @pytest.fixture
 def temp_json_file(tmp_path):
-    """Fixture to create a temporary JSON file for testing"""
-    json_file = tmp_path / "test_event_config.json"
-    return str(json_file)
+    return str(tmp_path / 'test_event_config.json')
 
 
 @pytest.fixture(autouse=True)
 def _isolate_event_config(tmp_path, monkeypatch):
-    """Redirect the EventConfig singleton to a tmp dir for every test.
-
-    The prod events directory holds live event definitions. Without this,
-    a test that calls add_new_event / update_event_config / save_event_config
-    would write real files into prod (this has happened before).
-    """
+    """Give each test fresh event/account/RSVP data with no production state."""
     import event_config
     from event_config import _instance
-    events_dir = tmp_path / "events"
-    events_dir.mkdir()
-    monkeypatch.setattr(_instance, 'events_dir', str(events_dir))
 
-    # The EventConfig singleton's event list is process-wide, so a test that
-    # loads its own events would otherwise leak them into every test that runs
-    # after it. Snapshot the contents and restore them afterwards.
-    #
-    # Restore the contents in place rather than assigning a new list:
-    # event_config.events must keep pointing at the very list the singleton
-    # uses, since tests reach that state through both names.
-    saved_events = list(_instance._events)
+    root = tmp_path / 'data'
+    root.mkdir()
+    monkeypatch.setenv('RSVP_DATA_DIR', str(root))
+    monkeypatch.setenv('RSVP_TEST_DATA_ROOT', str(tmp_path))
+    monkeypatch.setenv('RSVP_ENV', 'test')
+    events_dir = root / 'events'
+    events_dir.mkdir()
+    saved_events = deepcopy(_instance._events)
+    saved_snapshot = _instance._disk_snapshot
+    monkeypatch.setattr(_instance, 'events_dir', str(events_dir))
     _instance._events.clear()
+    _instance._disk_snapshot = _instance._signature()
+    if 'passkey_auth' in sys.modules:
+        monkeypatch.setattr(sys.modules['passkey_auth'], 'ADMINS_FILE', str(root / 'admins.json'))
+    if 'app' in sys.modules:
+        application = sys.modules['app'].app
+        for key, value in {'RSVP_DATA_DIR': str(root), 'EMAIL_ENABLED': False, 'TESTING': True, 'CSRF_ENABLED': False}.items():
+            monkeypatch.setitem(application.config, key, value)
     try:
         yield
     finally:
         _instance._events[:] = saved_events
-        # Belt and braces: if a test rebound the module-level alias to some
-        # other list, point it back at the singleton's own.
+        _instance._disk_snapshot = saved_snapshot
         event_config.events = _instance._events
-
-
-# Values used only when the checkout has no config.py of its own.
-_TEST_CONFIG = {
-    'SENDER_EMAIL': 'test@example.com',
-    'ADMIN_PASSWORD': 'test',
-    'SECRET_KEY': 'test-secret-key',
-    'WEBAUTHN_RP_ID': 'localhost',
-    'WEBAUTHN_RP_NAME': 'Test',
-    'WEBAUTHN_ORIGIN': 'http://localhost',
-}
-
-
-def pytest_configure(config):
-    """app.py loads config.py at import time, but config.py is gitignored.
-
-    On a checkout that has no config.py (a fresh clone, CI) the suite could not
-    even be collected. Rather than writing a config.py — a file left behind by
-    a hard crash would be a real config.py holding test credentials, which a
-    later app start in that directory would happily load — teach from_pyfile to
-    fall back to in-memory defaults for the missing file. Nothing touches disk,
-    and a checkout that has its own config.py (prod's, notably) is unaffected:
-    from_pyfile finds it and this fallback never fires.
-    """
-    if os.path.exists(os.path.join(os.path.dirname(__file__), 'config.py')):
-        return
-
-    from flask import Config
-
-    original_from_pyfile = Config.from_pyfile
-
-    def from_pyfile_with_test_defaults(self, filename, silent=False):
-        try:
-            return original_from_pyfile(self, filename, silent=silent)
-        except FileNotFoundError:
-            if os.path.basename(filename) != 'config.py':
-                raise
-            self.update(_TEST_CONFIG)
-            return True
-
-    Config.from_pyfile = from_pyfile_with_test_defaults

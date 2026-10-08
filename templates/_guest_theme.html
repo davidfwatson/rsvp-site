@@ -1,0 +1,6 @@
+{% macro theme_attributes(event) -%}
+class="guest-page color-scheme-{{ event.color_scheme|default('pink', true) }} background-{{ event.background_style|default('linen', true) }} font-{{ event.font_style|default('serif', true) }}" style="{% if event.background_color %}--background-color: {{ event.background_color }};{% endif %}{% if event.accent_color %}--accent-color: {{ event.accent_color }};{% endif %}"
+{%- endmacro %}
+{% macro guest_background(event) -%}
+{% if event.background_style == 'image' and event.background_image %}<div class="guest-background" aria-hidden="true"><img src="{{ event.background_image }}" alt="" fetchpriority="high"></div>{% endif %}
+{%- endmacro %}

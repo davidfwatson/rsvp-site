@@ -73,8 +73,8 @@ Follow [the production and recovery runbook](docs/production.md) for the
 one-time data copy, systemd/nginx setup, CI secrets, merge deployment, backups,
 and rollback. `/healthz` reports the running release for deployment checks.
 Ready-to-install nightly restic backup units make a consistent local copy
-under app locks, then encrypt/upload it offsite after releasing those locks.
-They require a configured remote repository and password before activation.
+under app locks, then encrypt it and upload it to snowblind over SFTP after
+releasing those locks. A failed run sends a push through notify-service.
 
 The existing `requirements.txt` and `rsvp-site.ini` remain for legacy setups;
 new release deployments use `requirements-runtime.txt` and gunicorn.

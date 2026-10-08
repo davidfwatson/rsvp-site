@@ -67,6 +67,25 @@ loopback port 8087, caps uploads at 10 MiB, and avoids logging private invite
 URLs. Preserve your existing TLS and ACME settings. Run `sudo nginx -t` before
 reloading nginx, then `sudo systemctl daemon-reload`.
 
+The app answers only for `partymail.app`. Two older hostnames on this server,
+`rsvp.mvyimby.com` and `test.davidfwatson.com`, used to proxy to the same uWSGI
+socket; their nginx server blocks now return a 301 to
+`https://partymail.app$request_uri` so old links keep working.
+
+RSVP phone notifications go through the notify-service on loopback port 8765,
+which delivers them to the DFW Utils app. Its client is one stdlib-only file
+and is not a release dependency. Install a root-owned copy where the confined
+unit can read it, and keep the `PYTHONPATH` line from the example env file:
+
+```bash
+sudo install -d -o root -g root -m 755 /usr/local/lib/notify-service-client/notify_service
+sudo install -o root -g root -m 644 /home/david/webserver/notify-service/notify_service/client.py \
+  /usr/local/lib/notify-service-client/notify_service/client.py
+sudo install -o root -g root -m 644 /dev/null /usr/local/lib/notify-service-client/notify_service/__init__.py
+```
+
+Without that copy the app still runs and logs a warning in place of each push.
+
 Install the CI public key in `/home/rsvp/.ssh/authorized_keys` with the
 `restrict` option and owner-only permissions; disable password login for this
 account. Set `RSVP_DEPLOY_USER=rsvp` in GitHub. The deployment process runs as
@@ -145,7 +164,7 @@ directory. Each document retains up to 20 previous revisions under
 empty store. Event autosaves carry a version so a stale tab cannot overwrite
 a newer editor; workers refresh event files when disk contents change.
 
-Install the nightly offsite backup described below. Revision copies help with
+Install the nightly backup to snowblind described below. Revision copies help with
 accidental edits but do not survive a lost disk. Protect backups as account and
 guest data, and periodically restore one into a separate directory to verify
 the complete recovery path.
@@ -157,14 +176,24 @@ startup must be investigated rather than replacing data with an empty store.
 
 ## Nightly encrypted offsite backups
 
-`deploy/rsvp-backup.service` and `.timer` are ready to install; they are **not
-enabled until you configure a real off-host repository, its access credentials,
-and its encryption password**. Install restic through the server's package
-manager and confirm `restic version`. Select an S3-compatible bucket in an
-independent account/location or another supported off-host restic backend.
-Use credentials limited to that repository/bucket prefix; retention requires
-permission to delete old backup objects. Keep the encryption password in your
-password manager or another independent recovery location.
+The backup goes to snowblind (`snowblind.watsons.family`), the home backup
+server that the other projects on this host already push to. Restic writes an
+encrypted repository over SFTP at
+`/snowblind_z3/Backups/DavidBackups/partymail-restic`. Nothing is installed on
+snowblind, and no third-party storage account is involved. `DavidBackups` is
+used because the `david` account there can write to it; a new top-level
+directory under `Backups/` needs sudo on snowblind.
+
+Ubuntu 22.04 packages restic 0.12, which lacks `backup --group-by`. Install a
+current release binary from the restic GitHub releases page as
+`/usr/local/bin/restic`, checking it against the published `SHA256SUMS`, and
+confirm `restic version` reports 0.16 or later.
+
+The repository password is the only way to read the backup. Generate it away
+from the server, keep it in your password manager, and install a copy as
+`/etc/rsvp-backup.password` with root ownership and mode `600`. Do not
+regenerate it after the repository has been initialized. A backup whose only
+password copy is on this host is lost with the host.
 
 The root backup service must never execute code writable by the web account.
 Install fixed root-owned copies of the helper and its storage library:
@@ -173,19 +202,30 @@ Install fixed root-owned copies of the helper and its storage library:
 sudo install -d -o root -g root -m 755 /usr/local/lib/rsvp-backup
 sudo install -o root -g root -m 644 scripts/backup_data.py storage.py /usr/local/lib/rsvp-backup/
 sudo install -o root -g root -m 600 deploy/backup.env.example /etc/rsvp-backup.env
-sudo install -o root -g root -m 644 deploy/rsvp-backup.service deploy/rsvp-backup.timer /etc/systemd/system/
+sudo install -o root -g root -m 644 deploy/rsvp-backup.service deploy/rsvp-backup.timer \
+  deploy/rsvp-backup-failed.service /etc/systemd/system/
 sudo install -d -o root -g root -m 700 /var/lib/rsvp-backup
 sudo install -d -o rsvp -g rsvp -m 700 /var/lib/rsvp-site/events /var/lib/rsvp-site/uploads
-sudo sh -c 'umask 077; python3 -c "import secrets; print(secrets.token_hex(32))" > /etc/rsvp-backup.password'
 ```
 
-Update `/etc/rsvp-backup.env` with the real remote repository and bucket access
-credentials. The example includes a `RESTIC_PASSWORD_FILE`; do not put the
-password in Git or a command line. Do not regenerate this password after
-initializing the repository. Initialize the new repository once using its
-private configuration:
+Restic reaches snowblind with the same key the `rsync-*` units use. The service
+runs as root, so the SSH user and key come from `/root/.ssh/config` (mode `600`):
+
+```
+Host snowblind.watsons.family
+    User david
+    IdentityFile /home/david/.ssh/id_rsa
+    IdentitiesOnly yes
+    BatchMode yes
+```
+
+snowblind's host key must already be in `/root/.ssh/known_hosts`. The unit sets
+`ProtectHome=read-only` so restic's SSH process can read that key and those two
+files; it cannot write to any home directory. Check the connection once by
+hand, then initialize the repository:
 
 ```bash
+sudo ssh snowblind.watsons.family true
 sudo bash -c 'set -a; source /etc/rsvp-backup.env; set +a; exec restic init'
 ```
 
@@ -194,14 +234,14 @@ all current JSON document locks, each event's RSVP lock even before its first
 response exists, and the upload collection lock. It copies data, revision
 backups, images, Gmail/account credentials, and `/etc/rsvp-site.env`, and adds
 a SHA-256 manifest. This briefly pauses mutations while files copy locally.
-It releases all application locks before contacting the remote repository.
+It releases all application locks before contacting snowblind.
 Root-created lock files retain the service user's ownership, so the next app
 request can reopen them.
 
-Restic encrypts the remote snapshot. The helper then keeps the last 3 backups,
-14 daily, 8 weekly, and 12 monthly snapshots, pruning only snapshots tagged
-`partymail-production` for the configured backup host. It runs `restic check`
-afterward and records the last complete success in
+Restic encrypts the snapshot before it leaves this host. The helper then keeps
+the last 3 backups, 14 daily, 8 weekly, and 12 monthly snapshots, pruning only
+snapshots tagged `partymail-production` for the configured backup host. It runs
+`restic check` afterward and records the last complete success in
 `/var/lib/rsvp-backup/last-success.json`. A failed upload skips retention.
 Private temporary snapshots are removed after either success or failure; a
 machine crash may leave a root-only `snapshot-*` directory to remove manually.
@@ -219,14 +259,19 @@ sudo systemctl enable --now rsvp-backup.timer
 sudo systemctl list-timers rsvp-backup.timer
 ```
 
-The timer runs at 03:15 in the server's timezone with up to 30 minutes of
-random delay. `Persistent=true` catches up after downtime. The service exits
-unsuccessfully if snapshot/upload/prune/check fails; inspect
-`sudo journalctl -u rsvp-backup.service`. Connect your existing host monitoring
-to failed units and stale `last-success.json` (for example, over 48 hours old).
-No alert delivery integration is assumed. Update the installed root-owned
-helper/library manually when changing their code; release deployment never
-replaces privileged backup executables.
+A run takes a minute or two, most of it SSH round trips. The timer runs at
+02:15 in the server's timezone with up to 10 minutes of random delay.
+`Persistent=true` catches up after downtime. The hour is chosen to stay clear
+of the `rsync-*` units, which start at 03:05: snowblind's sshd drops
+connections when one host opens several in a burst.
+
+The service exits unsuccessfully if snapshot, upload, prune, or check fails.
+`OnFailure=` then starts `rsvp-backup-failed.service`, which posts to the
+loopback notify-service, and the alert arrives as a push in the DFW Utils app.
+Details are in `sudo journalctl -u rsvp-backup.service`. A backup that never
+starts raises no alert, so glance at `last-success.json` now and then. Update
+the installed root-owned helper and library by hand when their code changes;
+release deployment never replaces privileged backup executables.
 
 For a local snapshot without any network call, specify an empty root-only
 directory outside the live data:

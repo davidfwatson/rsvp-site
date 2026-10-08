@@ -1,9 +1,10 @@
 [Unit]
-Description=Consistent encrypted offsite backup of Party Mail data
+Description=Consistent encrypted backup of Party Mail data to snowblind
 Wants=network-online.target
 After=network-online.target
 ConditionPathExists=/etc/rsvp-backup.env
 ConditionPathExists=/var/lib/rsvp-site/.rsvp-data
+OnFailure=rsvp-backup-failed.service
 
 [Service]
 Type=oneshot
@@ -24,6 +25,7 @@ IOSchedulingPriority=7
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
-ProtectHome=true
+# Restic's SSH reads /home/david/.ssh/id_rsa and /root/.ssh/{config,known_hosts}.
+ProtectHome=read-only
 ReadWritePaths=/var/lib/rsvp-site /var/lib/rsvp-backup
 TimeoutStartSec=2h

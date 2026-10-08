@@ -1,0 +1,6 @@
+[Unit]
+Description=Push a phone alert when the Party Mail backup fails
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/curl -fsS -m 15 -H "Content-Type: application/json" -d '{"title":"Party Mail backup failed","message":"rsvp-backup.service failed on the Linode. Inspect: sudo journalctl -u rsvp-backup.service","source":"partymail","priority":1}' http://127.0.0.1:8765/v1/phone

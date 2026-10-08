@@ -133,6 +133,18 @@ def index():
     return render_template('landing.html')
 
 
+@app.route('/privacy')
+def privacy():
+    """Public policy page; the Google OAuth consent screen links here."""
+    return render_template('privacy.html', contact_email=app.config.get('CONTACT_EMAIL'))
+
+
+@app.route('/terms')
+def terms():
+    """Public terms page; the Google OAuth consent screen links here."""
+    return render_template('terms.html', contact_email=app.config.get('CONTACT_EMAIL'))
+
+
 @app.route('/<slug>')
 def event_page(slug):
     event = get_public_event(slug)

@@ -163,3 +163,23 @@ def test_transparent_upload_retains_alpha(admin_client):
     assert result.status_code == 200
     with Image.open(BytesIO(admin_client.get(result.json['url']).data)) as image:
         assert 'A' in image.getbands() and image.getpixel((0,0))[-1] == 0
+
+
+def test_policy_pages_are_public_and_linked_from_the_landing_page(client, monkeypatch):
+    """Google's consent screen links to these; they must load without a session."""
+    monkeypatch.setitem(app_module.app.config, 'CONTACT_EMAIL', 'hello@example.test')
+    landing = client.get('/').get_data(as_text=True)
+    assert 'href="/privacy"' in landing and 'href="/terms"' in landing
+    privacy = client.get('/privacy')
+    assert privacy.status_code == 200
+    text = privacy.get_data(as_text=True)
+    assert 'gmail.send' in text and 'Limited Use' in text and 'mailto:hello@example.test' in text
+    terms = client.get('/terms')
+    assert terms.status_code == 200 and 'Terms of Service' in terms.get_data(as_text=True)
+
+
+def test_policy_pages_win_over_an_event_with_the_same_slug(client):
+    """A host cannot shadow the policy by naming an event 'privacy'."""
+    save_event_config([dict(EVENT, slug='privacy', name='Shadow party')])
+    text = client.get('/privacy').get_data(as_text=True)
+    assert 'Privacy Policy' in text and 'Shadow party' not in text

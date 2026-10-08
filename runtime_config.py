@@ -35,6 +35,7 @@ def configure_app(app):
     defaults = {
         'SECRET_KEY': 'development-only-change-before-production',
         'SENDER_EMAIL': '',
+        'CONTACT_EMAIL': '',
         'ADMIN_PASSWORD': '',
         'WEBAUTHN_RP_NAME': 'Party Mail',
         'PUBLIC_URL': 'https://partymail.app' if environment == 'production' else 'http://localhost:5000',

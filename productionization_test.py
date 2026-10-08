@@ -202,3 +202,11 @@ def test_new_events_cannot_take_a_site_route_as_their_slug():
     assert 'privacy' not in get_all_events()
     with pytest.raises(ValueError):
         add_new_event(dict(details, name='Terms party', slug='terms'))
+
+
+def test_every_top_level_route_is_a_reserved_slug():
+    """A new single-segment route must be reserved, or an event could take its address."""
+    from event_config import RESERVED_SLUGS
+    routes = {rule.rule.strip('/').split('/')[0] for rule in app_module.app.url_map.iter_rules()}
+    routes = {segment for segment in routes if segment and not segment.startswith('<')}
+    assert routes <= RESERVED_SLUGS, sorted(routes - RESERVED_SLUGS)

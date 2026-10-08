@@ -5,13 +5,12 @@ from pathlib import Path
 import uuid
 
 from event_slug import generate_unique_slug, validate_slug
-
-# Top-level routes in app.py; an event with one of these slugs could never be opened.
-RESERVED_SLUGS = frozenset({'admin', 'healthz', 'media', 'oauth2callback', 'privacy', 'static', 'terms'})
 from runtime_config import data_path
 from storage import backup_file, json_lock, read_json, write_json
 
 
+# Top-level routes in app.py; an event with one of these slugs could never be opened.
+RESERVED_SLUGS = frozenset({'admin', 'healthz', 'media', 'oauth2callback', 'privacy', 'static', 'terms'})
 DEFAULT_EVENTS_DIR = str(data_path('events'))
 
 

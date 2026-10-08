@@ -1,7 +1,7 @@
 # Event config wipe (found April 2026) and the partial recovery
 
-Last updated 2026-10-07. Status: open. One event is still missing from the
-server and three restored events carry placeholder text.
+Last updated 2026-10-07. Status: open. Two events still lack their real details and there is no
+scheduled backup.
 
 ## Summary
 
@@ -57,7 +57,7 @@ restored in April.
 | Anita's 6th (`anita_6th`) | The seed event from the code, restored verbatim. The real party was run through Evite and a Google Form and held on 2024-11-17 | 1 test submission |
 | Family event (`891d4849`) | Lost. Name, date and location unknown. Currently labelled "Unidentified event (January 2025)" | 13, intact, 2025-01-23 to 2025-02-10 |
 | Ariana's 5th (`ariana5th`) | Lost. Only the name is known. Email shows the party was the weekend of 2026-02-07 | 17, intact |
-| Ariana's 4th (`ariana4th`) | Lost on the server and not restored. Recoverable from the Wayback Machine: 2025-02-08, 10:30 AM to 2:30 PM, with the full description | File missing from the server. The archived page lists 38 "Who's Going" entries as first name, last initial and party size, a few of them bot spam |
+| Ariana's 4th (`ariana4th`) | Lost on the server. Restored 2026-10-07 from the Wayback Machine: 2025-02-08, 10:30 AM to 2:30 PM, with the full description | Original file missing from the server. The archived page lists 38 "Who's Going" entries as first name, last initial and party size, a few of them bot spam |
 
 ## Errors in the September restore
 
@@ -82,13 +82,21 @@ between January and October 2025 routed the front page to `ariana4th`.
 - Server: `~/rsvp-site-backup-20260907-123511`, a copy of the data taken
   before the September restore.
 
+## Fixed on 2026-10-07
+
+- `ariana4th` added as an archived event from the Wayback capture, with the
+  38 guest-list entries in `rsvps_ariana4th.json`. Each entry has first name
+  and last initial only, and the whole party is counted as adults because the
+  split is unknown.
+- Session-written descriptions on Ariana's 5th and the family event blanked.
+  Restore notes stripped from Anita's 6th and the yimby event.
+- David's 38th archived.
+- Server backup taken first: `~/rsvp-site-backup-20261007-184331`.
+
 ## Still to do
 
-- Add `ariana4th` as an archived event from the Wayback capture, with its
-  partial guest list.
-- Replace the placeholder descriptions with real text or leave them empty,
-  and keep restore notes out of the description field.
 - Get the real details for Ariana's 5th and the family event from David or
   Pardis.
-- Archive David's 38th, which is past but still public.
 - Set up a scheduled off-server backup of `data/` and `rsvps_*.json`.
+- Past events stay public until someone ticks "archived". Decide whether the
+  app should retire them by date.

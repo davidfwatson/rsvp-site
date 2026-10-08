@@ -1,0 +1,18 @@
+{% macro attendance_fields(event, rsvp=none) %}
+<fieldset class="attendance-fieldset">
+    <legend>Can you join us?</legend>
+    <div class="attendance-options">
+        <div class="attendance-option"><input type="radio" id="yes" name="attending" value="yes" required {% if rsvp and rsvp.attending == 'yes' %}checked{% endif %}><label for="yes"><span class="attendance-icon" aria-hidden="true">✓</span>Joyfully accept</label></div>
+        <div class="attendance-option"><input type="radio" id="no" name="attending" value="no" required {% if rsvp and rsvp.attending == 'no' %}checked{% endif %}><label for="no"><span class="attendance-icon" aria-hidden="true">—</span>Sadly decline</label></div>
+    </div>
+</fieldset>
+<div class="party-fields" id="guestsInputContainer">
+    <p class="party-hint">Your party, including you{% if event.max_guests_per_invite %} · up to {{ event.max_guests_per_invite }} guest{{ 's' if event.max_guests_per_invite|int != 1 else '' }}{% endif %}</p>
+    <div class="form-row">
+        <div class="form-group"><label for="num_adults">Adults</label><input type="number" id="num_adults" name="num_adults" min="1" max="{{ event.max_guests_per_invite|default(10, true) }}" value="{{ (rsvp.num_adults or 1) if rsvp else 1 }}" inputmode="numeric" required></div>
+        <div class="form-group"><label for="num_children">Children</label><input type="number" id="num_children" name="num_children" min="0" max="{{ event.max_guests_per_invite|default(10, true) }}" value="{{ (rsvp.num_children or 0) if rsvp else 0 }}" inputmode="numeric" required></div>
+    </div>
+    <p class="party-error" id="partyError" role="status" aria-live="polite"></p>
+</div>
+<div class="form-group" id="dietaryContainer"><label for="dietary_restrictions">Dietary needs <span class="optional-label">optional</span></label><textarea id="dietary_restrictions" name="dietary_restrictions" maxlength="2000" rows="3" placeholder="Any allergies or dietary preferences your host should know about?">{{ (rsvp.dietary_restrictions or '') if rsvp else '' }}</textarea></div>
+{% endmacro %}

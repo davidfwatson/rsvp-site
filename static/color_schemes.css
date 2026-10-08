@@ -1,55 +1,11 @@
-/* Pink color scheme */
-.color-scheme-pink {
-  --primary-color: #ff69b4;
-  --secondary-color: #ffb6c1;
-  --background-color: #fff0f5;
-  --text-color: #333;
-  --heading-color: #ff69b4;
-  --input-border-color: #ffb6c1;
-  --input-focus-color: #ff69b4;
-  --button-color: #ff69b4;
-  --button-hover-color: #ff1493;
-  --envelope-image: url('/static/env_pink.png');
-}
+/* Existing invitations retain their palette; custom event colors override these. */
+.color-scheme-pink { --background-color: #f2e9e6; --accent-color: #9c5c69; }
+.color-scheme-blue { --background-color: #e9eef0; --accent-color: #466679; }
+.color-scheme-red { --background-color: #f1e8df; --accent-color: #a05743; }
+.color-scheme-black { --background-color: #ecebe7; --accent-color: #514d46; }
 
-/* Blue color scheme */
-.color-scheme-blue {
-  --primary-color: #4169e1;
-  --secondary-color: #87cefa;
-  --background-color: #f0f8ff;
-  --text-color: #333;
-  --heading-color: #4169e1;
-  --input-border-color: #87cefa;
-  --input-focus-color: #4169e1;
-  --button-color: #4169e1;
-  --button-hover-color: #0000cd;
-  --envelope-image: url('/static/env_blue.png');
-}
-
-/* Red color scheme */
-.color-scheme-red {
-  --primary-color: #dc143c;
-  --secondary-color: #ff6347;
-  --background-color: #fff5f5;
-  --text-color: #333;
-  --heading-color: #dc143c;
-  --input-border-color: #ff6347;
-  --input-focus-color: #dc143c;
-  --button-color: #dc143c;
-  --button-hover-color: #b22222;
-  --envelope-image: url('/static/env_red.png');
-}
-
-/* Black and white color scheme */
-.color-scheme-black {
-  --primary-color: #000000;
-  --secondary-color: #333333;
-  --background-color: #f5f5f5;
-  --text-color: #000000;
-  --heading-color: #000000;
-  --input-border-color: #333333;
-  --input-focus-color: #000000;
-  --button-color: #000000;
-  --button-hover-color: #333333;
-  --envelope-image: url('/static/env_black.png');
-}
+/* Shared pigment for the actual envelope and its admin picker swatch. */
+.color-scheme-pink, .scheme-pink { --envelope-color: #ba788f; }
+.color-scheme-blue, .scheme-blue { --envelope-color: #638fb6; }
+.color-scheme-red, .scheme-red { --envelope-color: #bd7856; }
+.color-scheme-black, .scheme-black { --envelope-color: #414b58; }

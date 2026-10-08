@@ -1,167 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Party Mail - Beautiful Event RSVPs Made Simple</title>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-52ZJ7PXYEC"></script>
-    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-52ZJ7PXYEC');</script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .landing-container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 800px;
-            padding: 60px 40px;
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 3em;
-            font-weight: 600;
-            color: #667eea;
-            margin-bottom: 20px;
-        }
-
-        .tagline {
-            font-size: 1.4em;
-            color: #666;
-            margin-bottom: 40px;
-            font-weight: 300;
-        }
-
-        .description {
-            font-size: 1.1em;
-            color: #555;
-            line-height: 1.8;
-            margin-bottom: 50px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 30px;
-            margin-bottom: 50px;
-        }
-
-        .feature {
-            padding: 20px;
-        }
-
-        .feature-icon {
-            font-size: 2.5em;
-            margin-bottom: 15px;
-        }
-
-        .feature h3 {
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 1.2em;
-        }
-
-        .feature p {
-            color: #777;
-            font-size: 0.95em;
-            line-height: 1.6;
-        }
-
-        .cta-button {
-            display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 40px;
-            border-radius: 30px;
-            text-decoration: none;
-            font-size: 1.1em;
-            font-weight: 600;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .cta-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-        }
-
-        .footer {
-            margin-top: 50px;
-            color: #999;
-            font-size: 0.9em;
-        }
-
-        @media (max-width: 600px) {
-            .landing-container {
-                padding: 40px 25px;
-            }
-
-            h1 {
-                font-size: 2em;
-            }
-
-            .tagline {
-                font-size: 1.1em;
-            }
-
-            .features {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Create thoughtful invitations, send them to your guests, and keep every RSVP in one place with Party Mail.">
+    <meta name="theme-color" content="#f4f2ec"><title>Party Mail · Bring people together</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='invitation.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}">
+    {% include '_analytics.html' ignore missing %}
 </head>
-<body>
-    <div class="landing-container">
-        <h1>🎉 Party Mail</h1>
-        <p class="tagline">Beautiful Event RSVPs Made Simple</p>
-
-        <p class="description">
-            Create stunning, personalized RSVP pages for your special events.
-            Send beautiful email invitations, track responses, and manage your guest list
-            all in one place.
-        </p>
-
-        <div class="features">
-            <div class="feature">
-                <div class="feature-icon">✨</div>
-                <h3>Beautiful Design</h3>
-                <p>Customizable color schemes and elegant invitation layouts</p>
-            </div>
-            <div class="feature">
-                <div class="feature-icon">📧</div>
-                <h3>Email Invites</h3>
-                <p>Send personalized invitations directly from the platform</p>
-            </div>
-            <div class="feature">
-                <div class="feature-icon">📊</div>
-                <h3>Track RSVPs</h3>
-                <p>Real-time guest list with export to CSV functionality</p>
-            </div>
-        </div>
-
-        <a href="/admin" class="cta-button">Get Started</a>
-
-        <div class="footer">
-            <p>Your events deserve beautiful invitations</p>
-        </div>
+<body class="landing-page">
+    <div class="landing-shell">
+        <header class="site-header"><a href="{{ url_for('index') }}" class="wordmark"><span class="wordmark-icon" aria-hidden="true">✉</span>Party Mail<span class="wordmark-dot" aria-hidden="true">.</span></a><a href="{{ url_for('admin_dashboard') }}" class="header-link">Host sign in<span aria-hidden="true">↗</span></a></header>
+        <main>
+            <section class="landing-hero" aria-labelledby="landingTitle">
+                <div class="hero-copy"><p class="eyebrow">For the joy of getting together</p><h1 id="landingTitle">Good gatherings.<br><em>Great invitations.</em></h1><p class="hero-description">A thoughtful invitation is the start of something good. Make it yours, share it with your people, and let the replies come to you.</p><a href="{{ url_for('admin_dashboard') }}" class="primary-button hero-cta">Create an invitation<span aria-hidden="true">↗</span></a><p class="hero-note">A little less planning. A lot more celebrating.</p></div>
+                <div class="hero-art" aria-hidden="true"><span class="art-caption">An evening well spent</span><div class="envelope-stage"><div class="envelope-shadow"></div><div class="envelope"><div class="envelope-back"></div><div class="envelope-flap-back"></div><div class="envelope-letter"><span class="letter-ornament">✦</span><span class="letter-caption">Let's get together</span><span class="letter-name">Dinner<br>under the stars</span><span class="letter-rule"></span><span class="letter-date">Good food · Better company</span></div><div class="envelope-flap"></div><div class="envelope-front"><div class="envelope-left"></div><div class="envelope-right"></div><div class="envelope-bottom"></div></div><div class="envelope-seal"><span>✦</span></div></div></div><div class="art-note"><span>01 /</span> Make a little occasion of it.</div></div>
+            </section>
+            <section class="landing-features" aria-label="A thoughtful way to host">
+                <article><span class="feature-number">01</span><h2>Make it feel like you.</h2><p>Choose your colors, add your favorite photo, and set the scene with an invitation that feels personal.</p></article>
+                <article><span class="feature-number">02</span><h2>Send something lovely.</h2><p>Share a link or send an email. Your guests open a little envelope and find all the details inside.</p></article>
+                <article><span class="feature-number">03</span><h2>Enjoy the easy replies.</h2><p>Guest counts, dietary needs, and notes stay together, so you can spend more time looking forward to it.</p></article>
+            </section>
+        </main>
+        <footer class="landing-footer"><p>For moments worth sharing.</p><span>Party Mail</span></footer>
     </div>
 </body>
 </html>

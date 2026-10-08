@@ -1,71 +1,61 @@
-import os
-import pickle
+"""Noninteractive Gmail delivery using credentials outside release code."""
+import json
+from base64 import urlsafe_b64encode
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+import bleach
+import markdown
+import httplib2
+from flask import current_app
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import Flow
+from google_auth_httplib2 import AuthorizedHttp
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from base64 import urlsafe_b64encode
-import markdown as md
-from flask import current_app, url_for
+
+from runtime_config import data_path
+from storage import json_lock, read_json, write_json
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.send']
 
-CREDENTIALS_FILE_PATH = "credentials.json"
-TOKEN_FILE_PATH = "token.pickle"
 
 def get_credentials():
-    creds = None
-    if os.path.exists(TOKEN_FILE_PATH):
-        with open(TOKEN_FILE_PATH, 'rb') as token:
-            creds = pickle.load(token)
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = Flow.from_client_secrets_file(
-                CREDENTIALS_FILE_PATH,
-                scopes=SCOPES,
-                redirect_uri=url_for('oauth2callback', _external=True)
-            )
-            auth_url, _ = flow.authorization_url(prompt='consent')
-            print(f"Please visit this URL to authorize the application: {auth_url}")
-            
-            # In a real application, you'd redirect the user to auth_url
-            # and handle the callback in the oauth2callback route
-            # For now, we'll use a simple input to simulate the process
-            code = input("Enter the authorization code: ")
-            flow.fetch_token(code=code)
-            creds = flow.credentials
+    """Read JSON tokens; OAuth setup is explicit in the owner connections page."""
+    path = data_path('token.json')
+    with json_lock(path):
+        info = read_json(path, None)
+        if not info:
+            raise RuntimeError('Connect Google email in Connections first.')
+        credentials = Credentials.from_authorized_user_info(info, SCOPES)
+        if credentials.expired and credentials.refresh_token:
+            credentials.refresh(lambda *args, **kwargs: Request()(*args, **{**kwargs, 'timeout': 15}))
+            write_json(path, json.loads(credentials.to_json()))
+        if not credentials.valid:
+            raise RuntimeError('Google email needs to be reconnected.')
+    return credentials
 
-        with open(TOKEN_FILE_PATH, 'wb') as token:
-            pickle.dump(creds, token)
-    return creds
 
 def build_message(destination, subject, body, html_body=None):
+    """Build multipart mail with safe Markdown fallback."""
     message = MIMEMultipart('alternative')
     message['to'] = destination
     message['from'] = current_app.config['SENDER_EMAIL']
     message['subject'] = subject
-    
-    message.attach(MIMEText(body, 'plain'))
-    if html_body:
-        message.attach(MIMEText(html_body, 'html'))
-    else:
-        message.attach(MIMEText(md.markdown(body), 'html'))
-    
+    message.attach(MIMEText(body, 'plain', 'utf-8'))
+    if html_body is None:
+        html_body = bleach.clean(markdown.markdown(body), tags=['p','strong','em','h1','h2','h3','ul','li','a','br'], attributes={'a':['href']}, strip=True)
+    message.attach(MIMEText(html_body, 'html', 'utf-8'))
     return {'raw': urlsafe_b64encode(message.as_bytes()).decode()}
 
+
 def send_email(destination, subject, body, html_body=None):
-    creds = get_credentials()
+    """Send through Gmail; return false on delivery errors."""
     try:
-        service = build('gmail', 'v1', credentials=creds)
-        message = build_message(destination, subject, body, html_body)
-        sent_message = service.users().messages().send(userId="me", body=message).execute()
-        print(f"Message Id: {sent_message['id']}")
+        http = AuthorizedHttp(get_credentials(), http=httplib2.Http(timeout=15))
+        service = build('gmail', 'v1', http=http, cache_discovery=False)
+        service.users().messages().send(userId='me', body=build_message(destination, subject, body, html_body)).execute()
         return True
-    except HttpError as error:
-        print(f'An error occurred: {error}')
+    except HttpError:
+        current_app.logger.exception('Gmail delivery failed')
         return False

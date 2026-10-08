@@ -1,0 +1,4 @@
+<dl class="event-details">
+    <div class="event-detail"><dt><span aria-hidden="true">◷</span>When</dt><dd>{{ event.date }}{% if event.start_time or event.time %}<span>{{ event|format_time }}</span>{% endif %}</dd></div>
+    <div class="event-detail"><dt><span aria-hidden="true">⌖</span>Where</dt><dd>{{ event.location }}</dd></div>
+</dl>

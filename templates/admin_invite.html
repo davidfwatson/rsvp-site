@@ -1,114 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Invite</title>
-    <link rel="stylesheet" href="/static/admin.css">
-</head>
-<body>
-    <div class="admin-container">
-        <h1>Admin Invite</h1>
-
-        {% if error %}
-            <div class="validation-message error">{{ error }}</div>
-        {% else %}
-            <p>You've been invited to become an admin. Enter your name and register a passkey to get started.</p>
-
-            <div id="register-form">
-                <label for="invitee-name">Your Name:</label>
-                <input type="text" id="invitee-name" placeholder="Enter your name" required>
-                <button onclick="doRegister()" id="register-btn" style="margin-top:10px">Register with Passkey</button>
-            </div>
-
-            <div id="register-error" class="validation-message error" style="display:none; margin-top:10px"></div>
-            <div id="register-success" class="validation-message success" style="display:none; margin-top:10px"></div>
-        {% endif %}
-    </div>
-
-    {% if not error %}
-    <script src="/static/passkey.js"></script>
-    <script>
-    async function doRegister() {
-        const nameInput = document.getElementById('invitee-name');
-        const name = nameInput.value.trim();
-        const errEl = document.getElementById('register-error');
-        const successEl = document.getElementById('register-success');
-        const btn = document.getElementById('register-btn');
-        errEl.style.display = 'none';
-        successEl.style.display = 'none';
-
-        if (!name) {
-            errEl.textContent = 'Please enter your name.';
-            errEl.style.display = 'block';
-            return;
-        }
-
-        btn.disabled = true;
-        btn.textContent = 'Registering...';
-
-        try {
-            // Send name to options endpoint
-            const optRes = await fetch('/admin/invite/{{ token }}/register/options', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({name: name}),
-            });
-            if (!optRes.ok) {
-                const err = await optRes.json();
-                throw new Error(err.error || 'Failed to get registration options');
-            }
-            const opts = await optRes.json();
-
-            opts.challenge = base64urlToBuffer(opts.challenge);
-            opts.user.id = base64urlToBuffer(opts.user.id);
-            if (opts.excludeCredentials) {
-                opts.excludeCredentials = opts.excludeCredentials.map(c => ({
-                    ...c, id: base64urlToBuffer(c.id)
-                }));
-            }
-
-            const credential = await navigator.credentials.create({publicKey: opts});
-
-            const body = {
-                id: bufferToBase64url(credential.rawId),
-                rawId: bufferToBase64url(credential.rawId),
-                type: credential.type,
-                name: name + "'s Passkey",
-                response: {
-                    attestationObject: bufferToBase64url(credential.response.attestationObject),
-                    clientDataJSON: bufferToBase64url(credential.response.clientDataJSON),
-                },
-            };
-
-            const verifyRes = await fetch('/admin/invite/{{ token }}/register/verify', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(body),
-            });
-            const result = await verifyRes.json();
-
-            if (result.success) {
-                successEl.textContent = 'Account created! Redirecting...';
-                successEl.style.display = 'block';
-                document.getElementById('register-form').style.display = 'none';
-                setTimeout(() => { window.location.href = '/admin'; }, 1000);
-            } else {
-                errEl.textContent = result.error || 'Registration failed';
-                errEl.style.display = 'block';
-                btn.disabled = false;
-                btn.textContent = 'Register with Passkey';
-            }
-        } catch(e) {
-            if (e.name !== 'NotAllowedError') {
-                errEl.textContent = 'Error: ' + e.message;
-                errEl.style.display = 'block';
-            }
-            btn.disabled = false;
-            btn.textContent = 'Register with Passkey';
-        }
-    }
-    </script>
+{% extends "admin_base.html" %}
+{% block title %}You're invited{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+{% block content %}
+<div class="auth-card panel">
+    <a class="auth-brand" href="{{ url_for('index') }}">Party Mail <span aria-hidden="true">✦</span></a>
+    <p class="eyebrow">A seat at the table</p>
+    <h1>You're invited.</h1>
+    {% if error %}
+        <p class="alert alert-error" role="alert">{{ error }}</p>
+        <a class="button button-secondary" href="{{ url_for('admin_login') }}">Go to sign in</a>
+    {% else %}
+        <p class="muted">Create your administrator account with a passkey. You'll use your fingerprint, face, or device PIN to sign in.</p>
+        <form id="register-form" class="stack">
+            <div class="form-field"><label for="invitee-name">Your name</label><input type="text" id="invitee-name" autocomplete="name" maxlength="80" placeholder="What should we call you?" value="{{ invite.name if invite.name != 'New administrator' else '' }}" required></div>
+            <button type="submit" class="button" id="register-btn">Create account with a passkey <span aria-hidden="true">→</span></button>
+        </form>
+        <p id="register-error" class="alert alert-error" role="alert" hidden></p>
+        <p id="register-success" class="alert alert-success" role="status" hidden></p>
+        <p class="muted">This invitation can be used once and expires after seven days.</p>
     {% endif %}
-</body>
-</html>
+</div>
+{% endblock %}
+{% block scripts %}
+{% if not error %}
+<script src="{{ url_for('static', filename='passkey.js') }}"></script>
+<script>
+document.getElementById('register-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    const name = document.getElementById('invitee-name').value.trim();
+    const error = document.getElementById('register-error');
+    const button = document.getElementById('register-btn');
+    error.hidden = true;
+    button.disabled = true;
+    button.textContent = 'Creating your passkey…';
+    try {
+        const result = await registerPasskey({{ url_for('passkey.invite_register_options', token=token)|tojson }},
+            {{ url_for('passkey.invite_register_verify', token=token)|tojson }}, name + "'s passkey", {name});
+        document.getElementById('register-success').textContent = 'You’re all set. Opening your workspace…';
+        document.getElementById('register-success').hidden = false;
+        window.location.assign(result.redirect || {{ url_for('admin_dashboard')|tojson }});
+    } catch (exception) {
+        error.textContent = passkeyError(exception);
+        error.hidden = false;
+        button.disabled = false;
+        button.textContent = 'Create account with a passkey →';
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

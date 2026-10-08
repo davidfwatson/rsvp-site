@@ -1,0 +1,6 @@
+{% if ga_measurement_id and request.endpoint in ['index','event_page','thank_you'] and not preview|default(false) %}
+<template id="analytics-choice-template"><div id="analytics-choice" class="analytics-choice" hidden role="region" aria-label="Analytics preference"><p>May we use visit analytics to improve PartyMail?</p><div><button type="button" id="analytics-allow">Allow</button><button type="button" id="analytics-decline">No thanks</button></div></div></template>
+<script id="analytics-config" type="application/json">{{ {'id':ga_measurement_id,'path':request.path}|tojson }}</script>
+<script src="{{ url_for('static',filename='analytics.js') }}" defer></script>
+<style>.analytics-choice{position:fixed;z-index:100;bottom:18px;left:18px;max-width:360px;padding:17px 19px;border:1px solid #deded4;border-radius:12px;background:#fffdf7;color:#4a584b;box-shadow:0 4px 20px #0001;font:12px/1.5 system-ui,sans-serif}.analytics-choice div{display:flex;gap:8px;margin-top:12px}.analytics-choice button{background:#365844;color:#fff;border:0;padding:8px 14px;border-radius:6px;font:12px system-ui,sans-serif;cursor:pointer}.analytics-choice button:last-child{background:#f1f2eb;color:#6b7566}.analytics-choice[hidden]{display:none}@media(max-width:420px){.analytics-choice{right:18px;max-width:none}}</style>
+{% endif %}

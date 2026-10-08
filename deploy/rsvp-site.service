@@ -1,0 +1,23 @@
+[Unit]
+Description=Party Mail RSVP application
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=rsvp
+Group=rsvp
+WorkingDirectory=/srv/rsvp/current
+EnvironmentFile=/etc/rsvp-site.env
+ExecStart=/srv/rsvp/current/venv/bin/gunicorn --config /srv/rsvp/current/deploy/gunicorn.conf.py app:app
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=35
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/rsvp-site
+
+[Install]
+WantedBy=multi-user.target

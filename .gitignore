@@ -1,6 +1,12 @@
 venv/*
 credentials.json
 token.pickle
+token.json
+.env
+.env.*
+!.env.example
+rsvp-release.tar.gz
+rsvp-release.sha256
 config.py
 __pycache__/*
 event_config.json

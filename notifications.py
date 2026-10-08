@@ -11,10 +11,12 @@ import datetime
 import logging
 import sys
 
-from notify_service.client import NotifyClient
+try:
+  from notify_service.client import NotifyClient
+except ImportError:
+  NotifyClient = None
 
-
-_client = NotifyClient()
+_client = NotifyClient() if NotifyClient else None
 
 
 def notify_phone(message: str = "Hello World", url=None):
@@ -23,9 +25,11 @@ def notify_phone(message: str = "Hello World", url=None):
   Returns True on success, False on failure (matches legacy behavior of
   returning a bool that callers ignore in practice).
   """
-  if "unittest" in sys.modules.keys():
-    logging.error(f"Skip Notify Phone in Tests: {message}")
+  if "unittest" in sys.modules or "pytest" in sys.modules:
     return True
+  if _client is None:
+    logging.warning('Phone notifications unavailable: install optional notify-service dependency')
+    return False
 
   try:
     status, body = _client.phone(message=message, url=url)

@@ -1,5 +1,6 @@
 """Runtime configuration shared by the web app, stores, and release tooling."""
 import os
+import re
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -100,5 +101,8 @@ def validate_production(config):
         errors.append('RSVP_WEBAUTHN_ORIGIN must equal RSVP_PUBLIC_URL')
     if config.get('WEBAUTHN_RP_ID') != public.hostname:
         errors.append('RSVP_WEBAUTHN_RP_ID must match the public hostname')
+    contact = str(config.get('CONTACT_EMAIL', ''))
+    if not re.fullmatch(r'[^@\s]+@[^@\s]+\.[^@\s]+', contact):
+        errors.append('RSVP_CONTACT_EMAIL must be the address /privacy and /terms give for questions and removal requests')
     if errors:
         raise RuntimeError('Unsafe production configuration: ' + '; '.join(errors))

@@ -36,8 +36,10 @@ stored outside releases alongside event data.
 
 `/privacy` and `/terms` are public pages. Enter their URLs, with
 `https://partymail.app` as the home page, under Branding on the Google OAuth
-consent screen so Google's sign-in page links to them. Set `RSVP_CONTACT_EMAIL`
-to the address both pages should give for questions and removal requests.
+consent screen so Google's sign-in page links to them. `RSVP_CONTACT_EMAIL` is
+required: it is the address both pages give for questions and removal requests.
+Production uses `hello@partymail.app`, which the forward-mail project on this
+server delivers to the owner.
 
 Stop the old service before copying data so the copy includes its last write.
 First take a timestamped backup of the old checkout's `data/`, `admins.json`,

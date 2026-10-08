@@ -192,3 +192,13 @@ def test_policy_pages_fall_back_to_the_host_when_no_contact_is_configured(client
         text = client.get(path).get_data(as_text=True)
         assert 'mailto:' not in text and 'the host who invited you' in text
         assert 'googletagmanager' not in text and 'analytics-config' not in text
+
+
+def test_new_events_cannot_take_a_site_route_as_their_slug():
+    """An event named after a top-level route gets a different slug or is refused."""
+    from event_config import add_new_event, get_all_events
+    details = dict(date='2027-06-12', start_time='6:00 PM', location='The garden', description='', max_guests_per_invite=2)
+    add_new_event(dict(details, name='Privacy'))
+    assert 'privacy' not in get_all_events()
+    with pytest.raises(ValueError):
+        add_new_event(dict(details, name='Terms party', slug='terms'))

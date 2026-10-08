@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f4f2ec"><title>{% block title %}{% endblock %} · Party Mail</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='invitation.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}">
+</head>
+<body class="landing-page">
+    <div class="landing-shell">
+        <header class="site-header"><a href="{{ url_for('index') }}" class="wordmark"><span class="wordmark-icon" aria-hidden="true">✉</span>Party Mail<span class="wordmark-dot" aria-hidden="true">.</span></a><a href="{{ url_for('admin_dashboard') }}" class="header-link">Host sign in<span aria-hidden="true">↗</span></a></header>
+        <main class="legal">
+            <h1>{{ self.title() }}</h1>
+            <p class="legal-date">Effective October 8, 2026</p>
+            {% block content %}{% endblock %}
+            <h2>Contact</h2>
+            {% if contact_email %}<p>Questions and requests go to <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>{% else %}<p>Questions and requests go to the host who invited you, who can reach the person running Party Mail.</p>{% endif %}
+        </main>
+        <footer class="landing-footer"><p><a href="{{ url_for('privacy') }}">Privacy</a> · <a href="{{ url_for('terms') }}">Terms</a></p><span>Party Mail</span></footer>
+    </div>
+</body>
+</html>

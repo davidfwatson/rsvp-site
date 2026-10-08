@@ -163,3 +163,50 @@ def test_transparent_upload_retains_alpha(admin_client):
     assert result.status_code == 200
     with Image.open(BytesIO(admin_client.get(result.json['url']).data)) as image:
         assert 'A' in image.getbands() and image.getpixel((0,0))[-1] == 0
+
+
+def test_policy_pages_are_public_and_linked_from_the_landing_page(client, monkeypatch):
+    """Google's consent screen links to these; they must load without a session."""
+    monkeypatch.setitem(app_module.app.config, 'CONTACT_EMAIL', 'hello@example.test')
+    landing = client.get('/').get_data(as_text=True)
+    assert 'href="/privacy"' in landing and 'href="/terms"' in landing
+    privacy = client.get('/privacy')
+    assert privacy.status_code == 200
+    text = privacy.get_data(as_text=True)
+    assert 'gmail.send' in text and 'Limited Use' in text and 'mailto:hello@example.test' in text
+    terms = client.get('/terms')
+    assert terms.status_code == 200 and 'Terms of Service' in terms.get_data(as_text=True)
+
+
+def test_policy_pages_win_over_an_event_with_the_same_slug(client):
+    """A host cannot shadow the policy by naming an event 'privacy'."""
+    save_event_config([dict(EVENT, slug='privacy', name='Shadow party')])
+    text = client.get('/privacy').get_data(as_text=True)
+    assert 'Privacy Policy' in text and 'Shadow party' not in text
+
+
+def test_policy_pages_fall_back_to_the_host_when_no_contact_is_configured(client, monkeypatch):
+    """An unset contact address must not render an empty mailto link."""
+    monkeypatch.setitem(app_module.app.config, 'CONTACT_EMAIL', '')
+    for path in ('/privacy', '/terms'):
+        text = client.get(path).get_data(as_text=True)
+        assert 'mailto:' not in text and 'the host who invited you' in text
+        assert 'googletagmanager' not in text and 'analytics-config' not in text
+
+
+def test_new_events_cannot_take_a_site_route_as_their_slug():
+    """An event named after a top-level route gets a different slug or is refused."""
+    from event_config import add_new_event, get_all_events
+    details = dict(date='2027-06-12', start_time='6:00 PM', location='The garden', description='', max_guests_per_invite=2)
+    add_new_event(dict(details, name='Privacy'))
+    assert 'privacy' not in get_all_events()
+    with pytest.raises(ValueError):
+        add_new_event(dict(details, name='Terms party', slug='terms'))
+
+
+def test_every_top_level_route_is_a_reserved_slug():
+    """A new single-segment route must be reserved, or an event could take its address."""
+    from event_config import RESERVED_SLUGS
+    routes = {rule.rule.strip('/').split('/')[0] for rule in app_module.app.url_map.iter_rules()}
+    routes = {segment for segment in routes if segment and not segment.startswith('<')}
+    assert routes <= RESERVED_SLUGS, sorted(routes - RESERVED_SLUGS)

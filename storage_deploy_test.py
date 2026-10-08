@@ -133,6 +133,11 @@ def test_production_requires_external_initialized_data_and_strong_secret(tmp_pat
     root = Path(os.environ['RSVP_DATA_DIR'])
     (root / '.rsvp-data').touch()
     monkeypatch.setenv('RSVP_SECRET_KEY', 'a' * 64)
+    # The policy pages promise a working contact, so production must name one.
+    monkeypatch.delenv('RSVP_CONTACT_EMAIL', raising=False)
+    with pytest.raises(RuntimeError, match='RSVP_CONTACT_EMAIL'):
+        configure_app(Flask('runtime-test', root_path=str(tmp_path)))
+    monkeypatch.setenv('RSVP_CONTACT_EMAIL', 'hello@partymail.app')
     configure_app(application)
     assert application.config['SESSION_COOKIE_SECURE'] is True
     assert application.config['PUBLIC_BASE_URL'] == 'https://partymail.app'
@@ -168,6 +173,7 @@ def test_production_candidate_health_boots_without_writing_data(tmp_path):
         'RSVP_PUBLIC_URL': 'https://partymail.app', 'RSVP_SECRET_KEY': 'a' * 64,
         'RSVP_WEBAUTHN_RP_ID': 'partymail.app', 'RSVP_WEBAUTHN_ORIGIN': 'https://partymail.app',
         'RSVP_RELEASE_ID': 'candidate-sha', 'RSVP_EMAIL_ENABLED': 'false', 'PYTHONPATH': str(root),
+        'RSVP_CONTACT_EMAIL': 'hello@partymail.app',
     }
     candidate_health(release, environment, 'candidate-sha')
     assert sorted(path.name for path in persistent.iterdir()) == ['.rsvp-data']

@@ -9,6 +9,8 @@ from runtime_config import data_path
 from storage import backup_file, json_lock, read_json, write_json
 
 
+# Top-level routes in app.py; an event with one of these slugs could never be opened.
+RESERVED_SLUGS = frozenset({'admin', 'healthz', 'media', 'oauth2callback', 'privacy', 'static', 'terms'})
 DEFAULT_EVENTS_DIR = str(data_path('events'))
 
 
@@ -116,7 +118,7 @@ class EventConfig:
             updated.setdefault('slug', slug)
             new_slug = updated['slug']
             self._event_path(new_slug)
-            if new_slug != slug and new_slug in self.get_existing_slugs():
+            if new_slug != slug and new_slug in self.get_existing_slugs() | RESERVED_SLUGS:
                 raise ValueError(f"Slug '{new_slug}' is already in use")
             if current and updated.get('id') != current.get('id'):
                 raise ValueError('An event ID cannot be changed.')
@@ -134,7 +136,7 @@ class EventConfig:
         with json_lock(Path(self.events_dir) / '.events'):
             self._refresh()
             event_id = str(uuid.uuid4())[:8]
-            existing = self.get_existing_slugs()
+            existing = self.get_existing_slugs() | RESERVED_SLUGS
             if event_data.get('slug'):
                 slug = event_data['slug'].strip().lower()
                 self._event_path(slug)

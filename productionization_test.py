@@ -183,3 +183,12 @@ def test_policy_pages_win_over_an_event_with_the_same_slug(client):
     save_event_config([dict(EVENT, slug='privacy', name='Shadow party')])
     text = client.get('/privacy').get_data(as_text=True)
     assert 'Privacy Policy' in text and 'Shadow party' not in text
+
+
+def test_policy_pages_fall_back_to_the_host_when_no_contact_is_configured(client, monkeypatch):
+    """An unset contact address must not render an empty mailto link."""
+    monkeypatch.setitem(app_module.app.config, 'CONTACT_EMAIL', '')
+    for path in ('/privacy', '/terms'):
+        text = client.get(path).get_data(as_text=True)
+        assert 'mailto:' not in text and 'the host who invited you' in text
+        assert 'googletagmanager' not in text and 'analytics-config' not in text

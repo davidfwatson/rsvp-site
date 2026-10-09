@@ -171,7 +171,7 @@ body[data-preview='true'].envelope-is-open .envelope.envelope--artwork { transfo
 .artwork-is-presented .envelope--artwork, .artwork-is-presented .envelope-shadow { opacity: 0; pointer-events: none; }
 body.artwork-is-presented:not([data-preview-view='opening']) .envelope-stage { height: 0; padding: 0; }
 body.artwork-is-flying:not([data-preview-view='opening']) .envelope-stage { position: fixed; left: var(--scene-left); top: var(--scene-top); width: var(--scene-width); height: var(--scene-height); padding: var(--scene-padding); z-index: 10; }
-body.artwork-is-flying .open-invitation { visibility: hidden; }
+body.artwork-is-flying .open-invitation, body.artwork-is-presented .envelope-note { visibility: hidden; }
 body.artwork-is-flying .invitation-card { opacity: 0; animation: none; }
 body.artwork-is-presented:not([data-preview='true']) .envelope-section { margin: 0; height: 0; }
 body.artwork-is-presented:not(.artwork-is-flying):not([data-preview='true']) .envelope-section { display: none; }

@@ -147,13 +147,16 @@
         Object.assign(flight.style, {left:`${to.left}px`, top:`${to.top}px`, width:`${to.width}px`, height:`${to.height}px`});
         body.append(flight);
         flight.append(artwork);
+        // Extraction eases to a stop. Begin the forward flight at rest too,
+        // then build speed gently so the handoff does not feel like a jump.
+        const flightDuration = 1300;
         flightAnimation = flight.animate([
             {transform:`translate(${from.left-to.left}px, ${from.top-to.top}px) scale(${from.width/to.width}, ${from.height/to.height})`},
             {transform:'translate(0, 0) scale(1)'},
-        ], {duration:1100, easing:'cubic-bezier(.16, 1, .3, 1)', fill:'both'});
+        ], {duration:flightDuration, easing:'cubic-bezier(.4, 0, .2, 1)', fill:'both'});
         let timer;
         try {
-            await Promise.race([flightAnimation.finished.catch(() => {}), new Promise(resolve => {timer=window.setTimeout(resolve, 1300);})]);
+            await Promise.race([flightAnimation.finished.catch(() => {}), new Promise(resolve => {timer=window.setTimeout(resolve, flightDuration + 200);})]);
         } finally {
             window.clearTimeout(timer);
             flightAnimation.cancel(); flightAnimation = null;

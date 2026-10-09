@@ -28,7 +28,6 @@
                     <div class="envelope-back"></div>
                     <div class="envelope-flap-back"></div>
                     <div class="envelope-letter">
-                        {% if event.cover_image %}<img class="envelope-artwork" src="{{ event.cover_image }}" alt="" decoding="async">{% endif %}
                         <div class="letter-typeset"><span class="letter-ornament">✦</span><span class="letter-caption">You're warmly invited</span>
                         <span class="letter-name">{{ event.name }}</span><span class="letter-rule"></span><span class="letter-date">{{ event.date }}</span></div>
                     </div>
@@ -41,7 +40,7 @@
             <p class="envelope-note" aria-hidden="true">Made for a moment worth sharing</p>
         </section>
         <div class="invitation-content" id="invitationContent">
-            {% if event.cover_image %}<div class="invitation-cover"><img src="{{ event.cover_image }}" alt="{{ event.name }} invitation artwork" fetchpriority="high"></div>{% endif %}
+            {% if event.cover_image %}<div class="invitation-cover"><img class="invitation-artwork" src="{{ event.cover_image }}" alt="{{ event.name }} invitation artwork" fetchpriority="high" decoding="async"></div>{% endif %}
             <article class="invitation-card" aria-labelledby="eventTitle">
                 <div class="card-content">
                     <header class="event-heading"><span class="card-ornament" aria-hidden="true">✦</span><p class="eyebrow">You're invited</p><h1 id="eventTitle" tabindex="-1">{{ event.name }}</h1><span class="heading-rule" aria-hidden="true"></span></header>

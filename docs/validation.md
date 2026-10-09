@@ -24,7 +24,7 @@ The Python suite covers the existing event/archive/calendar behavior plus:
   local copying, unlocked remote transfer, and successful-backup-only retention.
 
 Run `python -m pytest -q` with `requirements-dev.txt` installed. The final
-integrated suite passed 124 tests.
+integrated suite passed 129 tests.
 
 ## Browser checks
 
@@ -72,6 +72,17 @@ Dashboard fixtures passed in WebKit and Chromium, including long event titles.
 The isolated Python suite passed all 129 tests after integrating the latest
 privacy-page changes. Only a new sample event
 and its uploaded artwork were added to the temporary demo data.
+
+The uploaded card now uses a single image node throughout the opening. Frame
+samples verified flap opening, extraction, then a forward flight into the
+reading view, with no duplicate image or leftover flight element. Guest and
+animation-only fixtures covered portrait, square, landscape, extreme tall/wide,
+and transparent artwork at 390px; portrait checks also covered 280px and 1440px.
+The envelope starts near the available width and recedes during extraction.
+Repeated replay, resizing during flight, first opening the Design tab on mobile,
+failed image loads, the JavaScript reduced-motion branch, and the no-JavaScript
+guest fallback passed. The inline pane was enlarged to show portrait cards at
+a useful size. The isolated suite passed 129 tests again after these changes.
 
 Real Gmail sending, live Analytics collection, SSH deployment, and offsite
 restic transfer require the operator setup in `production.md`. The application

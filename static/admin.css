@@ -875,8 +875,8 @@ input:focus,textarea:focus,select:focus {
   cursor:default
 }
 .preview-stage {
-  height:355px;
-  min-height:355px;
+  height:clamp(400px,60vh,620px);
+  min-height:400px;
   display:flex;
   justify-content:center;
   background:#e5e8df;
@@ -1460,9 +1460,7 @@ td strong {
     font-size:11px
   }
   .preview-stage {
-    padding:10px;
-    height:320px;
-    min-height:320px
+    padding:10px
   }
   .sidebar {
     transform:translateX(-100%);

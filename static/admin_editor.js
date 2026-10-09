@@ -97,7 +97,7 @@
       if (controller !== previewController || controller.signal.aborted) return;
       previewReady = false; animationBusy = false; previewControls();
       previewRevision = snapshotRevision;
-      frame.srcdoc = html; caption.textContent = 'Your envelope, updated as you edit.';
+      frame.srcdoc = html; caption.textContent = 'Your design, updated as you edit.';
     } catch (err) {if (err.name !== 'AbortError') caption.textContent = 'Preview will update when the connection returns.';}
   }
   function changed(event) {

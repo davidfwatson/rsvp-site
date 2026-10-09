@@ -1,0 +1,116 @@
+name: Party Mail mobile
+
+on:
+  pull_request:
+    paths: ['ios/**', 'android/**', 'scripts/mobile_fixture.py', 'scripts/wait_mobile_fixture.py', 'scripts/verify_mobile.sh', 'app.py', 'mobile_api.py', 'passkey_auth.py', 'runtime_config.py', 'security.py', 'event_config.py', 'event_editor.py', 'requirements-*.txt', '.github/workflows/mobile.yml']
+  push:
+    branches: [main]
+    paths: ['ios/**', 'android/**', 'scripts/mobile_fixture.py', 'scripts/wait_mobile_fixture.py', 'scripts/verify_mobile.sh', 'app.py', 'mobile_api.py', 'passkey_auth.py', 'runtime_config.py', 'security.py', 'event_config.py', 'event_editor.py', 'requirements-*.txt', '.github/workflows/mobile.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deployment-and-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - run: python -m pip install -r requirements-dev.txt
+      - name: Deployment regression tests and isolated mobile API smoke
+        env:
+          PARTYMAIL_PYTHON: python
+        run: bash scripts/verify_mobile.sh
+
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
+          log-accepted-android-sdk-licenses: 'false'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Unit tests, lint, debug APK and unsigned release AAB
+        working-directory: android
+        run: ./gradlew --no-daemon --console=plain :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:bundleRelease
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: partymail-android-build-${{ github.sha }}
+          path: |
+            android/app/build/outputs/apk/debug/*.apk
+            android/app/build/outputs/bundle/release/*.aab
+            android/app/build/reports/tests/
+            android/app/build/reports/lint-results-debug.*
+          retention-days: 14
+
+  ios:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-runtime.txt
+      - name: Install isolated fixture dependencies
+        run: python -m pip install -r requirements-runtime.txt
+      - name: Choose an available iPhone simulator
+        run: |
+          xcrun simctl list devices available --json > "$RUNNER_TEMP/simulators.json"
+          python3 - <<'PY' >> "$GITHUB_ENV"
+          import json, os
+          from pathlib import Path
+          data = json.loads((Path(os.environ['RUNNER_TEMP']) / 'simulators.json').read_text())
+          phones = [device for runtime, devices in data['devices'].items() if '.iOS-' in runtime for device in devices if device.get('isAvailable') and device['name'].startswith('iPhone')]
+          if not phones:
+              raise SystemExit('The runner has no available iPhone simulator')
+          print('PARTYMAIL_SIMULATOR=' + phones[0]['udid'])
+          PY
+      - name: Build and test the iOS app
+        env:
+          PARTYMAIL_TEST_BASE_URL: http://127.0.0.1:5059
+          TEST_RUNNER_PARTYMAIL_TEST_BASE_URL: http://127.0.0.1:5059
+        run: |
+          set -euo pipefail
+          python -u scripts/mobile_fixture.py --port 5059 > "$RUNNER_TEMP/partymail-fixture.log" 2>&1 &
+          fixture_pid=$!
+          cleanup_fixture() {
+            task_status=$?
+            if [[ "$task_status" != 0 ]]; then
+              echo 'Isolated fixture startup/runtime log:'
+              tail -100 "$RUNNER_TEMP/partymail-fixture.log" || true
+            fi
+            kill "$fixture_pid" 2>/dev/null || true
+            wait "$fixture_pid" 2>/dev/null || true
+          }
+          trap cleanup_fixture EXIT
+          python scripts/wait_mobile_fixture.py --base-url "$PARTYMAIL_TEST_BASE_URL" --pid "$fixture_pid"
+          xcodebuild -project ios/PartyMail.xcodeproj -scheme PartyMail \
+            -sdk iphonesimulator -destination "platform=iOS Simulator,id=$PARTYMAIL_SIMULATOR" \
+            -derivedDataPath "$RUNNER_TEMP/PartyMail-derived" \
+            -resultBundlePath "$RUNNER_TEMP/PartyMail-tests.xcresult" \
+            CODE_SIGNING_ALLOWED=NO test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: partymail-ios-simulator-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/PartyMail-derived/Build/Products/Debug-iphonesimulator/PartyMail.app
+            ${{ runner.temp }}/PartyMail-tests.xcresult
+            ${{ runner.temp }}/partymail-fixture.log
+          retention-days: 14

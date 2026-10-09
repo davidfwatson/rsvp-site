@@ -4,6 +4,15 @@ A Flask invitation and RSVP app with a responsive administrator workspace,
 passkey accounts, one-use access links, invitation customization, and a guest
 list for each event.
 
+Native **iOS/iPadOS** (SwiftUI) and **Android** (Kotlin/Compose) clients live in
+[`ios/`](ios/README.md) and [`android/`](android/README.md). They share events,
+accounts, guest replies, and passkeys with the website. Host workspaces, design
+editing, RSVP forms, private update links, sharing, calendar links, and access
+management use the same backend. Run `venv/bin/python scripts/mobile_fixture.py`
+for an isolated demo with email disabled, or add `--smoke` for an end-to-end API
+check. See [mobile release setup](docs/mobile-release.md) for morning TestFlight
+and Play setup and [the API contract](docs/mobile-api.md) for integration details.
+
 ## Development
 
 Use Python 3.12:
@@ -40,6 +49,8 @@ development only; production uses its separate environment configuration.
 | `RSVP_WEBAUTHN_RP_ID` | Passkey hostname; keep `partymail.app` for existing accounts |
 | `RSVP_WEBAUTHN_ORIGIN` | Matching HTTPS public origin |
 | `RSVP_WEBAUTHN_RP_NAME` | Account/passkey display name |
+| `RSVP_APPLE_TEAM_ID` | Developer team for the iOS domain association |
+| `RSVP_ANDROID_SHA256_CERT_FINGERPRINTS` | Comma-separated Android SHA-256 signing fingerprints; publishes Digital Asset Links and trusts those native passkey origins |
 | `RSVP_SENDER_EMAIL` | Authorized Gmail sender |
 | `RSVP_EMAIL_ENABLED` | Enable real mail delivery; false for development/tests |
 | `RSVP_GA_MEASUREMENT_ID` | Google Analytics property; empty disables tracking |

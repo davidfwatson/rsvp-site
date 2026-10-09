@@ -10,7 +10,7 @@ from storage import backup_file, json_lock, read_json, write_json
 
 
 # Top-level routes in app.py; an event with one of these slugs could never be opened.
-RESERVED_SLUGS = frozenset({'admin', 'healthz', 'media', 'oauth2callback', 'privacy', 'static', 'terms'})
+RESERVED_SLUGS = frozenset({'.well-known', 'api', 'admin', 'healthz', 'media', 'oauth2callback', 'privacy', 'static', 'terms'})
 DEFAULT_EVENTS_DIR = str(data_path('events'))
 
 

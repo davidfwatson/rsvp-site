@@ -1,0 +1,16 @@
+# Add as server-ops/android-autoship/apps/partymail.conf after the first
+# successful manual release, merge it there, then install from server-ops main.
+REPO=/Users/david/src/rsvp-site
+BRANCH=main
+DEPLOY=android/deploy
+VERSIONFILE=android/gradle.properties
+BUILDTREE=/Users/david/.autoship-buildtrees/partymail-android
+LABEL=com.davidfwatson.partymail-android-ship
+TRACK=internal
+SHIP_PATHS="android"
+PY=/Users/david/src/rsvp-site/android/deploy/.venv/bin/python
+JAVA_HOME=/opt/homebrew/opt/openjdk@21
+ANDROID_HOME=/opt/homebrew/share/android-commandlinetools
+# launchd doesn't inherit a shell. Keep Party Mail's upload-key env file at this
+# explicit path, or place PARTYMAIL_UPLOAD_* in the gitignored deploy/.env.
+PARTYMAIL_UPLOAD_ENV=/Users/david/keys/partymail-upload.env

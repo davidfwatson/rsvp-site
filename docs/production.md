@@ -10,6 +10,29 @@ directory, its `.rsvp-data` marker, an environment secret of at least 32
 characters, and matching HTTPS origin/passkey hostname. Keep the existing
 `partymail.app` RP ID so existing passkeys continue to work.
 
+## Native apps
+
+The native apps use `/api/mobile/*` with the website's session and CSRF
+protections. There is no new store or migration. Deploy the backend before
+shipping either app; the [mobile release runbook](mobile-release.md) covers
+the complete build and account setup.
+
+Flask serves `/.well-known/apple-app-site-association` and
+`/.well-known/assetlinks.json` through the existing proxy. Keep those paths
+public, on HTTPS, with a JSON content type and no redirect. The iOS association
+defaults to team `2FZS79QCFD`, app `com.davidfwatson.partymail`. For Android, set
+`RSVP_ANDROID_SHA256_CERT_FINGERPRINTS` in `/etc/rsvp-site.env` to the upload
+certificate and, after Play's first upload, its **app signing** certificate.
+The same exact certificates determine the accepted native WebAuthn origins.
+No Android identity is trusted until the list is configured; owner recovery
+and one-use account links still work. Never trust the SDK debug certificate on
+the production domain. Restart `rsvp-site` after changing that environment.
+
+Native API and association endpoints send no analytics. API responses use
+`Cache-Control: no-store`; the existing nginx `access_log off` protects
+private RSVP and account links. The public guest list remains abbreviated,
+and host API/export responses omit guest edit tokens.
+
 ## One-time server setup
 
 Use the existing host and TLS certificate. These are operator setup commands,

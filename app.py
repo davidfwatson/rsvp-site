@@ -53,7 +53,7 @@ def workspace_context():
 def get_public_event(slug):
     """Archived invitations remain available only to hosts."""
     event = get_event_config(slug)
-    return event if event and not event.get('archived') else None
+    return event if event and event.get('slug') == slug and not event.get('archived') else None
 
 
 def rsvp_path(event_id):
@@ -487,6 +487,10 @@ def healthz():
 @app.errorhandler(RequestEntityTooLarge)
 def too_large(error):
     return jsonify(error='Upload is too large. Choose an image smaller than 8 MB.'), 413
+
+
+from mobile_api import register_mobile_api
+register_mobile_api(app, globals())
 
 
 if __name__ == '__main__':

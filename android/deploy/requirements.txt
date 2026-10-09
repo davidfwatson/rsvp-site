@@ -1,0 +1,6 @@
+# For the Google Play Developer API upload in play.py: a service-account JWT
+# (pyjwt + cryptography for RS256) exchanged for an OAuth token, then plain REST
+# via requests. Building the .aab is pure Gradle; --skip-upload needs none of these.
+pyjwt>=2.8
+cryptography>=42
+requests>=2.31

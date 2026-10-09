@@ -97,7 +97,7 @@
       if (controller !== previewController || controller.signal.aborted) return;
       previewReady = false; animationBusy = false; previewControls();
       previewRevision = snapshotRevision;
-      frame.srcdoc = html; caption.textContent = 'Your envelope, updated as you edit.';
+      frame.srcdoc = html; caption.textContent = 'Your design, updated as you edit.';
     } catch (err) {if (err.name !== 'AbortError') caption.textContent = 'Preview will update when the connection returns.';}
   }
   function changed(event) {
@@ -147,7 +147,7 @@
       const payload = new FormData();payload.append('image',file);
       const response = await fetch(form.dataset.uploadUrl,{method:'POST',headers:{'X-CSRF-Token':token},body:payload});
       const result = await response.json(); if(!response.ok) throw new Error(result.error || 'Upload failed.');
-      imagePreview(input.dataset.uploadField,result.url); window.workspaceToast('Photograph uploaded.');
+      imagePreview(input.dataset.uploadField,result.url); window.workspaceToast('Image uploaded.');
     } catch(err) {error.textContent=err.message || 'Upload failed. Please try again.';error.hidden=false;state('error','Upload failed');}
     finally {uploading--;input.disabled=false;input.value='';if(revision>savedRevision)save();else if(!uploading)state('saved','All changes saved');}
   }));

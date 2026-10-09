@@ -8,7 +8,66 @@
     const flap = document.querySelector('.envelope-flap');
     const letter = document.querySelector('.envelope-letter');
     const body = document.body;
+    const cover = document.querySelector('.invitation-cover');
+    const artwork = cover?.querySelector('.invitation-artwork');
+    const envelope = document.querySelector('.envelope');
+    const stage = document.querySelector('.envelope-stage');
+    const openingOnly = preview && body.dataset.previewView === 'opening';
     let animating = false;
+    let layoutPending = false;
+    let artworkReady = false;
+    let display, flightAnimation;
+
+    function fitDisplay() {
+        if (!display || !artwork?.naturalWidth) return;
+        const bounds = stage.getBoundingClientRect();
+        if (!bounds.width || !bounds.height) return;
+        const ratio = artwork.naturalWidth / artwork.naturalHeight;
+        const width = Math.min(bounds.width - 32, (bounds.height - 24) * ratio);
+        if (width <= 0) return;
+        display.style.width = `${width}px`;
+        display.style.height = `${width / ratio}px`;
+    }
+
+    function fitArtwork(force = false) {
+        if (!artwork?.naturalWidth || !artwork.naturalHeight || !stage || !envelope) return;
+        if (animating && force !== true) {
+            layoutPending = true;
+            // A resize must not strand the flying image at stale viewport coordinates.
+            if (flightAnimation && flightAnimation.playState !== 'finished') flightAnimation.finish();
+            return;
+        }
+        if (body.classList.contains('artwork-is-presented')) { fitDisplay(); layoutPending = false; return; }
+        const bounds = stage.getBoundingClientRect();
+        if (!bounds.width || !bounds.height) return;
+        const style = window.getComputedStyle(stage);
+        const availableWidth = bounds.width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) - 16;
+        const availableHeight = bounds.height - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom) - 32;
+        if (availableWidth <= 0 || availableHeight <= 0) return;
+        const ratio = artwork.naturalWidth / artwork.naturalHeight;
+        const envelopeWidth = Math.min(760, availableWidth * .94);
+        const envelopeHeight = Math.min(envelopeWidth / 1.62, availableHeight * .8);
+        const cardHeight = Math.min(envelopeHeight - 24, (envelopeWidth - 32) / ratio), cardWidth = cardHeight * ratio;
+        const gap = 18;
+        const sceneHeight = envelopeHeight + Math.max(cardHeight + gap, envelopeHeight * .57 + 8);
+        const extractionScale = Math.min(.86, availableHeight / sceneHeight);
+        const top = (envelopeHeight - cardHeight) / 2;
+        const sizes = {
+            'envelope-width': envelopeWidth, 'envelope-height': envelopeHeight,
+            'card-width': cardWidth, 'card-height': cardHeight, 'card-top': top,
+            'card-lift': -(top + cardHeight + gap),
+            'seal-size': Math.min(54, Math.max(28, envelopeHeight * .2)),
+        };
+        // Width, height and lift must change together: interpolating just the
+        // lift after a resize would briefly push resized art through the front.
+        envelope.classList.add('artwork-is-sizing');
+        for (const [name, value] of Object.entries(sizes)) envelope.style.setProperty(`--art-${name}`, `${value}px`);
+        envelope.style.setProperty('--art-extraction-scale', extractionScale);
+        envelope.classList.add('envelope--artwork');
+        window.getComputedStyle(letter).transform;
+        envelope.classList.remove('artwork-is-sizing');
+        layoutPending = false;
+    }
 
     function reportPreviewState() {
         if (!preview || window.parent === window) return;
@@ -44,15 +103,107 @@
         body.dataset.invitationState = 'open';
     }
 
+    function artworkTarget() {
+        if (!openingOnly) return cover;
+        if (!display) {
+            display = document.createElement('div');
+            display.className = 'artwork-display';
+            stage.append(display);
+        }
+        display.hidden = false;
+        fitDisplay();
+        stage.removeAttribute('aria-hidden');
+        return display;
+    }
+
+    async function presentArtwork(animate) {
+        const from = artwork.getBoundingClientRect();
+        const scene = stage.getBoundingClientRect();
+        const sceneStyle = window.getComputedStyle(stage);
+        for (const [key, value] of Object.entries({left:scene.left, top:scene.top, width:scene.width, height:scene.height})) {
+            stage.style.setProperty(`--scene-${key}`, `${value}px`);
+        }
+        stage.style.setProperty('--scene-padding', sceneStyle.padding);
+        // Reserve the final image's space while the same node is in flight.
+        cover.style.aspectRatio = `${artwork.naturalWidth} / ${artwork.naturalHeight}`;
+        showInvitation();
+        body.classList.add('artwork-is-presented');
+        const target = artworkTarget();
+        if (!animate || reducedMotion || !artwork.animate || !from.width || !from.height) {
+            target.append(artwork);
+            return;
+        }
+        body.classList.add('artwork-is-flying');
+        body.dataset.invitationState = 'presenting';
+        const to = target.getBoundingClientRect();
+        if (!to.width || !to.height) {
+            target.append(artwork);
+            body.classList.remove('artwork-is-flying');
+            return;
+        }
+        const flight = document.createElement('div');
+        flight.className = 'artwork-flight';
+        flight.setAttribute('aria-hidden', 'true');
+        Object.assign(flight.style, {left:`${to.left}px`, top:`${to.top}px`, width:`${to.width}px`, height:`${to.height}px`});
+        body.append(flight);
+        flight.append(artwork);
+        // Extraction eases to a stop. Begin the forward flight at rest too,
+        // then build speed gently so the handoff does not feel like a jump.
+        const flightDuration = 1300;
+        flightAnimation = flight.animate([
+            {transform:`translate(${from.left-to.left}px, ${from.top-to.top}px) scale(${from.width/to.width}, ${from.height/to.height})`},
+            {transform:'translate(0, 0) scale(1)'},
+        ], {duration:flightDuration, easing:'cubic-bezier(.4, 0, .2, 1)', fill:'both'});
+        let timer;
+        try {
+            await Promise.race([flightAnimation.finished.catch(() => {}), new Promise(resolve => {timer=window.setTimeout(resolve, flightDuration + 200);})]);
+        } finally {
+            window.clearTimeout(timer);
+            flightAnimation.cancel(); flightAnimation = null;
+            target.append(artwork);
+            flight.remove();
+            body.classList.remove('artwork-is-flying');
+        }
+    }
+
+    function resetArtwork() {
+        body.classList.add('invitation-is-static');
+        body.classList.remove('artwork-is-presented', 'envelope-is-open', 'invitation-is-open');
+        if (display) display.hidden = true;
+        stage.setAttribute('aria-hidden', 'true');
+        letter.append(artwork);
+        invitation.hidden = true;
+        fitArtwork(true);
+        window.getComputedStyle(letter).transform;
+        body.classList.remove('invitation-is-static');
+    }
+
+    function prepareArtwork() {
+        if (!artwork.naturalWidth || !artwork.naturalHeight || artworkReady) return;
+        if (animating) { layoutPending = true; return; }
+        artworkReady = true;
+        envelope.setAttribute('aria-hidden', 'true');
+        envelope.classList.add('envelope--artwork');
+        cover.style.aspectRatio = `${artwork.naturalWidth} / ${artwork.naturalHeight}`;
+        fitArtwork(true);
+        if (preview || hasError || body.dataset.invitationState === 'open') {
+            presentArtwork(false);
+        } else {
+            letter.append(artwork);
+            fitArtwork();
+        }
+    }
+
     async function openInvitation() {
         if (animating || !invitation || !openButton || !flap || !letter) return;
         animating = true;
         openButton.disabled = true;
         reportPreviewState();
+        if (artworkReady && body.classList.contains('artwork-is-presented')) resetArtwork();
         body.classList.remove('invitation-is-static');
         // Commit the current pose before changing classes on a static preview.
         window.getComputedStyle(letter).transform;
-        if (preview && body.classList.contains('invitation-is-open') && !reducedMotion) {
+        if (!artworkReady && preview && body.classList.contains('invitation-is-open') && !reducedMotion) {
             body.dataset.invitationState = 'closing';
             openButton.querySelector('.open-label').textContent = 'Replaying…';
             // The paper must be completely inside before the flap folds down.
@@ -63,12 +214,15 @@
         reportPreviewState();
         await move(flap, () => body.classList.add('envelope-is-open'));
         await move(letter, () => body.classList.add('invitation-is-open'));
+        if (artworkReady) await presentArtwork(true);
         showInvitation();
         if (!preview) {
             document.getElementById('eventTitle')?.focus({ preventScroll: true });
             invitation.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
         }
         animating = false;
+        if (!artworkReady && artwork?.naturalWidth) prepareArtwork();
+        if (layoutPending) fitArtwork();
         openButton.disabled = !preview;
         reportPreviewState();
     }
@@ -84,6 +238,13 @@
             openButton.disabled = !preview;
         }
         openButton.addEventListener('click', openInvitation);
+    }
+
+    if (artwork && envelope && stage) {
+        artwork.addEventListener('load', prepareArtwork);
+        if (artwork.complete) prepareArtwork();
+        if ('ResizeObserver' in window) new ResizeObserver(() => fitArtwork()).observe(stage);
+        window.addEventListener('resize', () => fitArtwork());
     }
 
     if (preview) document.addEventListener('click', (event) => {

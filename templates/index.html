@@ -17,10 +17,6 @@
 <body {{ theme_attributes(event) }} data-preview="{{ 'true' if is_preview else 'false' }}"{% if is_preview and preview_view|default(none) == 'opening' %} data-preview-view="opening"{% endif %}>
     {{ guest_background(event) }}
     <main class="invitation-shell">
-        <header class="invitation-intro">
-            <p class="eyebrow">A little something to look forward to</p>
-            <p class="intro-title">An invitation for you.</p>
-        </header>
         <section class="envelope-section envelope-style-{{ event.envelope_style|default('classic', true) }}" aria-label="Open your invitation">
             <div class="envelope-stage" aria-hidden="true">
                 <div class="envelope-shadow"></div>
@@ -28,8 +24,8 @@
                     <div class="envelope-back"></div>
                     <div class="envelope-flap-back"></div>
                     <div class="envelope-letter">
-                        <span class="letter-ornament">✦</span><span class="letter-caption">You're warmly invited</span>
-                        <span class="letter-name">{{ event.name }}</span><span class="letter-rule"></span><span class="letter-date">{{ event.date }}</span>
+                        <div class="letter-typeset"><span class="letter-ornament">✦</span><span class="letter-caption">You're warmly invited</span>
+                        <span class="letter-name">{{ event.name }}</span><span class="letter-rule"></span><span class="letter-date">{{ event.date }}</span></div>
                     </div>
                     <div class="envelope-flap"></div>
                     <div class="envelope-front"><div class="envelope-left"></div><div class="envelope-right"></div><div class="envelope-bottom"></div></div>
@@ -40,8 +36,8 @@
             <p class="envelope-note" aria-hidden="true">Made for a moment worth sharing</p>
         </section>
         <div class="invitation-content" id="invitationContent">
+            {% if event.cover_image %}<div class="invitation-cover"><img class="invitation-artwork" src="{{ event.cover_image }}" alt="{{ event.name }} invitation artwork" fetchpriority="high" decoding="async"></div>{% endif %}
             <article class="invitation-card" aria-labelledby="eventTitle">
-                {% if event.cover_image %}<div class="invitation-cover"><img src="{{ event.cover_image }}" alt="" fetchpriority="high"></div>{% endif %}
                 <div class="card-content">
                     <header class="event-heading"><span class="card-ornament" aria-hidden="true">✦</span><p class="eyebrow">You're invited</p><h1 id="eventTitle" tabindex="-1">{{ event.name }}</h1><span class="heading-rule" aria-hidden="true"></span></header>
                     {% include '_event_details.html' %}

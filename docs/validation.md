@@ -60,6 +60,19 @@ picker swatches shared the envelope pigment. Change-only color selections
 during emulated slow saves reached both the preview and final save payload;
 the checks did not modify event data.
 
+Uploaded invitation artwork was checked using the supplied portrait birthday
+card on the isolated tailnet demo. The complete image is used in the envelope,
+the full invitation, and the dashboard thumbnail. Browser geometry checks at
+280–1440px verified preserved proportions, full extraction above the envelope
+front, readable full-width artwork, and no horizontal overflow. Square,
+landscape, panoramic, extremely tall/wide, and transparent star-shaped fixtures
+also passed; failed image loads retained the generated text card. Replay was
+checked across a resize, with sizing applied after the opening completed.
+Dashboard fixtures passed in WebKit and Chromium, including long event titles.
+The isolated Python suite passed all 129 tests after integrating the latest
+privacy-page changes. Only a new sample event
+and its uploaded artwork were added to the temporary demo data.
+
 Real Gmail sending, live Analytics collection, SSH deployment, and offsite
 restic transfer require the operator setup in `production.md`. The application
 and workflow are prepared for those integrations; development checks did not

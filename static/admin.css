@@ -455,12 +455,27 @@ code {
 }
 .event-art {
   --envelope:color-mix(in srgb,var(--envelope-color,#ba788f) 78%,#fff);
-  height:187px;
+  height:240px;
   position:relative;
   display:grid;
   place-items:center;
+  padding:40px 20px 20px;
   overflow:hidden;
   background-color:var(--swatch,#eee3dc)
+}
+.event-art-image {
+  display:block;
+  width:100%;
+  height:100%;
+  min-width:0;
+  min-height:0;
+  object-fit:contain;
+  filter:drop-shadow(0 4px 8px #203b3b16)
+}
+.event-art--uploaded .art-corner {
+  top:12px;
+  bottom:auto;
+  right:12px
 }
 .scheme-pink {
   --swatch:#ead9d5
@@ -480,14 +495,14 @@ code {
   left:17px;
   font-size:7px;
   letter-spacing:1.4px;
-  color:#7c7b7190
+  color:#596965
 }
 .mini-invite {
-  width:133px;
-  height:136px;
-  padding:19px 16px;
+  width:142px;
+  height:170px;
+  padding:18px 14px 46px;
   background:#fffdf7;
-  transform:rotate(-7deg);
+  transform:rotate(-5deg);
   text-align:center;
   box-shadow:3px 5px 13px #3b433719;
   border:1px solid #ede8de;
@@ -495,18 +510,18 @@ code {
   display:flex;
   flex-direction:column;
   align-items:center;
-  justify-content:space-between
+  gap:10px
 }
 .mini-invite:after {
   content:"";
   position:absolute;
-  width:126px;
+  width:154px;
   height:56px;
-  bottom:-12px;
-  left:-19px;
+  bottom:-15px;
+  left:-7px;
   background:var(--envelope);
   clip-path:polygon(0 0,50% 60%,100% 0,100% 100%,0 100%);
-  transform:rotate(13deg)
+  border-radius:2px
 }
 .mini-invite small {
   font-size:5px;
@@ -514,15 +529,21 @@ code {
   color:#918470
 }
 .mini-invite strong {
-  font:19px/1.12 Georgia,serif;
+  font:17px/1.15 Georgia,serif;
   color:#765e4f;
-  max-height:63px;
-  overflow:hidden
+  max-width:100%;
+  min-height:0;
+  overflow:hidden;
+  overflow-wrap:anywhere;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:3
 }
 .mini-invite span {
   font-size:6px;
   color:#978d7a;
-  margin-bottom:23px
+  flex-shrink:0;
+  margin-top:auto
 }
 .art-corner {
   position:absolute;
@@ -1537,7 +1558,7 @@ td strong {
     gap:15px
   }
   .event-art {
-    height:165px
+    height:230px
   }
   .event-card-body {
     padding:14px
@@ -1651,7 +1672,7 @@ td strong {
     grid-template-columns:1fr
   }
   .event-art {
-    height:190px
+    height:260px
   }
   .event-card-footer {
     flex-direction:row
@@ -1736,9 +1757,6 @@ td strong {
 }
 .auth-brand {
   display:block
-}
-.mini-invite strong {
-  font-size:17px
 }
 .member-menu-content input {
   font-size:10px!important

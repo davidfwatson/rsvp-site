@@ -147,7 +147,7 @@
       const payload = new FormData();payload.append('image',file);
       const response = await fetch(form.dataset.uploadUrl,{method:'POST',headers:{'X-CSRF-Token':token},body:payload});
       const result = await response.json(); if(!response.ok) throw new Error(result.error || 'Upload failed.');
-      imagePreview(input.dataset.uploadField,result.url); window.workspaceToast('Photograph uploaded.');
+      imagePreview(input.dataset.uploadField,result.url); window.workspaceToast('Image uploaded.');
     } catch(err) {error.textContent=err.message || 'Upload failed. Please try again.';error.hidden=false;state('error','Upload failed');}
     finally {uploading--;input.disabled=false;input.value='';if(revision>savedRevision)save();else if(!uploading)state('saved','All changes saved');}
   }));

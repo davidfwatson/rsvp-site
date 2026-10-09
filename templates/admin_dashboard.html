@@ -7,7 +7,15 @@
 <div class="event-grid" id="active-events">
 {% for slug, event in active_events.items() %}
 <a class="event-card" data-event-name="{{ event.name|lower }}" href="{{ url_for('admin', slug=slug) }}">
-  <div class="event-art scheme-{{ event.get('color_scheme','pink') }}" {% if event.get('cover_image') %}style="background-image:url('{{ event.cover_image }}');background-size:cover;background-position:center"{% endif %}><span class="event-art-label">PARTYMAIL INVITATION</span><div class="mini-invite"><small>YOU'RE INVITED</small><strong>{{ event.name }}</strong><span>{{ event.date }}</span></div><span class="art-corner">↗</span></div>
+  <div class="event-art scheme-{{ event.get('color_scheme','pink') }}{% if event.get('cover_image') %} event-art--uploaded{% endif %}">
+    <span class="event-art-label">PARTYMAIL INVITATION</span>
+    {% if event.get('cover_image') %}
+    <img class="event-art-image" src="{{ event.cover_image }}" alt="{{ event.name }} invitation artwork" loading="lazy" decoding="async">
+    {% else %}
+    <div class="mini-invite" aria-hidden="true"><small>YOU'RE INVITED</small><strong>{{ event.name }}</strong><span>{{ event.date }}</span></div>
+    {% endif %}
+    <span class="art-corner" aria-hidden="true">↗</span>
+  </div>
   <div class="event-card-body"><div class="event-card-title"><h3>{{ event.name }}</h3><span class="badge badge-success">Active</span></div><p>{{ event.date }} <span aria-hidden="true">·</span> {{ event.start_time }}</p><div class="event-card-footer"><span><strong>{{ stats[slug].attending }}</strong> guests attending</span><span>{{ stats[slug].responses }} responses <span aria-hidden="true">↗</span></span></div></div>
 </a>
 {% else %}<div class="empty-state"><span class="empty-icon" aria-hidden="true">✉</span><h3>Your next gathering starts here</h3><p>Create your first invitation and make it feel like you.</p><button class="button" data-open-dialog="new-event">Create an event</button></div>{% endfor %}

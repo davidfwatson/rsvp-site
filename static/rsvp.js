@@ -8,7 +8,51 @@
     const flap = document.querySelector('.envelope-flap');
     const letter = document.querySelector('.envelope-letter');
     const body = document.body;
+    const artwork = document.querySelector('.envelope-artwork');
+    const envelope = document.querySelector('.envelope');
+    const stage = document.querySelector('.envelope-stage');
     let animating = false;
+    let layoutPending = false;
+
+    function fitArtwork() {
+        if (!artwork?.naturalWidth || !artwork.naturalHeight || !stage || !envelope) return;
+        if (animating) { layoutPending = true; return; }
+        const bounds = stage.getBoundingClientRect();
+        if (!bounds.width || !bounds.height) return;
+        const style = window.getComputedStyle(stage);
+        const availableWidth = bounds.width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) - 24;
+        const availableHeight = bounds.height - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom) - 32;
+        if (availableWidth <= 0 || availableHeight <= 0) return;
+        const ratio = artwork.naturalWidth / artwork.naturalHeight;
+        const cardHeight = Math.min(220, 360 / ratio), cardWidth = cardHeight * ratio;
+        const envelopeWidth = Math.max(130, cardWidth + 32), envelopeHeight = Math.max(100, cardHeight + 24);
+        const gap = 18;
+        const sceneHeight = envelopeHeight + Math.max(cardHeight + gap, envelopeHeight * .57 + 8);
+        const scale = Math.min(1, availableWidth / envelopeWidth, availableHeight / sceneHeight);
+        const top = (envelopeHeight - cardHeight) / 2;
+        const sizes = {
+            'envelope-width': envelopeWidth * scale, 'envelope-height': envelopeHeight * scale,
+            'card-width': cardWidth * scale, 'card-height': cardHeight * scale, 'card-top': top * scale,
+            'card-lift': -(top + cardHeight + gap) * scale,
+            'seal-size': Math.min(44, Math.max(24, Math.min(envelopeWidth, envelopeHeight) * scale * .2)),
+        };
+        // Width, height and lift must change together: interpolating just the
+        // lift after a resize would briefly push resized art through the front.
+        envelope.classList.add('artwork-is-sizing');
+        for (const [name, value] of Object.entries(sizes)) envelope.style.setProperty(`--art-${name}`, `${value}px`);
+        envelope.classList.add('envelope--artwork');
+        window.getComputedStyle(letter).transform;
+        envelope.classList.remove('artwork-is-sizing');
+        layoutPending = false;
+    }
+
+    if (artwork && envelope && stage) {
+        artwork.addEventListener('load', fitArtwork);
+        artwork.addEventListener('error', () => envelope.classList.remove('envelope--artwork'));
+        if (artwork.complete) fitArtwork();
+        if ('ResizeObserver' in window) new ResizeObserver(fitArtwork).observe(stage);
+        else window.addEventListener('resize', fitArtwork);
+    }
 
     function reportPreviewState() {
         if (!preview || window.parent === window) return;
@@ -69,6 +113,7 @@
             invitation.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
         }
         animating = false;
+        if (layoutPending) fitArtwork();
         openButton.disabled = !preview;
         reportPreviewState();
     }

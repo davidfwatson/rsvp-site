@@ -79,7 +79,7 @@ struct GuestInvitationView: View {
                     if !attendees.isEmpty { Section("Who’s coming") { ForEach(Array(attendees.enumerated()), id: \.offset) { _, a in HStack { Text("\(a.firstName) \(a.lastInitial)"); Spacer(); Text(a.guestInfo).foregroundStyle(.secondary).font(.caption) } } } }
                     if savedToken != nil { Section { Button("Forget saved response on this device", role: .destructive) { Vault.delete("rsvp.\(slug)"); savedToken = nil; response = .empty; success = nil; editing = true } } footer: { Text("Your response stays with the host. Your private update link is stored securely on this device.") } }
                     if error != nil { Section { ErrorText(text: error) } }
-                }.refreshable { await load() }
+                }.scrollDismissesKeyboard(.interactively).refreshable { await load() }
             } else if loading { ProgressView("Opening your invitation…") }
             else { ContentUnavailableView { Label("Invitation unavailable", systemImage: "envelope.badge.shield.half.filled") } description: { Text(error ?? "This invitation may have been archived.") } actions: { Button("Try again") { Task { await load() } } } }
         }.navigationTitle(event?.name ?? "Invitation").navigationBarTitleDisplayMode(.inline).task { await load() }

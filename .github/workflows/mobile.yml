@@ -2,10 +2,10 @@ name: Party Mail mobile
 
 on:
   pull_request:
-    paths: ['ios/**', 'android/**', 'scripts/mobile_fixture.py', 'scripts/verify_mobile.sh', 'app.py', 'mobile_api.py', 'passkey_auth.py', 'runtime_config.py', 'security.py', 'event_config.py', 'event_editor.py', 'requirements-*.txt', '.github/workflows/mobile.yml']
+    paths: ['ios/**', 'android/**', 'scripts/mobile_fixture.py', 'scripts/wait_mobile_fixture.py', 'scripts/verify_mobile.sh', 'app.py', 'mobile_api.py', 'passkey_auth.py', 'runtime_config.py', 'security.py', 'event_config.py', 'event_editor.py', 'requirements-*.txt', '.github/workflows/mobile.yml']
   push:
     branches: [main]
-    paths: ['ios/**', 'android/**', 'scripts/mobile_fixture.py', 'scripts/verify_mobile.sh', 'app.py', 'mobile_api.py', 'passkey_auth.py', 'runtime_config.py', 'security.py', 'event_config.py', 'event_editor.py', 'requirements-*.txt', '.github/workflows/mobile.yml']
+    paths: ['ios/**', 'android/**', 'scripts/mobile_fixture.py', 'scripts/wait_mobile_fixture.py', 'scripts/verify_mobile.sh', 'app.py', 'mobile_api.py', 'passkey_auth.py', 'runtime_config.py', 'security.py', 'event_config.py', 'event_editor.py', 'requirements-*.txt', '.github/workflows/mobile.yml']
   workflow_dispatch:
 
 permissions:
@@ -40,6 +40,9 @@ jobs:
           distribution: temurin
           java-version: '21'
       - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
+          log-accepted-android-sdk-licenses: 'false'
       - uses: gradle/actions/setup-gradle@v4
       - name: Unit tests, lint, debug APK and unsigned release AAB
         working-directory: android
@@ -80,27 +83,23 @@ jobs:
           PY
       - name: Build and test the iOS app
         env:
-          PARTYMAIL_TEST_BASE_URL: http://127.0.0.1:5000
+          PARTYMAIL_TEST_BASE_URL: http://127.0.0.1:5059
+          TEST_RUNNER_PARTYMAIL_TEST_BASE_URL: http://127.0.0.1:5059
         run: |
           set -euo pipefail
-          python scripts/mobile_fixture.py > "$RUNNER_TEMP/partymail-fixture.log" 2>&1 &
+          python -u scripts/mobile_fixture.py --port 5059 > "$RUNNER_TEMP/partymail-fixture.log" 2>&1 &
           fixture_pid=$!
-          trap 'kill "$fixture_pid" 2>/dev/null || true; wait "$fixture_pid" 2>/dev/null || true' EXIT
-          python - <<'PY'
-          import time
-          from urllib.request import urlopen
-          deadline = time.monotonic() + 20
-          while time.monotonic() < deadline:
-              try:
-                  with urlopen('http://127.0.0.1:5000/healthz', timeout=1) as response:
-                      if response.status == 200:
-                          print('Isolated Party Mail fixture is ready.')
-                          break
-              except Exception:
-                  time.sleep(0.25)
-          else:
-              raise SystemExit('Isolated Party Mail fixture did not start within 20 seconds.')
-          PY
+          cleanup_fixture() {
+            task_status=$?
+            if [[ "$task_status" != 0 ]]; then
+              echo 'Isolated fixture startup/runtime log:'
+              tail -100 "$RUNNER_TEMP/partymail-fixture.log" || true
+            fi
+            kill "$fixture_pid" 2>/dev/null || true
+            wait "$fixture_pid" 2>/dev/null || true
+          }
+          trap cleanup_fixture EXIT
+          python scripts/wait_mobile_fixture.py --base-url "$PARTYMAIL_TEST_BASE_URL" --pid "$fixture_pid"
           xcodebuild -project ios/PartyMail.xcodeproj -scheme PartyMail \
             -sdk iphonesimulator -destination "platform=iOS Simulator,id=$PARTYMAIL_SIMULATOR" \
             -derivedDataPath "$RUNNER_TEMP/PartyMail-derived" \
@@ -113,4 +112,5 @@ jobs:
           path: |
             ${{ runner.temp }}/PartyMail-derived/Build/Products/Debug-iphonesimulator/PartyMail.app
             ${{ runner.temp }}/PartyMail-tests.xcresult
+            ${{ runner.temp }}/partymail-fixture.log
           retention-days: 14

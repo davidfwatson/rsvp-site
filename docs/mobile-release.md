@@ -169,9 +169,14 @@ python3 ios/deploy/testflight.py --archive-only --skip-upload
 available iPhone, tests the actual Xcode scheme, tests/lints/builds Android, and
 retains simulator app/result bundles plus the debug APK, unsigned release AAB
 and reports for 14 days.
-The iOS CI job starts the isolated Python fixture, checks readiness, and exercises
+The iOS CI job and local `--ios`/`--all` verification start their own isolated
+Python fixture on port 5059, check its identity/readiness, and exercise
 the actual simulator guest RSVP/update flow as well as unit tests. Its fixture
-uses temporary data and is terminated when the test step exits.
+uses temporary data and is terminated when the test step exits. This avoids
+macOS services that can occupy port 5000. `PARTYMAIL_FIXTURE_PORT` overrides the
+local verification port. Fixture startup/runtime logs are printed on failure;
+CI includes them in its artifact. `TEST_RUNNER_PARTYMAIL_TEST_BASE_URL` forwards
+the fixture origin into the XCTest runner before it launches the app.
 Simulator builds/unsigned device archives are suitable for validation; a signed
 IPA/AAB is produced after signing setup. CI never uploads to either store.
 

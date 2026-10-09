@@ -130,6 +130,12 @@ def main(argv: list[str] | None = None) -> int:
         sys.path.insert(0, str(ROOT))
         from app import app
         app.config.update(TESTING=True, EMAIL_ENABLED=False, GA_MEASUREMENT_ID="", ADMIN_PASSWORD="test")
+        @app.after_request
+        def identify_fixture(response):
+            # Readiness must never mistake an existing local service for this
+            # isolated server (macOS can reserve port 5000 for AirPlay).
+            response.headers["X-PartyMail-Fixture"] = "isolated"
+            return response
         if args.smoke:
             smoke(app)
         else:

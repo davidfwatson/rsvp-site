@@ -10,9 +10,9 @@ final class PartyMailUITests: XCTestCase {
         let invitation = XCTAttachment(screenshot: app.screenshot()); invitation.name = "iPhone invitation RSVP"; invitation.lifetime = .keepAlways; add(invitation)
         name.tap(); name.typeText("iOS Integration Guest")
         let email = app.textFields["rsvpEmail"]; email.tap(); email.typeText("ios-\(UUID().uuidString.prefix(8))@example.test")
-        app.swipeUp(); app.buttons["submitRSVP"].tap()
+        reveal(app.buttons["submitRSVP"], in: app); app.buttons["submitRSVP"].tap()
         XCTAssertTrue(app.buttons["Update your response"].waitForExistence(timeout: 15)); app.buttons["Update your response"].tap()
-        app.swipeUp(); XCTAssertTrue(app.buttons["submitRSVP"].waitForExistence(timeout: 5)); app.buttons["submitRSVP"].tap()
+        XCTAssertTrue(app.buttons["submitRSVP"].waitForExistence(timeout: 5)); reveal(app.buttons["submitRSVP"], in: app); app.buttons["submitRSVP"].tap()
         XCTAssertTrue(app.staticTexts["Your response is updated."].waitForExistence(timeout: 15))
     }
     func testHostCreatePreviewArchiveAndRestore() {
@@ -34,5 +34,18 @@ final class PartyMailUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Restore event"].waitForExistence(timeout: 15)); app.buttons["Restore event"].tap(); app.buttons["Restore"].tap()
         XCTAssertTrue(app.buttons["Archive event"].waitForExistence(timeout: 15))
     }
-    private func reveal(_ element: XCUIElement, in app: XCUIApplication) { for _ in 0..<12 { if element.isHittable { return }; app.swipeUp() }; XCTAssertTrue(element.isHittable) }
+    private func reveal(_ element: XCUIElement, in app: XCUIApplication) {
+        for _ in 0..<24 {
+            var upward = true
+            if element.exists {
+                let frame = element.frame
+                if element.isHittable && frame.minY > 150 && frame.maxY < app.frame.height - 120 { return }
+                upward = frame.minY > 150
+            }
+            let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: upward ? 0.60 : 0.35))
+            let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: upward ? 0.35 : 0.60))
+            start.press(forDuration: 0.05, thenDragTo: end)
+        }
+        XCTAssertTrue(element.isHittable)
+    }
 }

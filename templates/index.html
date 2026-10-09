@@ -17,10 +17,6 @@
 <body {{ theme_attributes(event) }} data-preview="{{ 'true' if is_preview else 'false' }}"{% if is_preview and preview_view|default(none) == 'opening' %} data-preview-view="opening"{% endif %}>
     {{ guest_background(event) }}
     <main class="invitation-shell">
-        <header class="invitation-intro">
-            <p class="eyebrow">A little something to look forward to</p>
-            <p class="intro-title">An invitation for you.</p>
-        </header>
         <section class="envelope-section envelope-style-{{ event.envelope_style|default('classic', true) }}" aria-label="Open your invitation">
             <div class="envelope-stage" aria-hidden="true">
                 <div class="envelope-shadow"></div>

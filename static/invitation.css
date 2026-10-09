@@ -19,9 +19,7 @@ button:disabled { cursor: default; }
 :focus-visible { outline: 3px solid var(--accent-color); outline-offset: 5px; }
 h1, h2, h3, p { margin-top: 0; }
 .invitation-shell { position: relative; z-index: 1; width: min(100% - 40px, 680px); margin: 0 auto; padding: 60px 0 26px; }
-.invitation-intro { text-align: center; }
 .eyebrow { font-size: 10px; font-weight: 650; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
-.intro-title { font-family: var(--display-font); font-size: clamp(27px, 5vw, 38px); letter-spacing: -.045em; margin-bottom: 0; font-weight: 400; }
 .envelope-section { text-align: center; margin-bottom: 30px; }
 .envelope-stage { position: relative; display: flex; align-items: flex-end; justify-content: center; height: 420px; perspective: 1400px; padding: 0 12px 35px; isolation: isolate; }
 /* The two flap faces have fixed paint layers. A shared 3D sorting context can
@@ -139,7 +137,7 @@ textarea { resize: vertical; min-height: 90px; }
 .text-link { display: block; font-size: 12px; text-align: center; margin-top: 21px; }
 /* Compact envelope artwork for the host's preview. */
 body[data-preview='true'] .invitation-shell { padding-top: 12px; }
-body[data-preview='true'] .invitation-intro, body[data-preview='true'] .envelope-note { display: none; }
+body[data-preview='true'] .envelope-note { display: none; }
 body[data-preview='true'] .envelope-stage { height: 300px; padding-bottom: 0; }
 body[data-preview='true'] .envelope { transform: rotateX(2deg) rotateZ(-3deg) scale(.7) translateY(24px); }
 body[data-preview='true'] .open-invitation { padding: 8px 16px; min-height: 36px; font-size: 10px; }

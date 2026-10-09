@@ -110,7 +110,7 @@ private val Dark = darkColorScheme(primary = Color(0xFFECA7C6), secondary = Colo
 private fun dateLabel(e: Event): String = runCatching { LocalDate.parse(e.date).format(DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy")) }.getOrDefault(e.date)
 private fun timeLabel(value: String): String = runCatching { LocalTime.parse(value).format(DateTimeFormatter.ofPattern("h:mm a")) }.getOrDefault(value)
 private fun share(context: Context, text: String, title: String = "Share invitation") { context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text), title)) }
-private fun openWeb(context: Context, url: String) {
+internal fun openWeb(context: Context, url: String) {
     // Resolve a browser explicitly, so verified Party Mail app links cannot reopen this app.
     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
         selector = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_BROWSER)

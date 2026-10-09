@@ -13,12 +13,21 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         model = ViewModelProvider(this)[PartyModel::class.java]
-        if (!model.bootstrapped && !model.busy) model.start(intent?.dataString)
+        val incoming = intent?.dataString
+        val forwarded = savedInstanceState == null && forwardWebsiteLink(incoming)
+        if (!model.bootstrapped && !model.busy) model.start(if (forwarded) null else incoming)
         setContent { PartyApp(model, this) }
     }
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        intent.dataString?.let(model::openRaw)
+        intent.dataString?.let { raw ->
+            if (!forwardWebsiteLink(raw)) model.openRaw(raw)
+        }
+    }
+    private fun forwardWebsiteLink(raw: String?): Boolean {
+        if (raw == null || !BrowserRoutes.shouldOpen(raw, model.api.origin)) return false
+        openWeb(this, raw)
+        return true
     }
 }

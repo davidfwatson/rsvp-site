@@ -177,6 +177,11 @@ macOS services that can occupy port 5000. `PARTYMAIL_FIXTURE_PORT` overrides the
 local verification port. Fixture startup/runtime logs are printed on failure;
 CI includes them in its artifact. `TEST_RUNNER_PARTYMAIL_TEST_BASE_URL` forwards
 the fixture origin into the XCTest runner before it launches the app.
+The fixture uses a threaded standard-library WSGI server that binds the numeric
+loopback address without reverse DNS, avoiding a macOS startup stall inherited
+from the default HTTP server. Readiness has a 60-second startup budget and reports
+the actual connection/JSON error; a startup stall also produces a stack dump
+after 15 seconds. Production continues to use its existing server.
 Simulator builds/unsigned device archives are suitable for validation; a signed
 IPA/AAB is produced after signing setup. CI never uploads to either store.
 

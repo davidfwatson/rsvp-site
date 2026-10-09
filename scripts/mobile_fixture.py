@@ -11,14 +11,56 @@ from __future__ import annotations
 
 import argparse
 from datetime import date, timedelta
+import faulthandler
 import json
 import logging
 import os
 from pathlib import Path
+import signal
+from socketserver import TCPServer, ThreadingMixIn
 import sys
 import tempfile
+from wsgiref.simple_server import WSGIRequestHandler, WSGIServer, make_server
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+class FixtureServer(ThreadingMixIn, WSGIServer):
+    """Bind numeric localhost without HTTPServer's reverse DNS startup lookup."""
+    daemon_threads = True
+
+    def server_bind(self):
+        TCPServer.server_bind(self)
+        self.server_name = "localhost"
+        self.server_port = self.server_address[1]
+        self.setup_environ()
+
+
+class FixtureRequestHandler(WSGIRequestHandler):
+    def log_message(self, format, *args):
+        # Never log invitation or RSVP capability URLs.
+        pass
+
+
+def serve_fixture(app, host: str, port: int) -> None:
+    """A fixture-only stdlib server, with diagnostics if bind/activation stalls."""
+    def stop(*_):
+        raise KeyboardInterrupt
+
+    signal.signal(signal.SIGTERM, stop)
+    faulthandler.enable()
+    faulthandler.dump_traceback_later(15)
+    print(f"Binding isolated fixture HTTP server to {host}:{port} (no reverse DNS).", flush=True)
+    try:
+        server = make_server(host, port, app, server_class=FixtureServer, handler_class=FixtureRequestHandler)
+    finally:
+        faulthandler.cancel_dump_traceback_later()
+    with server:
+        print(f"Isolated fixture HTTP server is listening on {host}:{server.server_port}.", flush=True)
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            pass
 
 
 def configure_fixture(data_root: Path, port: int) -> None:
@@ -143,7 +185,7 @@ def main(argv: list[str] | None = None) -> int:
             logging.getLogger("werkzeug").setLevel(logging.ERROR)
             print(f"Party Mail fixture: http://127.0.0.1:{args.port}; owner password: test; invitation: /demo-party", flush=True)
             print("Data is temporary. Email, notifications and analytics are disabled.", flush=True)
-            app.run(host=args.host, port=args.port, debug=False, use_reloader=False)
+            serve_fixture(app, args.host, args.port)
     return 0
 
 

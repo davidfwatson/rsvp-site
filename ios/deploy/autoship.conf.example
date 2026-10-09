@@ -1,0 +1,12 @@
+# Add as server-ops/ios-autoship/apps/partymail.conf after the first successful
+# manual release, merge it there, then install from server-ops main.
+REPO=/Users/david/src/rsvp-site
+BRANCH=main
+PBXPROJ=ios/PartyMail.xcodeproj/project.pbxproj
+DEPLOY=ios/deploy
+BUILDTREE=/Users/david/.autoship-buildtrees/partymail-ios
+PLATFORMS="ios"
+LABEL=com.davidfwatson.partymail-ship
+LEDGER=/Users/david/.claude/locks/rsvp-site-build-provenance.tsv
+TRIGGER=paths
+SHIP_PATHS="ios"

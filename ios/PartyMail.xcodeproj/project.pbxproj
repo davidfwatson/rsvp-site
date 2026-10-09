@@ -1,0 +1,562 @@
+// !$*UTF8*$!
+{archiveVersion = 1;
+		 classes = {};
+		 objectVersion = 56;
+		 objects = {
+5813C54F6F52E118F9D474DB = {isa = PBXFileReference;
+		 lastKnownFileType = sourcecode.swift;
+		 path = "API.swift";
+		 sourceTree = "<group>";
+		};
+		
+D5A079A3E8BDB0C350DB87D4 = {isa = PBXBuildFile;
+		 fileRef = 5813C54F6F52E118F9D474DB;
+		};
+		
+855E6D8486C571094E0873B7 = {isa = PBXFileReference;
+		 lastKnownFileType = sourcecode.swift;
+		 path = "AuthViews.swift";
+		 sourceTree = "<group>";
+		};
+		
+D6EAC19ADF3E8C49758A2D0A = {isa = PBXBuildFile;
+		 fileRef = 855E6D8486C571094E0873B7;
+		};
+		
+77D43F45597B3CAAADF0652A = {isa = PBXFileReference;
+		 lastKnownFileType = sourcecode.swift;
+		 path = "EventEditor.swift";
+		 sourceTree = "<group>";
+		};
+		
+61581A60168BCAE80C711BF3 = {isa = PBXBuildFile;
+		 fileRef = 77D43F45597B3CAAADF0652A;
+		};
+		
+47A13F310E36B287D10EF7DC = {isa = PBXFileReference;
+		 lastKnownFileType = sourcecode.swift;
+		 path = "GuestViews.swift";
+		 sourceTree = "<group>";
+		};
+		
+DB02F96AEF4344FEE4D6E49E = {isa = PBXBuildFile;
+		 fileRef = 47A13F310E36B287D10EF7DC;
+		};
+		
+B04F9B3658AA8838C28DF142 = {isa = PBXFileReference;
+		 lastKnownFileType = sourcecode.swift;
+		 path = "HostViews.swift";
+		 sourceTree = "<group>";
+		};
+		
+DE765C225D49EF55955D87FD = {isa = PBXBuildFile;
+		 fileRef = B04F9B3658AA8838C28DF142;
+		};
+		
+4488BD730A189556BDD0461F = {isa = PBXFileReference;
+		 lastKnownFileType = sourcecode.swift;
+		 path = "InvitationPreview.swift";
+		 sourceTree = "<group>";
+		};
+		
+B13E36DE8CBCD73FFC779D4C = {isa = PBXBuildFile;
+		 fileRef = 4488BD730A189556BDD0461F;
+		};
+		
+A0F2C3254512EEAFC5696263 = {isa = PBXFileReference;
+		 lastKnownFileType = sourcecode.swift;
+		 path = "Models.swift";
+		 sourceTree = "<group>";
+		};
+		
+AC71B6003399DCA5F51EECF3 = {isa = PBXBuildFile;
+		 fileRef = A0F2C3254512EEAFC5696263;
+		};
+		
+0E52C5F4CD628312921E2F44 = {isa = PBXFileReference;
+		 lastKnownFileType = sourcecode.swift;
+		 path = "PartyMailApp.swift";
+		 sourceTree = "<group>";
+		};
+		
+067A0569BB4BAE19FD9900E8 = {isa = PBXBuildFile;
+		 fileRef = 0E52C5F4CD628312921E2F44;
+		};
+		
+83DD1E34206A92B62B2F4B85 = {isa = PBXFileReference;
+		 lastKnownFileType = sourcecode.swift;
+		 path = "PasskeyAuthenticator.swift";
+		 sourceTree = "<group>";
+		};
+		
+3182FC7886F57B92D1FE8719 = {isa = PBXBuildFile;
+		 fileRef = 83DD1E34206A92B62B2F4B85;
+		};
+		
+3614DECAC4E89575331B5813 = {isa = PBXFileReference;
+		 lastKnownFileType = sourcecode.swift;
+		 path = "SettingsView.swift";
+		 sourceTree = "<group>";
+		};
+		
+C2B7FEDBCE76274320CA491D = {isa = PBXBuildFile;
+		 fileRef = 3614DECAC4E89575331B5813;
+		};
+		
+9EC491AD096293EF82E8E541 = {isa = PBXFileReference;
+		 lastKnownFileType = sourcecode.swift;
+		 path = "PartyMailTests.swift";
+		 sourceTree = "<group>";
+		};
+		
+A273D064073B7C92581B663A = {isa = PBXBuildFile;
+		 fileRef = 9EC491AD096293EF82E8E541;
+		};
+		
+7B71275E42261CBFBDEFCCCA = {isa = PBXFileReference;
+		 lastKnownFileType = sourcecode.swift;
+		 path = "PartyMailUITests.swift";
+		 sourceTree = "<group>";
+		};
+		
+BE0F46AC9B2D295E0AF892B7 = {isa = PBXBuildFile;
+		 fileRef = 7B71275E42261CBFBDEFCCCA;
+		};
+		
+9AC3B5AD93CBC0305C62F78F = {isa = PBXFileReference;
+		 lastKnownFileType = text.plist.xml;
+		 path = "Info.plist";
+		 sourceTree = "<group>";
+		};
+		
+397D2A9E6E652A2A8DBF48E7 = {isa = PBXFileReference;
+		 lastKnownFileType = text.plist.entitlements;
+		 path = "PartyMail.entitlements";
+		 sourceTree = "<group>";
+		};
+		
+6D123AE8AB04EEE632CC6C18 = {isa = PBXFileReference;
+		 lastKnownFileType = text.xml;
+		 path = "PrivacyInfo.xcprivacy";
+		 sourceTree = "<group>";
+		};
+		
+414D458A4445833FCC3E9669 = {isa = PBXBuildFile;
+		 fileRef = 6D123AE8AB04EEE632CC6C18;
+		};
+		
+795A02A63DC9C1E86758E98F = {isa = PBXFileReference;
+		 lastKnownFileType = folder.assetcatalog;
+		 path = "Assets.xcassets";
+		 sourceTree = "<group>";
+		};
+		
+6FE0BBEC37407380D400F491 = {isa = PBXBuildFile;
+		 fileRef = 795A02A63DC9C1E86758E98F;
+		};
+		
+5934A6E74AC6BA9205EDDBED = {isa = PBXFileReference;
+		 explicitFileType = wrapper.application;
+		 path = PartyMail.app;
+		 sourceTree = BUILT_PRODUCTS_DIR;
+		 includeInIndex = 0;
+		};
+		
+71D71E6D876057BDA7DDA222 = {isa = PBXFileReference;
+		 explicitFileType = wrapper.cfbundle;
+		 path = PartyMailTests.xctest;
+		 sourceTree = BUILT_PRODUCTS_DIR;
+		 includeInIndex = 0;
+		};
+		
+27A4C5604DEFCDCE2195DB5F = {isa = PBXFileReference;
+		 explicitFileType = wrapper.cfbundle;
+		 path = PartyMailUITests.xctest;
+		 sourceTree = BUILT_PRODUCTS_DIR;
+		 includeInIndex = 0;
+		};
+		
+65CDF16460163500D32CE6BA = {isa = PBXGroup;
+		 children = (5813C54F6F52E118F9D474DB, 855E6D8486C571094E0873B7, 77D43F45597B3CAAADF0652A, 47A13F310E36B287D10EF7DC, B04F9B3658AA8838C28DF142, 4488BD730A189556BDD0461F, A0F2C3254512EEAFC5696263, 0E52C5F4CD628312921E2F44, 83DD1E34206A92B62B2F4B85, 3614DECAC4E89575331B5813, 9AC3B5AD93CBC0305C62F78F, 397D2A9E6E652A2A8DBF48E7, 6D123AE8AB04EEE632CC6C18, 795A02A63DC9C1E86758E98F,);
+		 path = PartyMail;
+		 sourceTree = "<group>";
+		};
+		
+3EC89242CE0AC9D69921F0A1 = {isa = PBXGroup;
+		 children = (9EC491AD096293EF82E8E541,);
+		 path = PartyMailTests;
+		 sourceTree = "<group>";
+		};
+		
+A52225905225FCB7CD4E11AF = {isa = PBXGroup;
+		 children = (7B71275E42261CBFBDEFCCCA,);
+		 path = PartyMailUITests;
+		 sourceTree = "<group>";
+		};
+		
+0A3E27B8CA818264D75C8D81 = {isa = PBXGroup;
+		 children = (5934A6E74AC6BA9205EDDBED, 71D71E6D876057BDA7DDA222, 27A4C5604DEFCDCE2195DB5F,);
+		 name = Products;
+		 sourceTree = "<group>";
+		};
+		
+0D6E4079E36703EBD37C0072 = {isa = PBXGroup;
+		 children = (65CDF16460163500D32CE6BA, 3EC89242CE0AC9D69921F0A1, A52225905225FCB7CD4E11AF, 0A3E27B8CA818264D75C8D81,);
+		 sourceTree = "<group>";
+		};
+		
+CBB5680E5EC8B0281117C3FD = {isa = XCBuildConfiguration;
+		 name = Debug;
+		 buildSettings = {CLANG_ENABLE_MODULES = "YES";
+		 SWIFT_VERSION = "5.0";
+		 IPHONEOS_DEPLOYMENT_TARGET = "17.0";
+		 SDKROOT = "iphoneos";
+		 TARGETED_DEVICE_FAMILY = "1,2";
+		 ENABLE_USER_SCRIPT_SANDBOXING = "YES";
+		 SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+		ENABLE_TESTABILITY = YES;
+		ONLY_ACTIVE_ARCH = YES;
+		 DEBUG_INFORMATION_FORMAT = "dwarf";
+		 SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+		};
+		};
+		
+994ADD928B7507132191E408 = {isa = XCBuildConfiguration;
+		 name = Release;
+		 buildSettings = {CLANG_ENABLE_MODULES = "YES";
+		 SWIFT_VERSION = "5.0";
+		 IPHONEOS_DEPLOYMENT_TARGET = "17.0";
+		 SDKROOT = "iphoneos";
+		 TARGETED_DEVICE_FAMILY = "1,2";
+		 ENABLE_USER_SCRIPT_SANDBOXING = "YES";
+		 SWIFT_OPTIMIZATION_LEVEL = "-O";
+		 DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+		 SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited)";
+		};
+		};
+		
+44DA6F00F112CEA400EE5C2B = {isa = XCConfigurationList;
+		 buildConfigurations = (CBB5680E5EC8B0281117C3FD, 994ADD928B7507132191E408,);
+		 defaultConfigurationIsVisible = 0;
+		 defaultConfigurationName = Release;
+		};
+		
+B551F86AF7E3A7BD073CE4C5 = {isa = XCBuildConfiguration;
+		 name = Debug;
+		 buildSettings = {CLANG_ENABLE_MODULES = "YES";
+		 SWIFT_VERSION = "5.0";
+		 IPHONEOS_DEPLOYMENT_TARGET = "17.0";
+		 SDKROOT = "iphoneos";
+		 TARGETED_DEVICE_FAMILY = "1,2";
+		 ENABLE_USER_SCRIPT_SANDBOXING = "YES";
+		 SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+		ENABLE_TESTABILITY = YES;
+		ONLY_ACTIVE_ARCH = YES;
+		 DEBUG_INFORMATION_FORMAT = "dwarf";
+		 SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+		 PRODUCT_NAME = "$(TARGET_NAME)";
+		 PRODUCT_BUNDLE_IDENTIFIER = "com.davidfwatson.partymail";
+		 DEVELOPMENT_TEAM = "2FZS79QCFD";
+		 CODE_SIGN_STYLE = "Automatic";
+		 CURRENT_PROJECT_VERSION = 1;
+		 MARKETING_VERSION = 1.0;
+		 SWIFT_EMIT_LOC_STRINGS = "YES";
+		 INFOPLIST_FILE = "PartyMail/Info.plist";
+		 CODE_SIGN_ENTITLEMENTS = "PartyMail/PartyMail.entitlements";
+		 ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon";
+		 ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "AccentColor";
+		 LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+		 ENABLE_PREVIEWS = "YES";
+		};
+		};
+		
+B7AA76B8708EDB5F97CFA135 = {isa = XCBuildConfiguration;
+		 name = Release;
+		 buildSettings = {CLANG_ENABLE_MODULES = "YES";
+		 SWIFT_VERSION = "5.0";
+		 IPHONEOS_DEPLOYMENT_TARGET = "17.0";
+		 SDKROOT = "iphoneos";
+		 TARGETED_DEVICE_FAMILY = "1,2";
+		 ENABLE_USER_SCRIPT_SANDBOXING = "YES";
+		 SWIFT_OPTIMIZATION_LEVEL = "-O";
+		 DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+		 SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited)";
+		 PRODUCT_NAME = "$(TARGET_NAME)";
+		 PRODUCT_BUNDLE_IDENTIFIER = "com.davidfwatson.partymail";
+		 DEVELOPMENT_TEAM = "2FZS79QCFD";
+		 CODE_SIGN_STYLE = "Automatic";
+		 CURRENT_PROJECT_VERSION = 1;
+		 MARKETING_VERSION = 1.0;
+		 SWIFT_EMIT_LOC_STRINGS = "YES";
+		 INFOPLIST_FILE = "PartyMail/Info.plist";
+		 CODE_SIGN_ENTITLEMENTS = "PartyMail/PartyMail.entitlements";
+		 ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon";
+		 ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "AccentColor";
+		 LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+		 ENABLE_PREVIEWS = "YES";
+		};
+		};
+		
+DE1F6E283F421AF7253CA996 = {isa = XCConfigurationList;
+		 buildConfigurations = (B551F86AF7E3A7BD073CE4C5, B7AA76B8708EDB5F97CFA135,);
+		 defaultConfigurationIsVisible = 0;
+		 defaultConfigurationName = Release;
+		};
+		
+B2CFB0F507242693AE66C1E9 = {isa = XCBuildConfiguration;
+		 name = Debug;
+		 buildSettings = {CLANG_ENABLE_MODULES = "YES";
+		 SWIFT_VERSION = "5.0";
+		 IPHONEOS_DEPLOYMENT_TARGET = "17.0";
+		 SDKROOT = "iphoneos";
+		 TARGETED_DEVICE_FAMILY = "1,2";
+		 ENABLE_USER_SCRIPT_SANDBOXING = "YES";
+		 SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+		ENABLE_TESTABILITY = YES;
+		ONLY_ACTIVE_ARCH = YES;
+		 DEBUG_INFORMATION_FORMAT = "dwarf";
+		 SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+		 PRODUCT_NAME = "$(TARGET_NAME)";
+		 PRODUCT_BUNDLE_IDENTIFIER = "com.davidfwatson.partymail.tests";
+		 DEVELOPMENT_TEAM = "2FZS79QCFD";
+		 CODE_SIGN_STYLE = "Automatic";
+		 CURRENT_PROJECT_VERSION = 1;
+		 MARKETING_VERSION = 1.0;
+		 SWIFT_EMIT_LOC_STRINGS = "YES";
+		 GENERATE_INFOPLIST_FILE = "YES";
+		 LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+		 TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PartyMail.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PartyMail";
+		 BUNDLE_LOADER = "$(TEST_HOST)";
+		};
+		};
+		
+55B3472BD47A15378267D011 = {isa = XCBuildConfiguration;
+		 name = Release;
+		 buildSettings = {CLANG_ENABLE_MODULES = "YES";
+		 SWIFT_VERSION = "5.0";
+		 IPHONEOS_DEPLOYMENT_TARGET = "17.0";
+		 SDKROOT = "iphoneos";
+		 TARGETED_DEVICE_FAMILY = "1,2";
+		 ENABLE_USER_SCRIPT_SANDBOXING = "YES";
+		 SWIFT_OPTIMIZATION_LEVEL = "-O";
+		 DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+		 SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited)";
+		 PRODUCT_NAME = "$(TARGET_NAME)";
+		 PRODUCT_BUNDLE_IDENTIFIER = "com.davidfwatson.partymail.tests";
+		 DEVELOPMENT_TEAM = "2FZS79QCFD";
+		 CODE_SIGN_STYLE = "Automatic";
+		 CURRENT_PROJECT_VERSION = 1;
+		 MARKETING_VERSION = 1.0;
+		 SWIFT_EMIT_LOC_STRINGS = "YES";
+		 GENERATE_INFOPLIST_FILE = "YES";
+		 LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+		 TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PartyMail.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PartyMail";
+		 BUNDLE_LOADER = "$(TEST_HOST)";
+		};
+		};
+		
+5489D856184B31669BE35B50 = {isa = XCConfigurationList;
+		 buildConfigurations = (B2CFB0F507242693AE66C1E9, 55B3472BD47A15378267D011,);
+		 defaultConfigurationIsVisible = 0;
+		 defaultConfigurationName = Release;
+		};
+		
+4A05E89323E03D2AA46D8CEC = {isa = XCBuildConfiguration;
+		 name = Debug;
+		 buildSettings = {CLANG_ENABLE_MODULES = "YES";
+		 SWIFT_VERSION = "5.0";
+		 IPHONEOS_DEPLOYMENT_TARGET = "17.0";
+		 SDKROOT = "iphoneos";
+		 TARGETED_DEVICE_FAMILY = "1,2";
+		 ENABLE_USER_SCRIPT_SANDBOXING = "YES";
+		 SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+		ENABLE_TESTABILITY = YES;
+		ONLY_ACTIVE_ARCH = YES;
+		 DEBUG_INFORMATION_FORMAT = "dwarf";
+		 SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+		 PRODUCT_NAME = "$(TARGET_NAME)";
+		 PRODUCT_BUNDLE_IDENTIFIER = "com.davidfwatson.partymail.uitests";
+		 DEVELOPMENT_TEAM = "2FZS79QCFD";
+		 CODE_SIGN_STYLE = "Automatic";
+		 CURRENT_PROJECT_VERSION = 1;
+		 MARKETING_VERSION = 1.0;
+		 SWIFT_EMIT_LOC_STRINGS = "YES";
+		 GENERATE_INFOPLIST_FILE = "YES";
+		 LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+		 TEST_TARGET_NAME = "PartyMail";
+		};
+		};
+		
+BE338E0B0ACEFFA13FE1E943 = {isa = XCBuildConfiguration;
+		 name = Release;
+		 buildSettings = {CLANG_ENABLE_MODULES = "YES";
+		 SWIFT_VERSION = "5.0";
+		 IPHONEOS_DEPLOYMENT_TARGET = "17.0";
+		 SDKROOT = "iphoneos";
+		 TARGETED_DEVICE_FAMILY = "1,2";
+		 ENABLE_USER_SCRIPT_SANDBOXING = "YES";
+		 SWIFT_OPTIMIZATION_LEVEL = "-O";
+		 DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+		 SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited)";
+		 PRODUCT_NAME = "$(TARGET_NAME)";
+		 PRODUCT_BUNDLE_IDENTIFIER = "com.davidfwatson.partymail.uitests";
+		 DEVELOPMENT_TEAM = "2FZS79QCFD";
+		 CODE_SIGN_STYLE = "Automatic";
+		 CURRENT_PROJECT_VERSION = 1;
+		 MARKETING_VERSION = 1.0;
+		 SWIFT_EMIT_LOC_STRINGS = "YES";
+		 GENERATE_INFOPLIST_FILE = "YES";
+		 LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+		 TEST_TARGET_NAME = "PartyMail";
+		};
+		};
+		
+4508A579DB4812E87D83FB87 = {isa = XCConfigurationList;
+		 buildConfigurations = (4A05E89323E03D2AA46D8CEC, BE338E0B0ACEFFA13FE1E943,);
+		 defaultConfigurationIsVisible = 0;
+		 defaultConfigurationName = Release;
+		};
+		
+B6DB54E971B3EF1746A44238 = {isa = PBXSourcesBuildPhase;
+		 buildActionMask = 2147483647;
+		 files = (D5A079A3E8BDB0C350DB87D4, D6EAC19ADF3E8C49758A2D0A, 61581A60168BCAE80C711BF3, DB02F96AEF4344FEE4D6E49E, DE765C225D49EF55955D87FD, B13E36DE8CBCD73FFC779D4C, AC71B6003399DCA5F51EECF3, 067A0569BB4BAE19FD9900E8, 3182FC7886F57B92D1FE8719, C2B7FEDBCE76274320CA491D,);
+		 runOnlyForDeploymentPostprocessing = 0;
+		};
+		
+F1DED3BE2917DE9DE34667EE = {isa = PBXFrameworksBuildPhase;
+		 buildActionMask = 2147483647;
+		 files = ();
+		 runOnlyForDeploymentPostprocessing = 0;
+		};
+		
+7FF5B95ABB6FFD510712C7E4 = {isa = PBXResourcesBuildPhase;
+		 buildActionMask = 2147483647;
+		 files = (6FE0BBEC37407380D400F491, 414D458A4445833FCC3E9669,);
+		 runOnlyForDeploymentPostprocessing = 0;
+		};
+		
+E5B4BF87BA052470E0FADB1E = {isa = PBXNativeTarget;
+		 buildConfigurationList = DE1F6E283F421AF7253CA996;
+		 buildPhases = (B6DB54E971B3EF1746A44238, F1DED3BE2917DE9DE34667EE, 7FF5B95ABB6FFD510712C7E4,);
+		 buildRules = ();
+		 dependencies = ();
+		 name = PartyMail;
+		 productName = PartyMail;
+		 productReference = 5934A6E74AC6BA9205EDDBED;
+		 productType = "com.apple.product-type.application";
+		};
+		
+A5D0C10632C1B8F4CB578914 = {isa = PBXSourcesBuildPhase;
+		 buildActionMask = 2147483647;
+		 files = (A273D064073B7C92581B663A,);
+		 runOnlyForDeploymentPostprocessing = 0;
+		};
+		
+E04C6CB066CB49C04735BEBF = {isa = PBXFrameworksBuildPhase;
+		 buildActionMask = 2147483647;
+		 files = ();
+		 runOnlyForDeploymentPostprocessing = 0;
+		};
+		
+1B444EC3D1B821665A58C9BA = {isa = PBXResourcesBuildPhase;
+		 buildActionMask = 2147483647;
+		 files = ();
+		 runOnlyForDeploymentPostprocessing = 0;
+		};
+		
+2BB4D4870C68BB073D8E5913 = {isa = PBXContainerItemProxy;
+		 containerPortal = 244210E48437B6556980A702;
+		 proxyType = 1;
+		 remoteGlobalIDString = E5B4BF87BA052470E0FADB1E;
+		 remoteInfo = PartyMail;
+		};
+		
+E295B06436F0FA87F811348A = {isa = PBXTargetDependency;
+		 target = E5B4BF87BA052470E0FADB1E;
+		 targetProxy = 2BB4D4870C68BB073D8E5913;
+		};
+		
+5411D53033520AC22CB588B1 = {isa = PBXNativeTarget;
+		 buildConfigurationList = 5489D856184B31669BE35B50;
+		 buildPhases = (A5D0C10632C1B8F4CB578914, E04C6CB066CB49C04735BEBF, 1B444EC3D1B821665A58C9BA,);
+		 buildRules = ();
+		 dependencies = (E295B06436F0FA87F811348A,);
+		 name = PartyMailTests;
+		 productName = PartyMailTests;
+		 productReference = 71D71E6D876057BDA7DDA222;
+		 productType = "com.apple.product-type.bundle.unit-test";
+		};
+		
+68DBB33842B4C41FCA5BC628 = {isa = PBXSourcesBuildPhase;
+		 buildActionMask = 2147483647;
+		 files = (BE0F46AC9B2D295E0AF892B7,);
+		 runOnlyForDeploymentPostprocessing = 0;
+		};
+		
+E22F14CC886392C0378A9D6D = {isa = PBXFrameworksBuildPhase;
+		 buildActionMask = 2147483647;
+		 files = ();
+		 runOnlyForDeploymentPostprocessing = 0;
+		};
+		
+4858ED9AC27669DAF95A8BD9 = {isa = PBXResourcesBuildPhase;
+		 buildActionMask = 2147483647;
+		 files = ();
+		 runOnlyForDeploymentPostprocessing = 0;
+		};
+		
+497D37841C53B641C53C3000 = {isa = PBXContainerItemProxy;
+		 containerPortal = 244210E48437B6556980A702;
+		 proxyType = 1;
+		 remoteGlobalIDString = E5B4BF87BA052470E0FADB1E;
+		 remoteInfo = PartyMail;
+		};
+		
+3FA40DF371E293D1DF0D4A00 = {isa = PBXTargetDependency;
+		 target = E5B4BF87BA052470E0FADB1E;
+		 targetProxy = 497D37841C53B641C53C3000;
+		};
+		
+F05172D45D5040166189E160 = {isa = PBXNativeTarget;
+		 buildConfigurationList = 4508A579DB4812E87D83FB87;
+		 buildPhases = (68DBB33842B4C41FCA5BC628, E22F14CC886392C0378A9D6D, 4858ED9AC27669DAF95A8BD9,);
+		 buildRules = ();
+		 dependencies = (3FA40DF371E293D1DF0D4A00,);
+		 name = PartyMailUITests;
+		 productName = PartyMailUITests;
+		 productReference = 27A4C5604DEFCDCE2195DB5F;
+		 productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		
+244210E48437B6556980A702 = {isa = PBXProject;
+		 attributes = {BuildIndependentTargetsInParallel = YES;
+		 LastUpgradeCheck = 2700;
+		 TargetAttributes = {E5B4BF87BA052470E0FADB1E = {CreatedOnToolsVersion = 27.0;
+		 DevelopmentTeam = 2FZS79QCFD;
+		 SystemCapabilities = {com.apple.AssociatedDomains = {enabled = 1;
+		};
+		};
+		};
+		 5411D53033520AC22CB588B1 = {CreatedOnToolsVersion = 27.0;
+		 TestTargetID = E5B4BF87BA052470E0FADB1E;
+		};
+		 F05172D45D5040166189E160 = {CreatedOnToolsVersion = 27.0;
+		 TestTargetID = E5B4BF87BA052470E0FADB1E;
+		};
+		};
+		};
+		 buildConfigurationList = 44DA6F00F112CEA400EE5C2B;
+		 compatibilityVersion = "Xcode 14.0";
+		 developmentRegion = en;
+		 hasScannedForEncodings = 0;
+		 knownRegions = (en, Base);
+		 mainGroup = 0D6E4079E36703EBD37C0072;
+		 productRefGroup = 0A3E27B8CA818264D75C8D81;
+		 projectDirPath = "";
+		 projectRoot = "";
+		 targets = (E5B4BF87BA052470E0FADB1E, 5411D53033520AC22CB588B1, F05172D45D5040166189E160,);
+		};
+		
+};
+		 rootObject = 244210E48437B6556980A702;
+		}

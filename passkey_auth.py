@@ -133,7 +133,7 @@ def bootstrap_owner():
 
 
 def _api_request():
-    return request.is_json or request.path.endswith(('/options', '/verify')) or request.path in (
+    return request.path.startswith('/api/') or request.is_json or request.path.endswith(('/options', '/verify')) or request.path in (
         '/admin/passkey/list', '/admin/invites', '/admin/accounts')
 
 
@@ -169,7 +169,9 @@ def _get_rp_name():
 
 
 def _get_origin():
-    return current_app.config.get('WEBAUTHN_ORIGIN', 'http://localhost:5000')
+    from mobile_api import android_origins
+    return [current_app.config.get('WEBAUTHN_ORIGIN', 'http://localhost:5000'),
+            *android_origins(current_app.config)]
 
 
 def _body():

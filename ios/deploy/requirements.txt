@@ -1,0 +1,7 @@
+# Needed for the App Store Connect API queries in asc.py: the --auto-build build
+# number lookup AND the post-upload auto-attach (which runs on every deploy, incl.
+# --build N — testflight.py re-execs it via this venv). Build + package + altool
+# upload itself is pure stdlib.
+pyjwt>=2.8
+cryptography>=42
+requests>=2.31

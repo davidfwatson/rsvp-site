@@ -41,6 +41,8 @@ def configure_app(app):
         'WEBAUTHN_RP_NAME': 'Party Mail',
         'PUBLIC_URL': 'https://partymail.app' if environment == 'production' else 'http://localhost:5000',
         'GA_MEASUREMENT_ID': '',
+        'APPLE_TEAM_ID': '2FZS79QCFD',
+        'ANDROID_SHA256_CERT_FINGERPRINTS': '',
     }
     for key, default in defaults.items():
         app.config.setdefault(key, default)

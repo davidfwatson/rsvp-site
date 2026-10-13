@@ -147,6 +147,10 @@ def _restic(command, cwd, environment, sleep=time.sleep):
             return result.stdout
         # Restic exits 1 when it cannot open the repository. Its specific codes
         # (unreadable source, missing repository, wrong password) will not pass on a retry.
+        # Exit 1 also covers permanent backend errors, so those alert two minutes
+        # late; stderr is not parsed to tell them apart. Repeating any of the three
+        # calls is safe: backup deduplicates, forget reapplies the same policy, and
+        # an interrupted prune is completed by the next one.
         if result.returncode != 1 or delay is None:
             break
         sleep(delay)

@@ -148,6 +148,27 @@ def test_backup_refuses_local_destination_and_symlink_sources(backup_source, tmp
         snapshot_data(data, environment, tmp_path / 'snapshot')
 
 
+def test_failed_final_check_does_not_record_success(backup_source, tmp_path):
+    """A snapshot that uploads and prunes but fails verification is not marked as a success."""
+    data, environment = backup_source
+    password = tmp_path / 'password'
+    password.write_text('private')
+    calls = []
+
+    def runner(command, cwd, passed_environment):
+        calls.append(command[1])
+        if command[1] == 'check':
+            raise RuntimeError('simulated check failure')
+        return b'{"message_type":"summary","snapshot_id":"abcdef1234567890"}\n' if command[1] == 'backup' else b''
+
+    work = tmp_path / 'backup-work'
+    with pytest.raises(RuntimeError):
+        run_backup(data, environment, work, {'RESTIC_REPOSITORY': 's3:https://example.test/bucket', 'RESTIC_PASSWORD_FILE': str(password)}, runner)
+    assert calls == ['backup', 'forget', 'check']
+    assert not (work / 'last-success.json').exists()
+    assert not list(work.glob('snapshot-*'))
+
+
 def _fake_restic(monkeypatch, returncodes):
     """Replace the restic subprocess with one that exits with each code in turn."""
     remaining, pauses = list(returncodes), []

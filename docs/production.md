@@ -295,6 +295,11 @@ A run takes a minute or two, most of it SSH round trips. The timer runs at
 of the `rsync-*` units, which start at 03:05: snowblind's sshd drops
 connections when one host opens several in a burst.
 
+The drops still happen now and then on a quiet connection, so the helper retries
+a restic call that exits 1, after 30 seconds and again after 90. On 2026-10-13
+the snapshot uploaded and the closing `restic check` lost its connection, which
+failed the run before the retry existed.
+
 The service exits unsuccessfully if snapshot, upload, prune, or check fails.
 `OnFailure=` then starts `rsvp-backup-failed.service`, which posts to the
 loopback notify-service, and the alert arrives as a push in the DFW Utils app.

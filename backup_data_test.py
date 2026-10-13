@@ -1,6 +1,7 @@
 """Backups operate on isolated fixtures and never contact a remote repository."""
 import json
 from pathlib import Path
+import subprocess
 import threading
 
 import pytest
@@ -145,3 +146,74 @@ def test_backup_refuses_local_destination_and_symlink_sources(backup_source, tmp
     (data / 'linked-secret').symlink_to(environment)
     with pytest.raises(ValueError, match='regular files'):
         snapshot_data(data, environment, tmp_path / 'snapshot')
+
+
+def test_failed_final_check_does_not_record_success(backup_source, tmp_path):
+    """A snapshot that uploads and prunes but fails verification is not marked as a success."""
+    data, environment = backup_source
+    password = tmp_path / 'password'
+    password.write_text('private')
+    calls = []
+
+    def runner(command, cwd, passed_environment):
+        calls.append(command[1])
+        if command[1] == 'check':
+            raise RuntimeError('simulated check failure')
+        return b'{"message_type":"summary","snapshot_id":"abcdef1234567890"}\n' if command[1] == 'backup' else b''
+
+    work = tmp_path / 'backup-work'
+    with pytest.raises(RuntimeError):
+        run_backup(data, environment, work, {'RESTIC_REPOSITORY': 's3:https://example.test/bucket', 'RESTIC_PASSWORD_FILE': str(password)}, runner)
+    assert calls == ['backup', 'forget', 'check']
+    assert not (work / 'last-success.json').exists()
+    assert not list(work.glob('snapshot-*'))
+
+
+def _fake_restic(monkeypatch, returncodes):
+    """Replace the restic subprocess with one that exits with each code in turn, and record the pauses."""
+    remaining, pauses, commands = list(returncodes), [], []
+
+    def run(command, **kwargs):
+        commands.append(command[1])
+        output = b'{"message_type":"summary","snapshot_id":"abcdef1234567890"}\n' if command[1] == 'backup' else b'ok'
+        return subprocess.CompletedProcess(command, remaining.pop(0), stdout=output, stderr=b'')
+
+    monkeypatch.setattr(backup_data.subprocess, 'run', run)
+    monkeypatch.setattr(backup_data.time, 'sleep', pauses.append)
+    return remaining, pauses, commands
+
+
+def test_restic_retries_a_dropped_connection(monkeypatch, tmp_path):
+    """A generic restic failure is retried after a pause and the later success is returned."""
+    remaining, pauses, _ = _fake_restic(monkeypatch, [1, 1, 0])
+    assert backup_data._restic(['restic', 'check'], tmp_path, {}) == b'ok'
+    assert pauses == list(backup_data.RETRY_DELAYS) and not remaining
+
+
+def test_restic_gives_up_after_the_last_retry(monkeypatch, tmp_path):
+    """A failure that outlasts every retry is reported without backend output."""
+    remaining, pauses, _ = _fake_restic(monkeypatch, [1, 1, 1])
+    with pytest.raises(RuntimeError, match='Restic check failed with exit 1'):
+        backup_data._restic(['restic', 'check'], tmp_path, {})
+    assert pauses == list(backup_data.RETRY_DELAYS) and not remaining
+
+
+def test_restic_does_not_retry_a_permanent_failure(monkeypatch, tmp_path):
+    """A wrong repository password fails at once instead of waiting out the retries."""
+    remaining, pauses, _ = _fake_restic(monkeypatch, [12, 0])
+    with pytest.raises(RuntimeError, match='exit 12'):
+        backup_data._restic(['restic', 'check'], tmp_path, {})
+    assert pauses == [] and remaining == [0]
+
+
+def test_backup_records_success_when_dropped_calls_recover(backup_source, tmp_path, monkeypatch):
+    """A run whose prune and check each lose one connection still completes and records success."""
+    data, environment = backup_source
+    password = tmp_path / 'password'
+    password.write_text('private')
+    remaining, pauses, commands = _fake_restic(monkeypatch, [0, 1, 0, 1, 0])
+    work = tmp_path / 'backup-work'
+    status = run_backup(data, environment, work, {'RESTIC_REPOSITORY': 's3:https://example.test/bucket', 'RESTIC_PASSWORD_FILE': str(password)})
+    assert commands == ['backup', 'forget', 'forget', 'check', 'check']
+    assert pauses == [backup_data.RETRY_DELAYS[0]] * 2 and not remaining
+    assert json.loads((work / 'last-success.json').read_text())['snapshot_id'] == status['snapshot_id']

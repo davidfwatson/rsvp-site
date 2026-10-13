@@ -151,7 +151,11 @@ def _restic(command, cwd, environment):
         # Exit 1 also covers permanent backend errors, so those alert two minutes
         # late; stderr is not parsed to tell them apart. Repeating any of the three
         # calls is safe: backup deduplicates, forget reapplies the same policy, and
-        # an interrupted prune is completed by the next one.
+        # an interrupted prune is completed by the next one. Two costs are accepted.
+        # A backup whose connection drops after the snapshot is committed leaves a
+        # second snapshot record of the same data, which retention later removes.
+        # A call dropped while holding the repository lock makes the retry exit 11,
+        # so that run fails as it did before retries existed.
         if result.returncode != 1 or delay is None:
             break
         time.sleep(delay)

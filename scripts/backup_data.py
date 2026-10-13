@@ -139,8 +139,9 @@ def verify_snapshot(snapshot):
 RETRY_DELAYS = (30, 90)
 
 
-def _restic(command, cwd, environment, sleep=time.sleep):
+def _restic(command, cwd, environment):
     """Run restic, retrying its generic failure, which is how a dropped connection exits."""
+    # A restic binary that cannot be launched raises OSError and is not retried.
     for delay in (*RETRY_DELAYS, None):
         result = subprocess.run(command, cwd=cwd, env=environment, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if not result.returncode:
@@ -153,7 +154,7 @@ def _restic(command, cwd, environment, sleep=time.sleep):
         # an interrupted prune is completed by the next one.
         if result.returncode != 1 or delay is None:
             break
-        sleep(delay)
+        time.sleep(delay)
     # Backend errors may include credential-bearing URLs; keep logs generic.
     raise RuntimeError(f'Restic {command[1]} failed with exit {result.returncode}; inspect the backup repository using its private configuration.')
 

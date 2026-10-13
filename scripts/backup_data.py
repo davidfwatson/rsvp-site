@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from storage import assert_safe_write, atomic_write, json_lock
@@ -133,12 +134,24 @@ def verify_snapshot(snapshot):
     return len(manifest['files'])
 
 
-def _restic(command, cwd, environment):
-    result = subprocess.run(command, cwd=cwd, env=environment, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if result.returncode:
-        # Backend errors may include credential-bearing URLs; keep logs generic.
-        raise RuntimeError(f'Restic {command[1]} failed with exit {result.returncode}; inspect the backup repository using its private configuration.')
-    return result.stdout
+# Pauses before each retry. snowblind's sshd drops some connections at key
+# exchange, and the three restic calls of one run arrive back to back.
+RETRY_DELAYS = (30, 90)
+
+
+def _restic(command, cwd, environment, sleep=time.sleep):
+    """Run restic, retrying its generic failure, which is how a dropped connection exits."""
+    for delay in (*RETRY_DELAYS, None):
+        result = subprocess.run(command, cwd=cwd, env=environment, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if not result.returncode:
+            return result.stdout
+        # Restic exits 1 when it cannot open the repository. Its specific codes
+        # (unreadable source, missing repository, wrong password) will not pass on a retry.
+        if result.returncode != 1 or delay is None:
+            break
+        sleep(delay)
+    # Backend errors may include credential-bearing URLs; keep logs generic.
+    raise RuntimeError(f'Restic {command[1]} failed with exit {result.returncode}; inspect the backup repository using its private configuration.')
 
 
 @contextmanager

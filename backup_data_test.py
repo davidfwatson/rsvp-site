@@ -1,6 +1,7 @@
 """Backups operate on isolated fixtures and never contact a remote repository."""
 import json
 from pathlib import Path
+import subprocess
 import threading
 
 import pytest
@@ -145,3 +146,37 @@ def test_backup_refuses_local_destination_and_symlink_sources(backup_source, tmp
     (data / 'linked-secret').symlink_to(environment)
     with pytest.raises(ValueError, match='regular files'):
         snapshot_data(data, environment, tmp_path / 'snapshot')
+
+
+def _fake_restic(monkeypatch, returncodes):
+    """Replace the restic subprocess with one that exits with each code in turn."""
+    remaining, pauses = list(returncodes), []
+
+    def run(command, **kwargs):
+        return subprocess.CompletedProcess(command, remaining.pop(0), stdout=b'ok', stderr=b'')
+
+    monkeypatch.setattr(backup_data.subprocess, 'run', run)
+    return remaining, pauses
+
+
+def test_restic_retries_a_dropped_connection(monkeypatch, tmp_path):
+    """A generic restic failure is retried after a pause and the later success is returned."""
+    remaining, pauses = _fake_restic(monkeypatch, [1, 1, 0])
+    assert backup_data._restic(['restic', 'check'], tmp_path, {}, sleep=pauses.append) == b'ok'
+    assert pauses == list(backup_data.RETRY_DELAYS) and not remaining
+
+
+def test_restic_gives_up_after_the_last_retry(monkeypatch, tmp_path):
+    """A failure that outlasts every retry is reported without backend output."""
+    remaining, pauses = _fake_restic(monkeypatch, [1, 1, 1])
+    with pytest.raises(RuntimeError, match='Restic check failed with exit 1'):
+        backup_data._restic(['restic', 'check'], tmp_path, {}, sleep=pauses.append)
+    assert pauses == list(backup_data.RETRY_DELAYS) and not remaining
+
+
+def test_restic_does_not_retry_a_permanent_failure(monkeypatch, tmp_path):
+    """A wrong repository password fails at once instead of waiting out the retries."""
+    remaining, pauses = _fake_restic(monkeypatch, [12, 0])
+    with pytest.raises(RuntimeError, match='exit 12'):
+        backup_data._restic(['restic', 'check'], tmp_path, {}, sleep=pauses.append)
+    assert pauses == [] and remaining == [0]

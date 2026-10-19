@@ -1,7 +1,7 @@
 # Event config wipe (found April 2026) and the partial recovery
 
-Last updated 2026-10-07. Status: open. Two events still lack their real details and there is no
-scheduled backup.
+Last updated 2026-10-19. Status: open. Two events still lack their real
+details. A nightly offsite backup has run since 2026-10-13.
 
 ## Summary
 
@@ -13,7 +13,15 @@ separate `rsvps_<id>.json` files, and most of those survived, but the file for
 Ariana's 4th birthday is gone as well.
 
 Event data is gitignored (`data/`, `rsvps_*.json`), so it has never been in
-git. It exists only on the server, and nothing backs it up on a schedule.
+git. Until October 2026 it existed only on the server with no scheduled
+backup.
+
+Since 2026-10-08 the live app runs from `/srv/rsvp/current` as the `rsvp`
+user and keeps all its data in `/var/lib/rsvp-site`. The old checkout at
+`~/webserver/rsvp-site` still holds `data/` and `rsvps_*.json` files, but they
+are a stale copy from the migration and the app no longer reads or writes
+them. Paths in the sections below that refer to the app directory describe
+the layout before that move.
 
 ## Timeline
 
@@ -30,6 +38,10 @@ git. It exists only on the server, and nothing backs it up on a schedule.
 - 2026-09-07: a Claude session restores four events as archived (PR #3).
 - 2026-10-07: a second pass finds Ariana's 4th in the Wayback Machine and
   finds that the September restore had missed it.
+- 2026-10-08: the app moves to `/srv/rsvp` with data in `/var/lib/rsvp-site`
+  (PR #7). PR #8 adds a nightly encrypted restic backup to snowblind.
+- 2026-10-13: the first scheduled backup fails its restic check. PR #12 adds a
+  retry for dropped SSH connections, and every nightly run since has completed.
 
 ## Cause
 
@@ -97,6 +109,10 @@ between January and October 2025 routed the front page to `ariana4th`.
 
 - Get the real details for Ariana's 5th and the family event from David or
   Pardis.
-- Set up a scheduled off-server backup of `data/` and `rsvps_*.json`.
+- Restore one snowblind snapshot into a scratch directory to confirm the
+  backup can actually be read back (see `docs/production.md`). The nightly
+  runs report success, but no restore has been tested.
+- Remove or clearly mark the stale data in `~/webserver/rsvp-site`, so nobody
+  mistakes it for the live data.
 - Past events stay public until someone ticks "archived". Decide whether the
   app should retire them by date.

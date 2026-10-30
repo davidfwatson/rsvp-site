@@ -15,7 +15,7 @@ import java.time.LocalDateTime
     val location: String = "", val description: String = "", val max_guests_per_invite: Int = 10,
     val color_scheme: String = "pink", val background_style: String = "linen", val background_color: String = "#FFF8F0",
     val accent_color: String = "#974065", val background_image: String = "", val cover_image: String = "",
-    val font_style: String = "serif", val envelope_style: String = "classic", val show_attendees: Boolean = false,
+    val font_style: String = "serif", val envelope_style: String = "classic", val show_attendees: Boolean = true,
     val archived: Boolean = false, val public_url: String = "", val stats: Stats = Stats()
 )
 @Serializable data class Response(

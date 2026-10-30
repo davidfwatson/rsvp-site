@@ -13,7 +13,7 @@ from dateutil.parser import parse as parse_datetime
 from flask import Blueprint, current_app, jsonify, request, send_file, session
 
 from event_config import EventConflictError, add_new_event, get_all_events, get_event_config
-from event_editor import prepare_event, validate_event
+from event_editor import prepare_event, public_attendees, validate_event
 from export_rsvps import generate_rsvps_csv, get_csv_filename
 from passkey_auth import (
     AccountError, _find_signin_link, _now, _update_data, admin_required,
@@ -251,15 +251,7 @@ def register_mobile_api(app, services):
     @bp.route('/invitations/<slug>')
     def invitation(slug):
         event = require_event(slug, public=True)
-        attendees = []
-        if event.get('show_attendees'):
-            for response in services['load_rsvps'](event['id']):
-                names = response.get('name', '').split()
-                if response.get('attending') != 'yes' or not names:
-                    continue
-                guests = response.get('num_adults', 1) + response.get('num_children', 0) - 1
-                attendees.append(dict(first_name=names[0], last_initial=names[-1][0].upper(),
-                                      guest_info=f' +{guests}' if guests > 0 else ''))
+        attendees = public_attendees(event, services['load_rsvps'](event['id']))
         return jsonify(event=event_payload(event), attendees=attendees)
 
     @bp.route('/invitations/<slug>/rsvp', methods=['POST'])

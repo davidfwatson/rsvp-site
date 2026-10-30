@@ -9,7 +9,7 @@ from date_validation import validate_date_time
 DESIGN_DEFAULTS = {
     'background_style': 'linen', 'background_color': '#f4efe7',
     'accent_color': '#95604b', 'background_image': '', 'cover_image': '',
-    'font_style': 'serif', 'envelope_style': 'classic', 'show_attendees': False,
+    'font_style': 'serif', 'envelope_style': 'classic', 'show_attendees': True,
 }
 CHOICES = {
     'color_scheme': ('pink', 'blue', 'red', 'black'),
@@ -27,6 +27,21 @@ def prepare_event(event):
         attributes={'a': ['href', 'title']}, protocols=['https', 'http', 'mailto'], strip=True,
     )
     return prepared
+
+
+def public_attendees(event, responses):
+    """Abbreviated names of confirmed guests, or none when the host hides the list."""
+    attendees = []
+    if not {**DESIGN_DEFAULTS, **event}['show_attendees']:
+        return attendees
+    for response in responses:
+        names = response.get('name', '').split()
+        if response.get('attending') != 'yes' or not names:
+            continue
+        guests = response.get('num_adults', 1) + response.get('num_children', 0) - 1
+        attendees.append(dict(first_name=names[0], last_initial=names[-1][0].upper(),
+                              guest_info=f' +{guests}' if guests > 0 else ''))
+    return attendees
 
 
 def validate_event(values, existing=None, require_future=False):

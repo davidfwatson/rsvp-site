@@ -68,7 +68,7 @@ struct EventDraft: Encodable {
     var coverImage = ""
     var fontStyle = "serif"
     var envelopeStyle = "classic"
-    var showAttendees = false
+    var showAttendees = true
     var version: Int?
     init() {}
     init(_ e: Event) {

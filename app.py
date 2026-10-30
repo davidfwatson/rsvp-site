@@ -16,7 +16,7 @@ from calendar_utils import generate_google_calendar_url, generate_ics_file
 from email_content import generate_confirmation_email_body, generate_invitation_email_body
 from email_handler import send_email
 from event_config import EventConflictError, add_new_event, format_event_time, get_all_events, get_event_config, update_event_config
-from event_editor import prepare_event, validate_event
+from event_editor import prepare_event, public_attendees, validate_event
 from export_rsvps import generate_rsvps_csv, get_csv_filename
 from notifications import notify_phone
 from passkey_auth import admin_required, get_current_admin, passkey_bp
@@ -150,14 +150,7 @@ def event_page(slug):
     event = get_public_event(slug)
     if not event:
         return 'Event not found', 404
-    attendees = []
-    if event.get('show_attendees', False):
-        for response in load_rsvps(event['id']):
-            names = response.get('name', '').split()
-            if response.get('attending') != 'yes' or not names:
-                continue
-            guests = response.get('num_adults', 1) + response.get('num_children', 0) - 1
-            attendees.append(dict(first_name=names[0], last_initial=names[-1][0].upper(), guest_info=f' +{guests}' if guests > 0 else ''))
+    attendees = public_attendees(event, load_rsvps(event['id']))
     return render_template('index.html', event=prepare_event(event), attendees=attendees)
 
 
@@ -173,7 +166,8 @@ def rsvp(slug):
     try:
         response = validate_guest(request.form, event)
     except ValueError as error:
-        return render_template('index.html', event=prepare_event(event), attendees=[], error=str(error)), 400
+        return render_template('index.html', event=prepare_event(event), attendees=public_attendees(event, load_rsvps(event['id'])),
+                               error=str(error)), 400
     with json_lock(rsvp_path(event['id'])):
         responses = load_rsvps(event['id'])
         existing = next((r for r in responses if r.get('email', '').strip().lower() == response['email']), None)
@@ -358,7 +352,7 @@ def preview_event(slug):
             event = validate_event(values, event)
         except ValueError as error:
             return jsonify(error=str(error)), 400
-    return render_template('index.html', event=prepare_event(event), attendees=[], preview=True,
+    return render_template('index.html', event=prepare_event(event), attendees=public_attendees(event, load_rsvps(event['id'])), preview=True,
                            preview_view='opening' if request.args.get('view') == 'opening' else None)
 
 

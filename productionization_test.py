@@ -87,6 +87,38 @@ def test_csrf_required_for_editor_and_upload(admin_client, monkeypatch):
     assert admin_client.post('/admin/summer-supper/upload', data={'image': (BytesIO(b'bad'), 'a.jpg')}).status_code == 400
 
 
+@pytest.mark.parametrize('route', ['/admin/summer-supper/upload', '/api/mobile/events/summer-supper/upload'])
+@pytest.mark.parametrize('format_name', ['JPEG', 'PNG', 'WEBP'])
+def test_supported_upload_decoders_still_work(admin_client, route, format_name):
+    """Both upload entry points accept supported content regardless of filename."""
+    buffer = BytesIO()
+    Image.new('RGB', (12, 8), 'orange').save(buffer, format_name)
+    response = admin_client.post(route, data={'image': (BytesIO(buffer.getvalue()), 'photo.bin')})
+    assert response.status_code == 200
+    with Image.open(BytesIO(admin_client.get(response.json['url']).data)) as cleaned:
+        assert cleaned.format == 'WEBP' and cleaned.size == (12, 8)
+
+
+@pytest.mark.parametrize('route', ['/admin/summer-supper/upload', '/api/mobile/events/summer-supper/upload'])
+@pytest.mark.parametrize('format_name', ['XBM', 'TIFF'])
+def test_unsupported_upload_decoders_never_parse_input(admin_client, monkeypatch, route, format_name):
+    """Reject disallowed formats before their potentially costly parsers execute."""
+    from PIL import TiffImagePlugin, XbmImagePlugin
+    from runtime_config import data_path
+
+    buffer = BytesIO()
+    Image.new('1', (8, 8)).save(buffer, format_name)
+
+    def unexpected_parser(*args, **kwargs):
+        raise AssertionError('An unsupported decoder parsed an upload')
+
+    monkeypatch.setattr(XbmImagePlugin.XbmImageFile, '_open', unexpected_parser)
+    monkeypatch.setattr(TiffImagePlugin.TiffImageFile, '_open', unexpected_parser)
+    response = admin_client.post(route, data={'image': (BytesIO(buffer.getvalue()), 'photo.png', 'image/png')})
+    assert response.status_code == 400
+    assert not list(data_path('uploads').glob('*.webp'))
+
+
 def test_repeat_email_cannot_overwrite_or_disclose_existing_rsvp(client):
     """Only possession of the private edit link authorizes an RSVP change."""
     guest = dict(name='Private Guest', email='private@example.com', attending='yes', num_adults='2', num_children='1', dietary_restrictions='private diet')

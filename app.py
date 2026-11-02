@@ -401,7 +401,7 @@ def upload_image(slug):
                 output.flush()
                 os.fsync(output.fileno())
         return jsonify(success=True, url=url_for('media', name=name))
-    except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError):
+    except (UnidentifiedImageError, OSError, SyntaxError, ValueError, Image.DecompressionBombError):
         return jsonify(error='Choose a valid JPEG, PNG, or WebP image under 24 megapixels.'), 400
 
 

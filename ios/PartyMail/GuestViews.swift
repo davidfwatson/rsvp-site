@@ -48,6 +48,7 @@ struct GuestInvitationView: View {
     @State private var event: Event?
     @State private var attendees: [Attendee] = []
     @State private var response = RSVP.empty
+    @State private var savedAttending = ""
     @State private var savedToken: String?
     @State private var error: String?
     @State private var loading = true
@@ -66,7 +67,7 @@ struct GuestInvitationView: View {
                         Section(savedToken == nil ? "Your RSVP" : "Update your RSVP") {
                             TextField("Your name", text: $response.name).textContentType(.name).accessibilityIdentifier("rsvpName")
                             TextField("Email", text: $response.email).textContentType(.emailAddress).keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled().accessibilityIdentifier("rsvpEmail")
-                            Picker("Will you join us?", selection: $response.attending) { Text("Yes, I’ll be there").tag("yes"); if event.allowMaybe != false || response.attending == "maybe" { Text("Maybe").tag("maybe") }; Text("Sorry, can’t make it").tag("no") }.pickerStyle(.segmented)
+                            Picker("Will you join us?", selection: $response.attending) { Text("Yes, I’ll be there").tag("yes"); if event.allowMaybe != false || savedAttending == "maybe" { Text("Maybe").tag("maybe") }; Text("Sorry, can’t make it").tag("no") }.pickerStyle(.segmented)
                             if response.attending != "no" { Stepper("Adults: \(response.numAdults)", value: $response.numAdults, in: (event.allowDropoff == true ? 0 : 1)...event.maxGuestsPerInvite); Stepper("Children: \(response.numChildren)", value: $response.numChildren, in: 0...max(0, event.maxGuestsPerInvite - response.numAdults)); Text("Up to \(event.maxGuestsPerInvite) guests per invitation.").font(.caption).foregroundStyle(.secondary); TextField("Dietary restrictions", text: $response.dietaryRestrictions, axis: .vertical).lineLimit(1...3) }
                             TextField("A message for the host", text: $response.comment, axis: .vertical).lineLimit(2...5)
                             BusyButton(title: savedToken == nil ? "Send RSVP" : "Save response", busy: busy, icon: "paperplane") { submit() }.accessibilityIdentifier("submitRSVP")
@@ -77,7 +78,7 @@ struct GuestInvitationView: View {
                         Link(destination: Config.url("/\(slug)/calendar/ics")) { Label("Add to Apple Calendar", systemImage: "calendar") }
                     }
                     if !attendees.isEmpty { Section("Who’s coming") { ForEach(Array(attendees.enumerated()), id: \.offset) { _, a in if a.guestInfo.hasPrefix("'s") { Text("\(a.firstName) \(a.lastInitial).\(a.guestInfo)") } else { HStack { Text("\(a.firstName) \(a.lastInitial)"); Spacer(); Text(a.guestInfo).foregroundStyle(.secondary).font(.caption) } } } } }
-                    if savedToken != nil { Section { Button("Forget saved response on this device", role: .destructive) { Vault.delete("rsvp.\(slug)"); savedToken = nil; response = .empty; success = nil; editing = true } } footer: { Text("Your response stays with the host. Your private update link is stored securely on this device.") } }
+                    if savedToken != nil { Section { Button("Forget saved response on this device", role: .destructive) { Vault.delete("rsvp.\(slug)"); savedToken = nil; response = .empty; savedAttending = ""; success = nil; editing = true } } footer: { Text("Your response stays with the host. Your private update link is stored securely on this device.") } }
                     if error != nil { Section { ErrorText(text: error) } }
                 }.scrollDismissesKeyboard(.interactively).refreshable { await load() }
             } else if loading { ProgressView("Opening your invitation…") }
@@ -93,7 +94,7 @@ struct GuestInvitationView: View {
             if let privateToken = token ?? savedToken ?? Vault.responseToken(slug: slug) {
                 do {
                     let payload: ResponsePayload = try await store.get("/api/mobile/invitations/\(slug)/responses/\(privateToken)")
-                    response = payload.response; event = payload.event; savedToken = privateToken
+                    response = payload.response; savedAttending = payload.response.attending; event = payload.event; savedToken = privateToken
                     Vault.saveResponseToken(privateToken, slug: slug)
                 } catch {
                     if token != nil { throw error }
@@ -113,12 +114,12 @@ struct GuestInvitationView: View {
             do {
                 if let savedToken {
                     let payload: ResponsePayload = try await store.send("/api/mobile/invitations/\(slug)/responses/\(savedToken)", value: response.payload(), method: "PATCH")
-                    response = payload.response; self.event = payload.event; success = "Your response is updated."; editing = false
+                    response = payload.response; savedAttending = payload.response.attending; self.event = payload.event; success = "Your response is updated."; editing = false
                 } else {
                     let payload: RSVPResult = try await store.send("/api/mobile/invitations/\(slug)/rsvp", value: response.payload())
                     if payload.checkEmail == true { success = payload.emailDelivered == true ? "You already responded. Check your email for your private update link." : "A response already exists for this email. Use your original update link, or contact the host for help."; editing = false }
                     else {
-                        if let rsvp = payload.response { response = rsvp }
+                        if let rsvp = payload.response { response = rsvp; savedAttending = rsvp.attending }
                         if let raw = payload.updateUrl, let url = Config.trustedURL(raw), case let .response(_, privateToken) = DeepLink.parse(url) { savedToken = privateToken; if !Vault.saveResponseToken(privateToken, slug: slug) { error = "Your response was sent, but its update link couldn’t be saved on this device. Keep the link in your confirmation email." } }
                         success = response.attending == "yes" ? "You’re on the list. See you there!" : response.attending == "maybe" ? "Your host knows you might come. Update your response once you know." : "Your response is sent. Thanks for letting the host know."
                         if payload.emailDelivered == false { success! += " Email confirmation is unavailable; your update link is saved on this device." }

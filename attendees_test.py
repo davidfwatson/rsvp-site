@@ -216,3 +216,11 @@ def test_host_sees_maybe_tile_and_toggle(admin_client):
     assert get_event_config('porch-party')['allow_maybe'] is False
     admin_client.post('/admin/porch-party', data={**form, 'allow_maybe': 'on'})
     assert get_event_config('porch-party')['allow_maybe'] is True
+
+
+def test_saved_maybe_survives_a_failed_update_when_maybe_is_off(client):
+    """A guest who said maybe keeps the option after an invalid edit, even with maybe turned off."""
+    save_event_config([{**EVENT, 'allow_maybe': False}])
+    write_json(web.rsvp_path(EVENT['id']), [dict(MAYBE, num_adults=1, num_children=0, token='tok')])
+    page = client.post('/porch-party/update-rsvp/tok', data=dict(MAYBE, attending='yes', num_adults='99'))
+    assert page.status_code == 400 and 'value="maybe"' in page.get_data(as_text=True)

@@ -22,7 +22,7 @@
             {% if error %}<p class="form-notice error" role="alert">{{ error }}</p>{% endif %}
             <form method="POST" class="rsvp-form" data-max-guests="{{ event.max_guests_per_invite|default(10, true) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                {{ attendance_fields(event, request.form if error else rsvp) }}
+                {{ attendance_fields(event, request.form if error else rsvp, rsvp.attending) }}
                 <p class="form-status" role="status" aria-live="polite"></p>
                 <button type="submit" class="primary-button">Update my RSVP<span aria-hidden="true">↗</span></button>
                 <p class="form-footnote">Your host will receive your updated response.</p>

@@ -60,3 +60,30 @@ def test_mobile_invitation_returns_guest_list_by_default(client):
     """The native apps get the same default as the web page."""
     attendees = client.get('/api/mobile/invitations/porch-party').json['attendees']
     assert [a['first_name'] for a in attendees] == ['Alex', 'Sam']
+
+
+@pytest.fixture
+def admin_client(client, monkeypatch):
+    """Signed-in host, stubbing the admin store as archived_events_test does."""
+    import passkey_auth
+    monkeypatch.setattr(passkey_auth, '_load_data',
+                        lambda: {"admins": [{"id": "test-admin", "is_owner": True}], "invites": []})
+    with client.session_transaction() as sess:
+        sess['admin_id'] = 'test-admin'
+    return client
+
+
+def test_response_stats_split_adults_and_children():
+    """Hosts get people, adults and children counted from "yes" replies only."""
+    assert web.response_stats(RESPONSES) == dict(responses=4, attending=5, adults=4, children=1,
+                                                accepted=3, declined=1)
+
+
+def test_host_guest_list_labels_people_and_replies_plainly(admin_client):
+    """The stat tiles say what they count, and party sizes read naturally."""
+    page = admin_client.get('/admin/porch-party').get_data(as_text=True)
+    assert 'People coming' in page and '4 adults · 1 child' in page
+    assert 'Replies saying yes' in page and 'Reply saying no' in page
+    assert 'Accepted' not in page
+    assert '2 adults · 1 child<' in page and '1 adult · 0 children' in page
+    assert 'data-label="Party size"' in page

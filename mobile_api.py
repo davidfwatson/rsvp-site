@@ -28,7 +28,7 @@ EVENT_FIELDS = (
     'id', 'slug', 'version', 'name', 'date', 'start_time', 'end_time', 'location',
     'description', 'max_guests_per_invite', 'color_scheme', 'background_style',
     'background_color', 'accent_color', 'background_image', 'cover_image',
-    'font_style', 'envelope_style', 'show_attendees', 'allow_dropoff', 'archived',
+    'font_style', 'envelope_style', 'show_attendees', 'allow_dropoff', 'allow_maybe', 'archived',
 )
 RESPONSE_FIELDS = (
     'name', 'email', 'attending', 'num_adults', 'num_children',
@@ -91,7 +91,7 @@ def _response(response, private=False):
     result = dict(name='', email='', attending='no', num_adults=0, num_children=0,
                   dietary_restrictions='', comment='')
     result.update({key: response[key] for key in RESPONSE_FIELDS if key in response})
-    if 'num_adults' not in response and result['attending'] == 'yes':
+    if 'num_adults' not in response and result['attending'] in ('yes', 'maybe'):
         result['num_adults'] = 1
     if private:
         result['token'] = response['token']

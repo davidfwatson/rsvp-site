@@ -36,6 +36,7 @@ class ModelsTest {
         assertNotNull(Validation.response(guest.copy(num_adults = 0, num_children = 0), 4, allowDropoff = true))
         assertNotNull(Validation.response(guest.copy(num_children = -1), 4))
         assertNull(Validation.response(guest.copy(attending = "no", num_adults = 0), 4))
+        assertNotNull(Validation.response(guest.copy(attending = "maybe"), 3))
         assertNotNull(Validation.response(guest.copy(email = "bad"), 4))
     }
     @Test fun publicInvitationOmitsPrivateHostFieldsAndHandlesExtraMetadata() {

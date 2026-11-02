@@ -7,7 +7,7 @@ def generate_confirmation_email_body(event, rsvp, update_url=None):
   if update_url:
     update_info = f"\n\n[Update your RSVP]({update_url}) if your plans change."
 
-  if rsvp['attending'] == 'yes':
+  if rsvp['attending'] in ('yes', 'maybe'):
     adults, children = rsvp['num_adults'], rsvp['num_children']
     parts = []
     if adults > 0:
@@ -16,6 +16,11 @@ def generate_confirmation_email_body(event, rsvp, update_url=None):
       parts.append(f"{children} child{'ren' if children != 1 else ''}")
     guest_details = " and ".join(parts) + ("" if adults else " (drop-off)")
     welcome = "We're excited that you'll be joining us for" if adults else "We're excited to welcome your kids to"
+    closing = "We look forward to seeing you there!"
+    if rsvp['attending'] == 'maybe':
+      welcome = "We hope you'll be able to join us for"
+      closing = "Let us know once you're sure."
+      guest_details += ", if you can make it"
 
     dietary_info = ""
     if rsvp.get('dietary_restrictions'):
@@ -35,7 +40,7 @@ def generate_confirmation_email_body(event, rsvp, update_url=None):
 
 We have you down for **{guest_details}**.{dietary_info}
 
-We look forward to seeing you there!{update_info}
+{closing}{update_info}
 """
   else:
     body = f"""

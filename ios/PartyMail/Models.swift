@@ -23,7 +23,7 @@ enum Config {
 
 struct Admin: Codable, Identifiable { let id: String; var name: String; let isOwner: Bool }
 struct SessionPayload: Decodable { let csrfToken: String; let admin: Admin?; let publicUrl: String; let emailEnabled: Bool; let emailConnected: Bool }
-struct Stats: Codable { let responses: Int; let attending: Int; let accepted: Int; let declined: Int }
+struct Stats: Codable { let responses: Int; let attending: Int; let accepted: Int; let declined: Int; var maybe: Int? }
 struct Event: Codable, Identifiable {
     let id: String
     let slug: String
@@ -45,6 +45,7 @@ struct Event: Codable, Identifiable {
     var envelopeStyle: String
     var showAttendees: Bool
     var allowDropoff: Bool?
+    var allowMaybe: Bool?
     var archived: Bool
     var publicUrl: String?
     var stats: Stats?
@@ -71,6 +72,7 @@ struct EventDraft: Encodable {
     var envelopeStyle = "classic"
     var showAttendees = true
     var allowDropoff = false
+    var allowMaybe = true
     var version: Int?
     init() {}
     init(_ e: Event) {
@@ -78,7 +80,7 @@ struct EventDraft: Encodable {
         location = e.location; description = e.description; maxGuestsPerInvite = e.maxGuestsPerInvite
         colorScheme = e.colorScheme; backgroundStyle = e.backgroundStyle; backgroundColor = e.backgroundColor
         accentColor = e.accentColor; backgroundImage = e.backgroundImage; coverImage = e.coverImage
-        fontStyle = e.fontStyle; envelopeStyle = e.envelopeStyle; showAttendees = e.showAttendees; allowDropoff = e.allowDropoff ?? false; version = e.version
+        fontStyle = e.fontStyle; envelopeStyle = e.envelopeStyle; showAttendees = e.showAttendees; allowDropoff = e.allowDropoff ?? false; allowMaybe = e.allowMaybe ?? true; version = e.version
     }
     var validationError: String? {
         if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return "Give your event a name." }
@@ -109,7 +111,7 @@ struct RSVP: Codable, Identifiable {
     func validationError(limit: Int, allowDropoff: Bool = false) -> String? {
         if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return "Please enter your name." }
         if !email.contains("@") || !email.contains(".") || email.contains(" ") { return "Please enter your email address." }
-        if attending == "yes" && (numAdults < (allowDropoff ? 0 : 1) || numChildren < 0 || guests < 1 || guests > limit) { return allowDropoff ? "Choose between 1 and \(limit) guests." : "Choose between 1 and \(limit) guests, with at least one adult." }
+        if attending != "no" && (numAdults < (allowDropoff ? 0 : 1) || numChildren < 0 || guests < 1 || guests > limit) { return allowDropoff ? "Choose between 1 and \(limit) guests." : "Choose between 1 and \(limit) guests, with at least one adult." }
         return nil
     }
 }

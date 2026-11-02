@@ -16,7 +16,7 @@ from calendar_utils import generate_google_calendar_url, generate_ics_file
 from email_content import generate_confirmation_email_body, generate_invitation_email_body
 from email_handler import send_email
 from event_config import EventConflictError, add_new_event, format_event_time, get_all_events, get_event_config, update_event_config
-from event_editor import prepare_event, public_attendees, validate_event
+from event_editor import DESIGN_DEFAULTS, prepare_event, public_attendees, validate_event
 from export_rsvps import generate_rsvps_csv, get_csv_filename
 from notifications import notify_phone
 from passkey_auth import admin_required, get_current_admin, passkey_bp
@@ -106,15 +106,20 @@ def validate_guest(values, event, existing=None):
     if not result['name'] or not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', result['email']):
         raise ValueError('Please enter your name and a valid email address.')
     attending = values.get('attending')
-    if attending not in ('yes', 'no'):
+    # Turning "Maybe" off doesn't strand guests who already answered it.
+    maybe_allowed = {**DESIGN_DEFAULTS, **event}['allow_maybe'] or (existing or {}).get('attending') == 'maybe'
+    choices = ('yes', 'maybe', 'no') if maybe_allowed else ('yes', 'no')
+    if attending not in choices:
         raise ValueError('Please choose whether you can attend.')
     result['attending'] = attending
+    # A "maybe" keeps its party size so the host knows how many might come.
+    counted = attending in ('yes', 'maybe')
     try:
-        adults = int(values.get('num_adults', 1)) if attending == 'yes' else 0
-        children = int(values.get('num_children', 0)) if attending == 'yes' else 0
+        adults = int(values.get('num_adults', 1)) if counted else 0
+        children = int(values.get('num_children', 0)) if counted else 0
     except (ValueError, TypeError):
         raise ValueError('Please enter whole numbers for your guest counts.') from None
-    if attending == 'yes':
+    if counted:
         min_adults = 0 if event.get('allow_dropoff') else 1
         if adults < min_adults or children < 0 or adults + children < 1:
             raise ValueError('Please include at least one adult in your party.' if min_adults
@@ -255,8 +260,10 @@ def response_stats(responses):
     attending = [r for r in responses if r.get('attending') == 'yes']
     adults = sum(r.get('num_adults', 1) for r in attending)
     children = sum(r.get('num_children', 0) for r in attending)
+    maybe = [r for r in responses if r.get('attending') == 'maybe']
     return dict(responses=len(responses), attending=adults + children, adults=adults, children=children,
-        accepted=len(attending), declined=sum(r.get('attending') == 'no' for r in responses))
+        accepted=len(attending), declined=sum(r.get('attending') == 'no' for r in responses),
+        maybe=len(maybe), maybe_people=sum(r.get('num_adults', 1) + r.get('num_children', 0) for r in maybe))
 
 
 @app.route('/admin')
@@ -307,6 +314,7 @@ def admin(slug):
                 values['archived'] = 'archived' in request.form
                 values['show_attendees'] = 'show_attendees' in request.form
                 values['allow_dropoff'] = 'allow_dropoff' in request.form
+                values['allow_maybe'] = 'allow_maybe' in request.form
                 version = int(values['version']) if 'version' in values else None
                 save_event_values(event, values, version)
                 flash('Event details updated successfully!', 'success')

@@ -188,7 +188,7 @@ private fun eventURL(vm: PartyModel, e: Event) = if (Links.safeWeb(e.public_url,
         if (e.archived) MessageCard("Archived. Restore this event to accept RSVPs and send invitations.", false, {})
         Panel {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Metric("Guests", e.stats.attending); Metric("Responses", e.stats.responses); Metric("Yes", e.stats.accepted); Metric("No", e.stats.declined)
+                Metric("Guests", e.stats.attending); Metric("Responses", e.stats.responses); Metric("Yes", e.stats.accepted); if (e.stats.maybe > 0) Metric("Maybe", e.stats.maybe); Metric("No", e.stats.declined)
             }
         }
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -207,12 +207,12 @@ private fun eventURL(vm: PartyModel, e: Event) = if (Links.safeWeb(e.public_url,
         }
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { Text("Guest responses", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f)); TextButton(onClick = { vm.export(context) }, enabled = !vm.busy) { Text("Export CSV") } }
         Field(search, { search = it }, "Search guests")
-        Choices("Show", filter, listOf("all", "yes", "no"), { filter = it })
+        Choices("Show", filter, listOf("all", "yes", "maybe", "no"), { filter = it })
         if (list.isEmpty()) Text(if (vm.responses.isEmpty()) "Your first response will appear here." else "No matching responses.", color = MaterialTheme.colorScheme.onSurfaceVariant)
         list.forEach { r -> Panel {
-            Row { Text(r.name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f)); Text(if (r.attending == "yes") "Attending" else "Declined", color = MaterialTheme.colorScheme.primary) }
+            Row { Text(r.name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f)); Text(when (r.attending) { "yes" -> "Attending"; "maybe" -> "Maybe"; else -> "Declined" }, color = MaterialTheme.colorScheme.primary) }
             Text(r.email)
-            if (r.attending == "yes") Text("${r.num_adults} adults · ${r.num_children} children")
+            if (r.attending != "no") Text("${r.num_adults} adults · ${r.num_children} children")
             if (r.dietary_restrictions.isNotBlank()) Text("Dietary needs: ${r.dietary_restrictions}")
             if (r.comment.isNotBlank()) Text(r.comment)
             Text("Updated ${r.updated_at.ifBlank { r.timestamp }.replace('T', ' ').substringBefore('.')}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -243,6 +243,7 @@ private fun eventURL(vm: PartyModel, e: Event) = if (Links.safeWeb(e.public_url,
         Field(limit, { limit = it; update(e.copy(max_guests_per_invite = it.toIntOrNull() ?: 0)) }, "Maximum guests per invitation", keyboard = KeyboardType.Number, help = "1–100 guests, including the person responding.", enabled = !vm.busy)
         Toggle("Show attendee names to guests", e.show_attendees, { update(e.copy(show_attendees = it)) }, !vm.busy)
         Toggle("Drop-offs allowed (kids without an adult)", e.allow_dropoff, { update(e.copy(allow_dropoff = it)) }, !vm.busy)
+        Toggle("Allow “Maybe” replies", e.allow_maybe, { update(e.copy(allow_maybe = it)) }, !vm.busy)
         Heading("Make it yours", "Choose the colors, paper and type for your invitation.")
         Choices("Color palette", e.color_scheme, listOf("pink", "blue", "red", "black"), { update(e.copy(color_scheme = it)) }, !vm.busy)
         Choices("Paper background", e.background_style, listOf("linen", "gradient", "solid", "image"), { update(e.copy(background_style = it)) }, !vm.busy)
@@ -346,8 +347,8 @@ private fun eventURL(vm: PartyModel, e: Event) = if (Links.safeWeb(e.public_url,
         Heading(e.name, "Let your host know if you can make it.")
         Field(name, { name = it }, "Your name", enabled = !vm.busy)
         Field(email, { email = it }, "Email address", keyboard = KeyboardType.Email, enabled = !vm.busy, help = "Your private RSVP update link will be sent here.")
-        Choices("Will you attend?", attending, listOf("yes", "no"), { attending = it }, !vm.busy)
-        if (attending == "yes") {
+        Choices("Will you attend?", attending, if (e.allow_maybe || r.attending == "maybe") listOf("yes", "maybe", "no") else listOf("yes", "no"), { attending = it }, !vm.busy)
+        if (attending != "no") {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { Field(adults, { adults = it }, "Adults", Modifier.weight(1f), !vm.busy, keyboard = KeyboardType.Number); Field(children, { children = it }, "Children", Modifier.weight(1f), !vm.busy, keyboard = KeyboardType.Number) }
             Text("Up to ${e.max_guests_per_invite} guests, including you.", style = MaterialTheme.typography.bodySmall)
             Field(dietary, { dietary = it }, "Dietary restrictions (optional)", singleLine = false, enabled = !vm.busy)

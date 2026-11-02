@@ -8,14 +8,14 @@ import java.time.LocalDateTime
 
 @Serializable data class Admin(val id: String, val name: String, val is_owner: Boolean = false)
 @Serializable data class Session(val csrf_token: String = "", val admin: Admin? = null, val public_url: String = "https://partymail.app", val email_enabled: Boolean = false, val email_connected: Boolean = false)
-@Serializable data class Stats(val responses: Int = 0, val attending: Int = 0, val accepted: Int = 0, val declined: Int = 0)
+@Serializable data class Stats(val responses: Int = 0, val attending: Int = 0, val accepted: Int = 0, val declined: Int = 0, val maybe: Int = 0)
 @Serializable data class Event(
     val id: String = "", val slug: String = "", val version: Int = 0,
     val name: String = "", val date: String = "", val start_time: String = "", val end_time: String = "",
     val location: String = "", val description: String = "", val max_guests_per_invite: Int = 10,
     val color_scheme: String = "pink", val background_style: String = "linen", val background_color: String = "#FFF8F0",
     val accent_color: String = "#974065", val background_image: String = "", val cover_image: String = "",
-    val font_style: String = "serif", val envelope_style: String = "classic", val show_attendees: Boolean = true, val allow_dropoff: Boolean = false,
+    val font_style: String = "serif", val envelope_style: String = "classic", val show_attendees: Boolean = true, val allow_dropoff: Boolean = false, val allow_maybe: Boolean = true,
     val archived: Boolean = false, val public_url: String = "", val stats: Stats = Stats()
 )
 @Serializable data class Response(
@@ -83,7 +83,7 @@ object Validation {
     fun response(r: Response, maxGuests: Int, allowDropoff: Boolean = false): String? = when {
         r.name.isBlank() -> "Add your name."
         !Regex("[^\\s@]+@[^\\s@]+\\.[^\\s@]+").matches(r.email) -> "Add a valid email address."
-        r.attending == "yes" && (r.num_adults < (if (allowDropoff) 0 else 1) || r.num_children < 0 || r.num_adults + r.num_children !in 1..maxGuests) ->
+        r.attending != "no" && (r.num_adults < (if (allowDropoff) 0 else 1) || r.num_children < 0 || r.num_adults + r.num_children !in 1..maxGuests) ->
             if (allowDropoff) "Your party needs between 1 and $maxGuests guests." else "Your party needs at least one adult and no more than $maxGuests guests."
         else -> null
     }

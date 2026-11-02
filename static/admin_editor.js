@@ -38,7 +38,7 @@
     for (const [key, value] of new FormData(form)) {
       if (!['csrf_token', 'update_event', 'version'].includes(key) && typeof value === 'string') result[key] = value;
     }
-    for (const key of ['archived', 'show_attendees', 'allow_dropoff']) result[key] = form.elements[key].checked;
+    for (const key of ['archived', 'show_attendees', 'allow_dropoff', 'allow_maybe']) result[key] = form.elements[key].checked;
     return result;
   }
   // Deduplicate input/change events by the draft, never by save completion.

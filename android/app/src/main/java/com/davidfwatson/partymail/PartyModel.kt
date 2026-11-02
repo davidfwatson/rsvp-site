@@ -168,8 +168,8 @@ class PartyModel(application: Application) : AndroidViewModel(application) {
         val e = event ?: return@run
         Validation.response(draft, e.max_guests_per_invite, e.allow_dropoff)?.let { throw ApiError(it) }
         val body = payload("name" to draft.name.trim(), "email" to draft.email.trim(), "attending" to draft.attending,
-            "num_adults" to if (draft.attending == "yes") draft.num_adults else 0,
-            "num_children" to if (draft.attending == "yes") draft.num_children else 0,
+            "num_adults" to if (draft.attending != "no") draft.num_adults else 0,
+            "num_children" to if (draft.attending != "no") draft.num_children else 0,
             "dietary_restrictions" to draft.dietary_restrictions, "comment" to draft.comment)
         val token = responseToken
         if (token != null) {

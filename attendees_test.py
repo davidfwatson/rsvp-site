@@ -142,3 +142,18 @@ def test_dropoff_setting_saves_from_admin(admin_client):
     assert get_event_config('porch-party')['allow_dropoff'] is True
     admin_client.post('/admin/porch-party', data=form)
     assert get_event_config('porch-party')['allow_dropoff'] is False
+
+
+@pytest.mark.parametrize('rsvp, expected', [
+    (None, '1'), (dict(attending='yes'), '1'), (dict(num_adults=0), '0'), (dict(num_adults=3), '3'),
+    (dict(num_adults=''), '1'),
+])
+def test_adults_field_keeps_zero_and_defaults_legacy_responses_to_one(rsvp, expected):
+    """A saved 0 stays 0; a response saved before num_adults existed still shows 1."""
+    import re
+    from flask import render_template_string
+    with web.app.test_request_context():
+        html = render_template_string(
+            "{% from '_rsvp_fields.html' import attendance_fields %}{{ attendance_fields(event, rsvp) }}",
+            event={**EVENT, 'allow_dropoff': True}, rsvp=rsvp)
+    assert re.search(r'id="num_adults"[^>]*value="([^"]*)"', html).group(1) == expected

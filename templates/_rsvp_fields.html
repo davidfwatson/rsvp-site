@@ -9,7 +9,7 @@
 <div class="party-fields" id="guestsInputContainer">
     <p class="party-hint">{% if event.allow_dropoff %}Everyone who's coming · dropping off? Enter 0 adults{% else %}Your party, including you{% endif %}{% if event.max_guests_per_invite %} · up to {{ event.max_guests_per_invite }} guest{{ 's' if event.max_guests_per_invite|int != 1 else '' }}{% endif %}</p>
     <div class="form-row">
-        <div class="form-group"><label for="num_adults">Adults</label><input type="number" id="num_adults" name="num_adults" min="{{ 0 if event.allow_dropoff else 1 }}" max="{{ event.max_guests_per_invite|default(10, true) }}" value="{{ rsvp.num_adults if rsvp and rsvp.num_adults not in (none, '') else 1 }}" inputmode="numeric" required></div>
+        <div class="form-group"><label for="num_adults">Adults</label><input type="number" id="num_adults" name="num_adults" min="{{ 0 if event.allow_dropoff else 1 }}" max="{{ event.max_guests_per_invite|default(10, true) }}" value="{{ rsvp.num_adults if rsvp and rsvp.num_adults is defined and rsvp.num_adults not in (none, '') else 1 }}" inputmode="numeric" required></div>
         <div class="form-group"><label for="num_children">Children</label><input type="number" id="num_children" name="num_children" min="0" max="{{ event.max_guests_per_invite|default(10, true) }}" value="{{ (rsvp.num_children or 0) if rsvp else 0 }}" inputmode="numeric" required></div>
     </div>
     <p class="party-error" id="partyError" role="status" aria-live="polite"></p>

@@ -248,7 +248,9 @@ def admin_logout():
 def response_stats(responses):
     """Count households and people consistently."""
     attending = [r for r in responses if r.get('attending') == 'yes']
-    return dict(responses=len(responses), attending=sum(r.get('num_adults', 1) + r.get('num_children', 0) for r in attending),
+    adults = sum(r.get('num_adults', 1) for r in attending)
+    children = sum(r.get('num_children', 0) for r in attending)
+    return dict(responses=len(responses), attending=adults + children, adults=adults, children=children,
         accepted=len(attending), declined=sum(r.get('attending') == 'no' for r in responses))
 
 

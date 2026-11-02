@@ -10,7 +10,7 @@ DESIGN_DEFAULTS = {
     'background_style': 'linen', 'background_color': '#f4efe7',
     'accent_color': '#95604b', 'background_image': '', 'cover_image': '',
     'font_style': 'serif', 'envelope_style': 'classic', 'show_attendees': True,
-    'allow_dropoff': False,
+    'allow_dropoff': False, 'allow_maybe': True,
 }
 CHOICES = {
     'color_scheme': ('pink', 'blue', 'red', 'black'),
@@ -87,7 +87,7 @@ def validate_event(values, existing=None, require_future=False):
         if not isinstance(value, str) or (value and not re.fullmatch(r'/media/[a-f0-9]{32}\.webp', value)):
             raise ValueError('Choose an uploaded image.')
         result[field] = value
-    for field in ('archived', 'show_attendees', 'allow_dropoff'):
+    for field in ('archived', 'show_attendees', 'allow_dropoff', 'allow_maybe'):
         value = values.get(field, result.get(field, False))
         result[field] = value is True or value in ('on', 'true', '1')
     return result

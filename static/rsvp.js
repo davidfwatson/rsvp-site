@@ -263,6 +263,7 @@
     if (!form) return;
     const yesRadio = document.getElementById('yes');
     const noRadio = document.getElementById('no');
+    const maybeRadio = document.getElementById('maybe');
     const guestFields = document.getElementById('guestsInputContainer');
     const dietaryFields = document.getElementById('dietaryContainer');
     const adults = document.getElementById('num_adults');
@@ -276,8 +277,9 @@
     function validateParty() {
         if (!adults || !children || !yesRadio) return;
         const total = Number(adults.value) + Number(children.value);
-        const tooMany = yesRadio.checked && total > capacity;
-        const nobody = yesRadio.checked && total < 1;
+        const counted = yesRadio.checked || Boolean(maybeRadio?.checked);
+        const tooMany = counted && total > capacity;
+        const nobody = counted && total < 1;
         const message = tooMany ? `Your host can welcome up to ${capacity} ${capacity === 1 ? 'guest' : 'guests'} per invitation.`
             : nobody ? 'Please tell us how many people are coming.' : '';
         adults.setCustomValidity(message);
@@ -287,7 +289,7 @@
 
     function toggleGuestFields() {
         if (!yesRadio || !guestFields || !dietaryFields) return;
-        const attending = yesRadio.checked;
+        const attending = yesRadio.checked || Boolean(maybeRadio?.checked);
         guestFields.hidden = !attending;
         dietaryFields.hidden = !attending;
         if (adults) { adults.required = attending; adults.disabled = !attending; }
@@ -299,6 +301,7 @@
 
     yesRadio?.addEventListener('change', toggleGuestFields);
     noRadio?.addEventListener('change', toggleGuestFields);
+    maybeRadio?.addEventListener('change', toggleGuestFields);
     adults?.addEventListener('input', validateParty);
     children?.addEventListener('input', validateParty);
     toggleGuestFields();

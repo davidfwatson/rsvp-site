@@ -58,6 +58,7 @@ final class PartyMailTests: XCTestCase {
         var rsvp = RSVP.empty; rsvp.name = "Guest"; rsvp.email = "guest@example.test"; rsvp.token = "private-secret"
         XCTAssertNil(rsvp.validationError(limit: 2))
         rsvp.numChildren = 2; XCTAssertNotNil(rsvp.validationError(limit: 2))
+        rsvp.attending = "maybe"; XCTAssertNotNil(rsvp.validationError(limit: 2))
         rsvp.attending = "no"; XCTAssertNil(rsvp.validationError(limit: 2))
         let encoder = JSONEncoder(); encoder.keyEncodingStrategy = .convertToSnakeCase
         let data = try encoder.encode(rsvp.payload()); let object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])

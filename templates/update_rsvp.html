@@ -16,7 +16,7 @@
     <main class="simple-shell">
         <p class="eyebrow">Plans change. That's okay.</p>
         <article class="invitation-card"><div class="card-content">
-            <header class="simple-heading"><span class="card-ornament" aria-hidden="true">✦</span><p class="eyebrow">{{ event.name }}</p><h1>Update your RSVP.</h1><p>Hi {{ rsvp.name }}. You're currently marked as <strong>{{ 'attending' if rsvp.attending == 'yes' else 'not attending' }}</strong>.</p></header>
+            <header class="simple-heading"><span class="card-ornament" aria-hidden="true">✦</span><p class="eyebrow">{{ event.name }}</p><h1>Update your RSVP.</h1><p>Hi {{ rsvp.name }}. You're currently marked as <strong>{{ 'attending' if rsvp.attending == 'yes' else 'maybe' if rsvp.attending == 'maybe' else 'not attending' }}</strong>.</p></header>
             {% include '_event_details.html' %}
             {% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<p class="form-notice {{ category }}" role="alert">{{ message }}</p>{% endfor %}{% endwith %}
             {% if error %}<p class="form-notice error" role="alert">{{ error }}</p>{% endif %}

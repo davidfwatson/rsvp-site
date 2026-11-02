@@ -1,8 +1,9 @@
 {% macro attendance_fields(event, rsvp=none) %}
 <fieldset class="attendance-fieldset">
     <legend>Can you join us?</legend>
-    <div class="attendance-options">
+    <div class="attendance-options{{ ' has-maybe' if event.allow_maybe|default(true) or (rsvp and rsvp.attending == 'maybe') }}">
         <div class="attendance-option"><input type="radio" id="yes" name="attending" value="yes" required {% if rsvp and rsvp.attending == 'yes' %}checked{% endif %}><label for="yes"><span class="attendance-icon" aria-hidden="true">✓</span>Joyfully accept</label></div>
+        {% if event.allow_maybe|default(true) or (rsvp and rsvp.attending == 'maybe') %}<div class="attendance-option"><input type="radio" id="maybe" name="attending" value="maybe" required {% if rsvp and rsvp.attending == 'maybe' %}checked{% endif %}><label for="maybe"><span class="attendance-icon" aria-hidden="true">?</span>Maybe</label></div>{% endif %}
         <div class="attendance-option"><input type="radio" id="no" name="attending" value="no" required {% if rsvp and rsvp.attending == 'no' %}checked{% endif %}><label for="no"><span class="attendance-icon" aria-hidden="true">—</span>Sadly decline</label></div>
     </div>
 </fieldset>

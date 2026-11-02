@@ -103,7 +103,7 @@ def test_repeat_email_cannot_overwrite_or_disclose_existing_rsvp(client):
     assert app_module.load_rsvps(EVENT['id'])[0]['attending'] == 'no'
 
 
-@pytest.mark.parametrize('changes', [dict(attending='maybe'), dict(num_adults='0'), dict(num_children='-1'), dict(num_adults='99'), dict(num_adults='not-a-number'), dict(email='invalid')])
+@pytest.mark.parametrize('changes', [dict(attending='perhaps'), dict(num_adults='0'), dict(num_children='-1'), dict(num_adults='99'), dict(num_adults='not-a-number'), dict(email='invalid')])
 def test_invalid_rsvp_never_writes(client, changes):
     response = client.post('/summer-supper/rsvp', data={**dict(name='Guest', email='a@example.com', attending='yes', num_adults='1', num_children='0'), **changes})
     assert response.status_code == 400

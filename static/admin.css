@@ -301,6 +301,10 @@ code {
   background:#e8f1e5;
   color:#467751
 }
+.badge-maybe {
+  background:#f6eedc;
+  color:#8a6a2c
+}
 .welcome-banner {
   display:flex;
   justify-content:space-between;
@@ -1057,6 +1061,9 @@ input:focus,textarea:focus,select:focus {
   grid-template-columns:repeat(3,1fr);
   gap:12px;
   margin:20px 0 24px
+}
+.stats-grid.has-maybe {
+  grid-template-columns:repeat(4,1fr)
 }
 .stats-grid>div {
   background:#f5f7f0;
@@ -1860,5 +1867,8 @@ td strong {
   }
   #tab-guests .stat-headcount {
     grid-column:1/-1
+  }
+  #tab-guests .stats-grid.has-maybe {
+    grid-template-columns:repeat(3,1fr)
   }
 }

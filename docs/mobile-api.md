@@ -44,10 +44,11 @@ An event has `id, slug, version, name, date` (YYYY-MM-DD), `start_time` (HH:mm),
 `background_style` (linen/gradient/solid/image), `background_color, accent_color`
 (#RRGGBB), `background_image, cover_image` (empty or `/media/<hex>.webp`),
 `font_style` (serif/sans), `envelope_style` (classic/minimal), `show_attendees,
-archived`, `public_url`, `stats: {responses,attending,adults,children,accepted,declined}`.
+allow_dropoff, allow_maybe` (default true), `archived`, `public_url`,
+`stats: {responses,attending,adults,children,accepted,declined,maybe,maybe_people}`.
 Creating requires `name,date,start_time,location`; optional `slug`. Creation
 requires a future date; editing past events is supported. Metadata is immutable.
-Host responses omit the secret RSVP token. Fields: `name,email,attending` (yes/no),
+Host responses omit the secret RSVP token. Fields: `name,email,attending` (yes/maybe/no; maybe keeps a party size),
 `num_adults,num_children,dietary_restrictions,comment,timestamp,updated_at`.
 
 ## Guest invitations

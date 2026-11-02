@@ -66,8 +66,8 @@ struct GuestInvitationView: View {
                         Section(savedToken == nil ? "Your RSVP" : "Update your RSVP") {
                             TextField("Your name", text: $response.name).textContentType(.name).accessibilityIdentifier("rsvpName")
                             TextField("Email", text: $response.email).textContentType(.emailAddress).keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled().accessibilityIdentifier("rsvpEmail")
-                            Picker("Will you join us?", selection: $response.attending) { Text("Yes, I’ll be there").tag("yes"); Text("Sorry, can’t make it").tag("no") }.pickerStyle(.segmented)
-                            if response.attending == "yes" { Stepper("Adults: \(response.numAdults)", value: $response.numAdults, in: (event.allowDropoff == true ? 0 : 1)...event.maxGuestsPerInvite); Stepper("Children: \(response.numChildren)", value: $response.numChildren, in: 0...max(0, event.maxGuestsPerInvite - response.numAdults)); Text("Up to \(event.maxGuestsPerInvite) guests per invitation.").font(.caption).foregroundStyle(.secondary); TextField("Dietary restrictions", text: $response.dietaryRestrictions, axis: .vertical).lineLimit(1...3) }
+                            Picker("Will you join us?", selection: $response.attending) { Text("Yes, I’ll be there").tag("yes"); if event.allowMaybe != false || response.attending == "maybe" { Text("Maybe").tag("maybe") }; Text("Sorry, can’t make it").tag("no") }.pickerStyle(.segmented)
+                            if response.attending != "no" { Stepper("Adults: \(response.numAdults)", value: $response.numAdults, in: (event.allowDropoff == true ? 0 : 1)...event.maxGuestsPerInvite); Stepper("Children: \(response.numChildren)", value: $response.numChildren, in: 0...max(0, event.maxGuestsPerInvite - response.numAdults)); Text("Up to \(event.maxGuestsPerInvite) guests per invitation.").font(.caption).foregroundStyle(.secondary); TextField("Dietary restrictions", text: $response.dietaryRestrictions, axis: .vertical).lineLimit(1...3) }
                             TextField("A message for the host", text: $response.comment, axis: .vertical).lineLimit(2...5)
                             BusyButton(title: savedToken == nil ? "Send RSVP" : "Save response", busy: busy, icon: "paperplane") { submit() }.accessibilityIdentifier("submitRSVP")
                         }
@@ -120,7 +120,7 @@ struct GuestInvitationView: View {
                     else {
                         if let rsvp = payload.response { response = rsvp }
                         if let raw = payload.updateUrl, let url = Config.trustedURL(raw), case let .response(_, privateToken) = DeepLink.parse(url) { savedToken = privateToken; if !Vault.saveResponseToken(privateToken, slug: slug) { error = "Your response was sent, but its update link couldn’t be saved on this device. Keep the link in your confirmation email." } }
-                        success = response.attending == "yes" ? "You’re on the list. See you there!" : "Your response is sent. Thanks for letting the host know."
+                        success = response.attending == "yes" ? "You’re on the list. See you there!" : response.attending == "maybe" ? "Your host knows you might come. Update your response once you know." : "Your response is sent. Thanks for letting the host know."
                         if payload.emailDelivered == false { success! += " Email confirmation is unavailable; your update link is saved on this device." }
                         editing = false
                     }

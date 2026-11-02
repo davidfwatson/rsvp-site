@@ -59,6 +59,7 @@ struct EventEditor: View {
             Stepper(value: $draft.maxGuestsPerInvite, in: 1...100) { Text("Up to \(draft.maxGuestsPerInvite) guests per invitation") }
             Toggle("Show attendees to guests", isOn: $draft.showAttendees)
             Toggle("Drop-offs allowed (kids without an adult)", isOn: $draft.allowDropoff)
+            Toggle("Allow “Maybe” replies", isOn: $draft.allowMaybe)
         }
     }
     private func timeBinding(_ text: Binding<String>) -> Binding<Date> { Binding(get: { let f = DateFormatter(); f.dateFormat = "HH:mm"; return f.date(from: text.wrappedValue) ?? Date() }, set: { text.wrappedValue = Format.timeValue($0) }) }

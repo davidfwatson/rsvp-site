@@ -76,7 +76,7 @@ def admin_client(client, monkeypatch):
 def test_response_stats_split_adults_and_children():
     """Hosts get people, adults and children counted from "yes" replies only."""
     assert web.response_stats(RESPONSES) == dict(responses=4, attending=5, adults=4, children=1,
-                                                accepted=3, declined=1)
+                                                accepted=3, declined=1, maybe=0, maybe_people=0)
 
 
 def test_host_guest_list_labels_people_and_replies_plainly(admin_client):
@@ -157,3 +157,62 @@ def test_adults_field_keeps_zero_and_defaults_legacy_responses_to_one(rsvp, expe
             "{% from '_rsvp_fields.html' import attendance_fields %}{{ attendance_fields(event, rsvp) }}",
             event={**EVENT, 'allow_dropoff': True}, rsvp=rsvp)
     assert re.search(r'id="num_adults"[^>]*value="([^"]*)"', html).group(1) == expected
+
+
+MAYBE = dict(name='Mo Bee', email='mo@example.test', attending='maybe', num_adults='2', num_children='1')
+
+
+def test_maybe_is_on_by_default_and_can_be_turned_off():
+    """Events without the setting accept "maybe"; a host can switch it off."""
+    with web.app.test_request_context():
+        assert web.validate_guest(MAYBE, EVENT)['num_adults'] == 2
+        with pytest.raises(ValueError, match='whether you can attend'):
+            web.validate_guest(MAYBE, {**EVENT, 'allow_maybe': False})
+        existing = dict(name='Mo Bee', email='mo@example.test', attending='maybe')
+        assert web.validate_guest(MAYBE, {**EVENT, 'allow_maybe': False}, existing)['attending'] == 'maybe'
+
+
+def test_maybe_counts_separately_and_stays_off_the_public_list(client):
+    """Maybes aren't in the headcount or "Who's coming", but hosts see how many might come."""
+    responses = RESPONSES + [dict(MAYBE, num_adults=2, num_children=1)]
+    stats = web.response_stats(responses)
+    assert (stats['attending'], stats['maybe'], stats['maybe_people']) == (5, 1, 3)
+    assert public_attendees(EVENT, responses) == public_attendees(EVENT, RESPONSES)
+
+
+def test_event_page_offers_maybe_only_when_allowed(client):
+    """The radio appears by default and disappears when the host turns it off."""
+    assert 'value="maybe"' in client.get('/porch-party').get_data(as_text=True)
+    save_event_config([{**EVENT, 'allow_maybe': False}])
+    assert 'value="maybe"' not in client.get('/porch-party').get_data(as_text=True)
+
+
+def test_maybe_rsvp_flow(client):
+    """A maybe reply is saved with its party size and confirmed as tentative."""
+    sent = []
+    import app as app_module
+    original = app_module.deliver_email
+    app_module.deliver_email = lambda to, subject, body: sent.append(body) or True
+    try:
+        page = client.post('/porch-party/rsvp', data=MAYBE, follow_redirects=True).get_data(as_text=True)
+    finally:
+        app_module.deliver_email = original
+    assert 'might join' in page and '2 adults &amp; 1 child if you can make it' in page
+    assert '**2 adults and 1 child, if you can make it**' in sent[0] and "once you're sure" in sent[0]
+    saved = [r for r in web.load_rsvps(EVENT['id']) if r['email'] == 'mo@example.test']
+    assert saved[0]['attending'] == 'maybe' and saved[0]['num_children'] == 1
+
+
+def test_host_sees_maybe_tile_and_toggle(admin_client):
+    """The guest list shows a maybe tile and badge; the toggle round-trips."""
+    write_json(web.rsvp_path(EVENT['id']), RESPONSES + [dict(MAYBE, num_adults=2, num_children=1)])
+    page = admin_client.get('/admin/porch-party').get_data(as_text=True)
+    assert 'Reply saying maybe' in page and '3 people<' in page and 'badge-maybe' in page
+    assert 'id="allow_maybe"' in page and 'checked' in page.split('id="allow_maybe"')[1][:60]
+    from event_config import get_event_config
+    form = {k: EVENT[k] for k in ('name', 'date', 'start_time', 'end_time', 'location', 'description')}
+    form.update(update_event='1', max_guests_per_invite='5', color_scheme='pink', show_attendees='on')
+    admin_client.post('/admin/porch-party', data=form)
+    assert get_event_config('porch-party')['allow_maybe'] is False
+    admin_client.post('/admin/porch-party', data={**form, 'allow_maybe': 'on'})
+    assert get_event_config('porch-party')['allow_maybe'] is True

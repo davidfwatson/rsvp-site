@@ -104,6 +104,7 @@ textarea { resize: vertical; min-height: 90px; }
 .honeypot { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .attendance-fieldset { margin: 0 0 20px; padding: 0; border: 0; min-width: 0; }
 .attendance-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.attendance-options.has-maybe { grid-template-columns: 1.3fr 1fr 1.3fr; }
 .attendance-option { position: relative; }
 .attendance-option input { position: absolute; top: 50%; left: 14px; opacity: 0; width: 1px; height: 1px; }
 .attendance-option label { display: flex; justify-content: center; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 5px; font-size: 12px; padding: 13px 8px; cursor: pointer; min-height: 46px; transition: border-color .2s, background .2s; }

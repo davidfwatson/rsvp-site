@@ -28,7 +28,7 @@ EVENT_FIELDS = (
     'id', 'slug', 'version', 'name', 'date', 'start_time', 'end_time', 'location',
     'description', 'max_guests_per_invite', 'color_scheme', 'background_style',
     'background_color', 'accent_color', 'background_image', 'cover_image',
-    'font_style', 'envelope_style', 'show_attendees', 'archived',
+    'font_style', 'envelope_style', 'show_attendees', 'allow_dropoff', 'archived',
 )
 RESPONSE_FIELDS = (
     'name', 'email', 'attending', 'num_adults', 'num_children',

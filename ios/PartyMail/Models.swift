@@ -44,6 +44,7 @@ struct Event: Codable, Identifiable {
     var fontStyle: String
     var envelopeStyle: String
     var showAttendees: Bool
+    var allowDropoff: Bool?
     var archived: Bool
     var publicUrl: String?
     var stats: Stats?
@@ -69,6 +70,7 @@ struct EventDraft: Encodable {
     var fontStyle = "serif"
     var envelopeStyle = "classic"
     var showAttendees = true
+    var allowDropoff = false
     var version: Int?
     init() {}
     init(_ e: Event) {
@@ -76,7 +78,7 @@ struct EventDraft: Encodable {
         location = e.location; description = e.description; maxGuestsPerInvite = e.maxGuestsPerInvite
         colorScheme = e.colorScheme; backgroundStyle = e.backgroundStyle; backgroundColor = e.backgroundColor
         accentColor = e.accentColor; backgroundImage = e.backgroundImage; coverImage = e.coverImage
-        fontStyle = e.fontStyle; envelopeStyle = e.envelopeStyle; showAttendees = e.showAttendees; version = e.version
+        fontStyle = e.fontStyle; envelopeStyle = e.envelopeStyle; showAttendees = e.showAttendees; allowDropoff = e.allowDropoff ?? false; version = e.version
     }
     var validationError: String? {
         if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return "Give your event a name." }
@@ -104,10 +106,10 @@ struct RSVP: Codable, Identifiable {
     var guests: Int { numAdults + numChildren }
     static let empty = RSVP(name: "", email: "", attending: "yes", numAdults: 1, numChildren: 0, dietaryRestrictions: "", comment: "")
     func payload() -> RSVPInput { RSVPInput(name: name, email: email, attending: attending, numAdults: numAdults, numChildren: numChildren, dietaryRestrictions: dietaryRestrictions, comment: comment) }
-    func validationError(limit: Int) -> String? {
+    func validationError(limit: Int, allowDropoff: Bool = false) -> String? {
         if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return "Please enter your name." }
         if !email.contains("@") || !email.contains(".") || email.contains(" ") { return "Please enter your email address." }
-        if attending == "yes" && (numAdults < 1 || numChildren < 0 || guests > limit) { return "Choose between 1 and \(limit) guests, with at least one adult." }
+        if attending == "yes" && (numAdults < (allowDropoff ? 0 : 1) || numChildren < 0 || guests < 1 || guests > limit) { return allowDropoff ? "Choose between 1 and \(limit) guests." : "Choose between 1 and \(limit) guests, with at least one adult." }
         return nil
     }
 }

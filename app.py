@@ -114,8 +114,13 @@ def validate_guest(values, event, existing=None):
         children = int(values.get('num_children', 0)) if attending == 'yes' else 0
     except (ValueError, TypeError):
         raise ValueError('Please enter whole numbers for your guest counts.') from None
-    if attending == 'yes' and (adults < 1 or children < 0 or adults + children > event['max_guests_per_invite']):
-        raise ValueError(f"Your party can include up to {event['max_guests_per_invite']} guests, including you.")
+    if attending == 'yes':
+        min_adults = 0 if event.get('allow_dropoff') else 1
+        if adults < min_adults or children < 0 or adults + children < 1:
+            raise ValueError('Please include at least one adult in your party.' if min_adults
+                             else 'Please tell us how many people are coming.')
+        if adults + children > event['max_guests_per_invite']:
+            raise ValueError(f"Your party can include up to {event['max_guests_per_invite']} guests.")
     result.update(num_adults=adults, num_children=children)
     return result
 
@@ -301,6 +306,7 @@ def admin(slug):
                 values = request.form.to_dict()
                 values['archived'] = 'archived' in request.form
                 values['show_attendees'] = 'show_attendees' in request.form
+                values['allow_dropoff'] = 'allow_dropoff' in request.form
                 version = int(values['version']) if 'version' in values else None
                 save_event_values(event, values, version)
                 flash('Event details updated successfully!', 'success')

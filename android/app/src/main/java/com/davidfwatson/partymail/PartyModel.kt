@@ -166,7 +166,7 @@ class PartyModel(application: Application) : AndroidViewModel(application) {
     }
     fun saveResponse(draft: Response) = run {
         val e = event ?: return@run
-        Validation.response(draft, e.max_guests_per_invite)?.let { throw ApiError(it) }
+        Validation.response(draft, e.max_guests_per_invite, e.allow_dropoff)?.let { throw ApiError(it) }
         val body = payload("name" to draft.name.trim(), "email" to draft.email.trim(), "attending" to draft.attending,
             "num_adults" to if (draft.attending == "yes") draft.num_adults else 0,
             "num_children" to if (draft.attending == "yes") draft.num_children else 0,

@@ -63,11 +63,11 @@
                 </div>
             </article>
             {% if event.show_attendees|default(true) and attendees %}
-            {% set party = namespace(total=0) %}{% for attendee in attendees %}{% set party.total = party.total + 1 + attendee.guest_info|int %}{% endfor %}
+            {% set party = namespace(total=0) %}{% for attendee in attendees %}{% set party.total = party.total + (attendee.dropoff_kids if attendee.dropoff_kids is defined else 1 + attendee.guest_info|int) %}{% endfor %}
             <section class="attendees-card" aria-labelledby="attendeesTitle">
                 <span class="card-ornament" aria-hidden="true">✦</span><p class="eyebrow">Good company awaits</p><h2 id="attendeesTitle">Who's coming</h2>
                 <p class="attendees-count">{{ party.total }} {{ 'guest' if party.total == 1 else 'guests' }} so far</p>
-                <ul class="attendees-list">{% for attendee in attendees %}<li style="--i: {{ loop.index0 }}"><span class="attendee-avatar" aria-hidden="true">{{ attendee.first_name[:1] }}</span><span class="attendee-name">{{ attendee.first_name }}{% if attendee.last_initial %} {{ attendee.last_initial }}.{% endif %}</span>{% if attendee.guest_info %}<span class="attendee-guests"><span class="visually-hidden">plus </span>{{ attendee.guest_info|trim }}</span>{% endif %}</li>{% endfor %}</ul>
+                <ul class="attendees-list">{% for attendee in attendees %}<li style="--i: {{ loop.index0 }}"><span class="attendee-avatar" aria-hidden="true">{{ attendee.first_name[:1] }}</span><span class="attendee-name">{{ attendee.first_name }}{% if attendee.last_initial %} {{ attendee.last_initial }}.{% endif %}{% if attendee.dropoff_kids is defined %}{{ attendee.guest_info }}{% endif %}</span>{% if attendee.dropoff_kids is not defined and attendee.guest_info %}<span class="attendee-guests"><span class="visually-hidden">plus </span>{{ attendee.guest_info|trim }}</span>{% endif %}</li>{% endfor %}</ul>
             </section>
             {% endif %}
         </div>

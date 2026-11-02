@@ -87,3 +87,58 @@ def test_host_guest_list_labels_people_and_replies_plainly(admin_client):
     assert 'Accepted' not in page
     assert '2 adults · 1 child<' in page and '1 adult · 0 children' in page
     assert 'data-label="Party size"' in page
+
+
+DROPOFF = dict(name='Pat Lane', email='pat.lane@example.test', attending='yes', num_adults='0', num_children='1')
+
+
+def test_zero_adults_rejected_unless_dropoffs_allowed():
+    """Without the setting a party still needs an adult; with it, kids alone are fine."""
+    with web.app.test_request_context():
+        with pytest.raises(ValueError, match='at least one adult'):
+            web.validate_guest(DROPOFF, EVENT)
+        assert web.validate_guest(DROPOFF, {**EVENT, 'allow_dropoff': True})['num_adults'] == 0
+        with pytest.raises(ValueError, match='how many people'):
+            web.validate_guest({**DROPOFF, 'num_children': '0'}, {**EVENT, 'allow_dropoff': True})
+
+
+def test_dropoff_shows_as_kids_on_public_list(client):
+    """A kids-only reply reads "Pat L.'s kid" and counts only the kids."""
+    save_event_config([{**EVENT, 'allow_dropoff': True}])
+    write_json(web.rsvp_path(EVENT['id']), RESPONSES[:2] + [
+        dict(name='Pat Lane', email='p@example.test', attending='yes', num_adults=0, num_children=2)])
+    assert public_attendees(EVENT, [dict(name='Pat Lane', attending='yes', num_adults=0, num_children=1)]) == [
+        dict(first_name='Pat', last_initial='L', guest_info="'s kid", dropoff_kids=1)]
+    page = client.get('/porch-party').get_data(as_text=True)
+    assert 'Pat L.&#39;s 2 kids' in page
+    assert '6 guests so far' in page
+
+
+def test_dropoff_rsvp_flow_confirms_kids_only(client):
+    """The form allows 0 adults, and the thank-you page and email don't call it 1 adult."""
+    save_event_config([{**EVENT, 'allow_dropoff': True}])
+    assert 'min="0"' in client.get('/porch-party').get_data(as_text=True)
+    sent = []
+    import app as app_module
+    original = app_module.deliver_email
+    app_module.deliver_email = lambda to, subject, body: sent.append(body) or True
+    try:
+        response = client.post('/porch-party/rsvp', data=DROPOFF, follow_redirects=True)
+    finally:
+        app_module.deliver_email = original
+    page = response.get_data(as_text=True)
+    assert '1 child confirmed for drop-off' in page and 'adult' not in page.split('confirmed-party')[1][:80]
+    assert '**1 child (drop-off)**' in sent[0] and 'welcome your kids' in sent[0]
+
+
+def test_dropoff_setting_saves_from_admin(admin_client):
+    """The host toggle round-trips through the event editor."""
+    page = admin_client.get('/admin/porch-party').get_data(as_text=True)
+    assert 'Drop-offs allowed' in page and 'id="allow_dropoff"' in page
+    from event_config import get_event_config
+    form = {k: EVENT[k] for k in ('name', 'date', 'start_time', 'end_time', 'location', 'description')}
+    form.update(update_event='1', max_guests_per_invite='5', color_scheme='pink', show_attendees='on')
+    admin_client.post('/admin/porch-party', data={**form, 'allow_dropoff': 'on'})
+    assert get_event_config('porch-party')['allow_dropoff'] is True
+    admin_client.post('/admin/porch-party', data=form)
+    assert get_event_config('porch-party')['allow_dropoff'] is False

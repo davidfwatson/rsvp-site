@@ -10,6 +10,7 @@ DESIGN_DEFAULTS = {
     'background_style': 'linen', 'background_color': '#f4efe7',
     'accent_color': '#95604b', 'background_image': '', 'cover_image': '',
     'font_style': 'serif', 'envelope_style': 'classic', 'show_attendees': True,
+    'allow_dropoff': False,
 }
 CHOICES = {
     'color_scheme': ('pink', 'blue', 'red', 'black'),
@@ -38,9 +39,14 @@ def public_attendees(event, responses):
         names = response.get('name', '').split()
         if response.get('attending') != 'yes' or not names:
             continue
-        guests = response.get('num_adults', 1) + response.get('num_children', 0) - 1
-        attendees.append(dict(first_name=names[0], last_initial=names[-1][0].upper(),
-                              guest_info=f' +{guests}' if guests > 0 else ''))
+        adults, children = response.get('num_adults', 1), response.get('num_children', 0)
+        attendee = dict(first_name=names[0], last_initial=names[-1][0].upper())
+        if adults == 0:
+            # A drop-off: the person who replied isn't coming, their kids are.
+            attendee.update(guest_info="'s kid" if children == 1 else f"'s {children} kids", dropoff_kids=children)
+        else:
+            attendee['guest_info'] = f' +{adults + children - 1}' if adults + children > 1 else ''
+        attendees.append(attendee)
     return attendees
 
 
@@ -81,7 +87,7 @@ def validate_event(values, existing=None, require_future=False):
         if not isinstance(value, str) or (value and not re.fullmatch(r'/media/[a-f0-9]{32}\.webp', value)):
             raise ValueError('Choose an uploaded image.')
         result[field] = value
-    for field in ('archived', 'show_attendees'):
+    for field in ('archived', 'show_attendees', 'allow_dropoff'):
         value = values.get(field, result.get(field, False))
         result[field] = value is True or value in ('on', 'true', '1')
     return result

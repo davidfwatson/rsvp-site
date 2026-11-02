@@ -8,9 +8,14 @@ def generate_confirmation_email_body(event, rsvp, update_url=None):
     update_info = f"\n\n[Update your RSVP]({update_url}) if your plans change."
 
   if rsvp['attending'] == 'yes':
-    guest_details = f"{rsvp['num_adults']} adult{'s' if rsvp['num_adults'] != 1 else ''}"
-    if rsvp['num_children'] > 0:
-      guest_details += f" and {rsvp['num_children']} child{'ren' if rsvp['num_children'] != 1 else ''}"
+    adults, children = rsvp['num_adults'], rsvp['num_children']
+    parts = []
+    if adults > 0:
+      parts.append(f"{adults} adult{'s' if adults != 1 else ''}")
+    if children > 0:
+      parts.append(f"{children} child{'ren' if children != 1 else ''}")
+    guest_details = " and ".join(parts) + ("" if adults else " (drop-off)")
+    welcome = "We're excited that you'll be joining us for" if adults else "We're excited to welcome your kids to"
 
     dietary_info = ""
     if rsvp.get('dietary_restrictions'):
@@ -20,7 +25,7 @@ def generate_confirmation_email_body(event, rsvp, update_url=None):
     body = f"""
 # Thank you for your RSVP, {rsvp['name']}!
 
-We're excited that you'll be joining us for **{event['name']}**!
+{welcome} **{event['name']}**!
 
 ## Event Details:
 - **Date:** {event['date']} at {event_time}

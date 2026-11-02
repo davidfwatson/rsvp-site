@@ -277,10 +277,12 @@
         if (!adults || !children || !yesRadio) return;
         const total = Number(adults.value) + Number(children.value);
         const tooMany = yesRadio.checked && total > capacity;
-        const message = tooMany ? `Your host can welcome up to ${capacity} ${capacity === 1 ? 'guest' : 'guests'} per invitation, including you.` : '';
+        const nobody = yesRadio.checked && total < 1;
+        const message = tooMany ? `Your host can welcome up to ${capacity} ${capacity === 1 ? 'guest' : 'guests'} per invitation.`
+            : nobody ? 'Please tell us how many people are coming.' : '';
         adults.setCustomValidity(message);
         if (partyError) partyError.textContent = message;
-        adults.setAttribute('aria-invalid', tooMany ? 'true' : 'false');
+        adults.setAttribute('aria-invalid', message ? 'true' : 'false');
     }
 
     function toggleGuestFields() {

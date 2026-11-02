@@ -67,7 +67,7 @@ struct GuestInvitationView: View {
                             TextField("Your name", text: $response.name).textContentType(.name).accessibilityIdentifier("rsvpName")
                             TextField("Email", text: $response.email).textContentType(.emailAddress).keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled().accessibilityIdentifier("rsvpEmail")
                             Picker("Will you join us?", selection: $response.attending) { Text("Yes, I’ll be there").tag("yes"); Text("Sorry, can’t make it").tag("no") }.pickerStyle(.segmented)
-                            if response.attending == "yes" { Stepper("Adults: \(response.numAdults)", value: $response.numAdults, in: 1...event.maxGuestsPerInvite); Stepper("Children: \(response.numChildren)", value: $response.numChildren, in: 0...max(0, event.maxGuestsPerInvite - response.numAdults)); Text("Up to \(event.maxGuestsPerInvite) guests per invitation.").font(.caption).foregroundStyle(.secondary); TextField("Dietary restrictions", text: $response.dietaryRestrictions, axis: .vertical).lineLimit(1...3) }
+                            if response.attending == "yes" { Stepper("Adults: \(response.numAdults)", value: $response.numAdults, in: (event.allowDropoff == true ? 0 : 1)...event.maxGuestsPerInvite); Stepper("Children: \(response.numChildren)", value: $response.numChildren, in: 0...max(0, event.maxGuestsPerInvite - response.numAdults)); Text("Up to \(event.maxGuestsPerInvite) guests per invitation.").font(.caption).foregroundStyle(.secondary); TextField("Dietary restrictions", text: $response.dietaryRestrictions, axis: .vertical).lineLimit(1...3) }
                             TextField("A message for the host", text: $response.comment, axis: .vertical).lineLimit(2...5)
                             BusyButton(title: savedToken == nil ? "Send RSVP" : "Save response", busy: busy, icon: "paperplane") { submit() }.accessibilityIdentifier("submitRSVP")
                         }
@@ -76,7 +76,7 @@ struct GuestInvitationView: View {
                         Button { browser = BrowserSheet(url: Config.url("/\(slug)/calendar/google")) } label: { Label("Add to Google Calendar", systemImage: "calendar.badge.plus") }
                         Link(destination: Config.url("/\(slug)/calendar/ics")) { Label("Add to Apple Calendar", systemImage: "calendar") }
                     }
-                    if !attendees.isEmpty { Section("Who’s coming") { ForEach(Array(attendees.enumerated()), id: \.offset) { _, a in HStack { Text("\(a.firstName) \(a.lastInitial)"); Spacer(); Text(a.guestInfo).foregroundStyle(.secondary).font(.caption) } } } }
+                    if !attendees.isEmpty { Section("Who’s coming") { ForEach(Array(attendees.enumerated()), id: \.offset) { _, a in if a.guestInfo.hasPrefix("'s") { Text("\(a.firstName) \(a.lastInitial).\(a.guestInfo)") } else { HStack { Text("\(a.firstName) \(a.lastInitial)"); Spacer(); Text(a.guestInfo).foregroundStyle(.secondary).font(.caption) } } } } }
                     if savedToken != nil { Section { Button("Forget saved response on this device", role: .destructive) { Vault.delete("rsvp.\(slug)"); savedToken = nil; response = .empty; success = nil; editing = true } } footer: { Text("Your response stays with the host. Your private update link is stored securely on this device.") } }
                     if error != nil { Section { ErrorText(text: error) } }
                 }.scrollDismissesKeyboard(.interactively).refreshable { await load() }
@@ -106,7 +106,7 @@ struct GuestInvitationView: View {
     }
     private func submit() {
         guard let event else { return }
-        if let validation = response.validationError(limit: event.maxGuestsPerInvite) { error = validation; return }
+        if let validation = response.validationError(limit: event.maxGuestsPerInvite, allowDropoff: event.allowDropoff == true) { error = validation; return }
         busy = true; error = nil
         Task {
             defer { busy = false }

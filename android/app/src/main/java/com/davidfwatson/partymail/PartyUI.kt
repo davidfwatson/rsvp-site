@@ -242,6 +242,7 @@ private fun eventURL(vm: PartyModel, e: Event) = if (Links.safeWeb(e.public_url,
         var limit by rememberSaveable(e.id) { mutableStateOf(e.max_guests_per_invite.toString()) }
         Field(limit, { limit = it; update(e.copy(max_guests_per_invite = it.toIntOrNull() ?: 0)) }, "Maximum guests per invitation", keyboard = KeyboardType.Number, help = "1–100 guests, including the person responding.", enabled = !vm.busy)
         Toggle("Show attendee names to guests", e.show_attendees, { update(e.copy(show_attendees = it)) }, !vm.busy)
+        Toggle("Drop-offs allowed (kids without an adult)", e.allow_dropoff, { update(e.copy(allow_dropoff = it)) }, !vm.busy)
         Heading("Make it yours", "Choose the colors, paper and type for your invitation.")
         Choices("Color palette", e.color_scheme, listOf("pink", "blue", "red", "black"), { update(e.copy(color_scheme = it)) }, !vm.busy)
         Choices("Paper background", e.background_style, listOf("linen", "gradient", "solid", "image"), { update(e.copy(background_style = it)) }, !vm.busy)
@@ -337,7 +338,7 @@ private fun eventURL(vm: PartyModel, e: Event) = if (Links.safeWeb(e.public_url,
     var name by rememberSaveable(e.slug, vm.responseToken) { mutableStateOf(r.name) }
     var email by rememberSaveable(e.slug, vm.responseToken) { mutableStateOf(r.email) }
     var attending by rememberSaveable(e.slug, vm.responseToken) { mutableStateOf(r.attending) }
-    var adults by rememberSaveable(e.slug, vm.responseToken) { mutableStateOf(r.num_adults.coerceAtLeast(1).toString()) }
+    var adults by rememberSaveable(e.slug, vm.responseToken) { mutableStateOf(r.num_adults.coerceAtLeast(if (e.allow_dropoff) 0 else 1).toString()) }
     var children by rememberSaveable(e.slug, vm.responseToken) { mutableStateOf(r.num_children.toString()) }
     var dietary by rememberSaveable(e.slug, vm.responseToken) { mutableStateOf(r.dietary_restrictions) }
     var comment by rememberSaveable(e.slug, vm.responseToken) { mutableStateOf(r.comment) }

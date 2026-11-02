@@ -26,8 +26,8 @@
             </header>
             {% if email_delivery_failed %}<p class="form-notice">{% if check_email %}We couldn't send a new confirmation email. Use your original private update link, or contact your host for help.{% else %}Your response is saved, but we couldn't send a confirmation email. Contact your host if your plans change.{% endif %}</p>{% endif %}
             {% if attending == 'yes' %}
-                {% set adults = num_adults|default(1, true)|int %}{% set children = num_children|default(0, true)|int %}
-                {% if adults or children %}<p class="confirmed-party">{{ adults }} adult{{ 's' if adults != 1 else '' }}{% if children %} &amp; {{ children }} child{{ 'ren' if children != 1 else '' }}{% endif %} confirmed</p>{% endif %}
+                {% set adults = num_adults|default(1)|int %}{% set children = num_children|default(0)|int %}
+                {% if adults or children %}<p class="confirmed-party">{% if adults %}{{ adults }} adult{{ 's' if adults != 1 else '' }}{% if children %} &amp; {% endif %}{% endif %}{% if children %}{{ children }} child{{ 'ren' if children != 1 else '' }}{% endif %} confirmed{% if not adults %} for drop-off{% endif %}</p>{% endif %}
                 {% include '_event_details.html' %}
                 <section class="calendar-section" aria-labelledby="calendarTitle">
                     <h2 id="calendarTitle">Save the date</h2><p>Add the gathering to your calendar.</p>

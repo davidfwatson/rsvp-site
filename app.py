@@ -384,8 +384,9 @@ def upload_image(slug):
     if len(raw) > 8 * 1024 * 1024:
         return jsonify(error='Choose an image smaller than 8 MB.'), 413
     try:
-        with Image.open(BytesIO(raw)) as original:
-            if original.format not in ('JPEG', 'PNG', 'WEBP') or original.width * original.height > 24000000:
+        # Restrict decoder dispatch before any unsupported format can parse input.
+        with Image.open(BytesIO(raw), formats=('JPEG', 'PNG', 'WEBP')) as original:
+            if original.width * original.height > 24000000:
                 raise ValueError('Choose a smaller JPEG, PNG, or WebP.')
             original.load()
             cleaned = ImageOps.exif_transpose(original).convert('RGBA' if 'A' in original.getbands() or 'transparency' in original.info else 'RGB')

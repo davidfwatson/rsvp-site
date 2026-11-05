@@ -79,6 +79,26 @@ def generate_google_calendar_url(event_config):
     return f"{calendar_url}?{urllib.parse.urlencode(params)}"
 
 
+def _escape_ics_text(value):
+    """Keep event text inside one RFC 5545 TEXT property value."""
+    return (value.replace('\\', '\\\\').replace('\r\n', '\n').replace('\r', '\n')
+            .replace('\n', '\\n').replace(';', '\\;').replace(',', '\\,'))
+
+
+def _fold_ics_line(line):
+    """Fold at 75 UTF-8 octets without splitting a character (RFC 5545 3.1)."""
+    lines, current, octets = [], '', 0
+    for character in line:
+        size = len(character.encode('utf-8'))
+        if octets + size > 75:
+            lines.append(current)
+            current, octets = ' ', 1
+        current += character
+        octets += size
+    lines.append(current)
+    return '\r\n'.join(lines)
+
+
 def generate_ics_file(event_config):
     """
     Generate ICS file content for an event
@@ -103,23 +123,21 @@ def generate_ics_file(event_config):
     # Generate a unique identifier
     uid = f"{event_config['id']}@{event_config['slug']}.partymail.app"
 
-    # Replace newlines in description with spaces
-    description = event_config['description'].replace('\n', ' ')
-
-    # Create ICS content
-    ics_content = f"""BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//PartyMail App//EN
-BEGIN:VEVENT
-UID:{uid}
-DTSTAMP:{now_str}
-DTSTART:{start_str}
-DTEND:{end_str}
-SUMMARY:{event_config['name']}
-DESCRIPTION:{description}
-LOCATION:{event_config['location']}
-END:VEVENT
-END:VCALENDAR
-"""
-
-    return ics_content
+    # RFC 5545 TEXT encoding prevents content from becoming extra properties or
+    # components. Escape before folding; consumers unfold before parsing values.
+    lines = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//PartyMail App//EN',
+        'BEGIN:VEVENT',
+        'UID:' + _escape_ics_text(uid),
+        f'DTSTAMP:{now_str}',
+        f'DTSTART:{start_str}',
+        f'DTEND:{end_str}',
+        'SUMMARY:' + _escape_ics_text(event_config['name']),
+        'DESCRIPTION:' + _escape_ics_text(event_config['description']),
+        'LOCATION:' + _escape_ics_text(event_config['location']),
+        'END:VEVENT',
+        'END:VCALENDAR',
+    ]
+    return '\r\n'.join(_fold_ics_line(line) for line in lines) + '\r\n'
